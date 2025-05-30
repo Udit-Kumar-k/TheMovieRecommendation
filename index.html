@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MovieRec</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="title">MovieRec</div>
+  <div class="searchBar">
+    <div class="filter">
+      <button class="filterbtn">
+        <img src="icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="Filter Icon" />
+      </button>
+      
+      <div class="filter-menu" id="filterMenu">
+        <div class="filter-left-column">
+
+        <fieldset class="filter-section filter-released">
+          <legend>Released:</legend>
+          <label><input type="checkbox" name="released" value="All" checked> All</label>
+          <label><input type="checkbox" name="released" value="2020s"> 2020s</label>
+          <label><input type="checkbox" name="released" value="2010s"> 2010s</label>
+          <label><input type="checkbox" name="released" value="2000s"> 2000s</label>
+          <label><input type="checkbox" name="released" value="1990s"> 1990s</label>
+          <label><input type="checkbox" name="released" value="1980s"> 1980s</label>
+          <label><input type="checkbox" name="released" value="1970s"> 1970s</label>
+          <label><input type="checkbox" name="released" value="older"> older</label>
+        </fieldset>
+
+        <div class="filter-group">
+          <fieldset class="filter-section filter-content-rating">
+            <legend>Content Rating</legend>
+            <label><input type="checkbox" name="rating" value="yes18" checked>Mature</label>
+            <label><input type="checkbox" name="rating" value="no18">General</label>
+          </fieldset>
+        </div>
+        </div>
+
+        <fieldset class="filter-section filter-genres">
+          <legend>Genre:</legend>
+          <label><input type="checkbox" name="genre" value="Action"> Action</label>
+          <label><input type="checkbox" name="genre" value="Action & Adventure"> Action & Adventure</label>
+          <label><input type="checkbox" name="genre" value="Adventure"> Adventure</label>
+          <label><input type="checkbox" name="genre" value="Animation"> Animation</label>
+          <label><input type="checkbox" name="genre" value="Biography"> Biography</label>
+          <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
+          <label><input type="checkbox" name="genre" value="Crime"> Crime</label>
+          <label><input type="checkbox" name="genre" value="Documentary"> Documentary</label>
+          <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
+          <label><input type="checkbox" name="genre" value="Family"> Family</label>
+          <label><input type="checkbox" name="genre" value="Fantasy"> Fantasy</label>
+          <label><input type="checkbox" name="genre" value="History"> History</label>
+          <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
+          <label><input type="checkbox" name="genre" value="Kids"> Kids</label>
+          <label><input type="checkbox" name="genre" value="Music"> Music</label>
+          <label><input type="checkbox" name="genre" value="Mystery"> Mystery</label>
+          <label><input type="checkbox" name="genre" value="News"> News</label>
+          <label><input type="checkbox" name="genre" value="Reality"> Reality</label>
+          <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
+          <label><input type="checkbox" name="genre" value="Sci-Fi & Fantasy"> Sci-Fi & Fantasy</label>
+          <label><input type="checkbox" name="genre" value="Science Fiction"> Science Fiction</label>
+          <label><input type="checkbox" name="genre" value="Soap"> Soap</label>
+          <label><input type="checkbox" name="genre" value="Talk"> Talk</label>
+          <label><input type="checkbox" name="genre" value="Thriller"> Thriller</label>
+          <label><input type="checkbox" name="genre" value="TV Movie"> TV Movie</label>
+          <label><input type="checkbox" name="genre" value="War"> War</label>
+          <label><input type="checkbox" name="genre" value="War & Politics"> War & Politics</label>
+          <label><input type="checkbox" name="genre" value="Western"> Western</label>
+        </fieldset>
+        
+        <fieldset class="filter-section filter-themes">
+         <legend>Themes: </legend>
+          <label><input type="checkbox" name="country" value="Argentina"> Argentina</label>
+          <label><input type="checkbox" name="country" value="Australia"> Australia</label>
+          <label><input type="checkbox" name="country" value="Austria"> Austria</label>
+          <label><input type="checkbox" name="country" value="Belgium"> Belgium</label>
+          <label><input type="checkbox" name="country" value="Brazil"> Brazil</label>
+          <label><input type="checkbox" name="country" value="Canada"> Canada</label>
+          <label><input type="checkbox" name="country" value="China"> China</label>
+        </fieldset>
+
+        <fieldset class="filter-section filter-countries">
+          <legend>Country:</legend>
+          <label><input type="checkbox" name="country" value="Argentina"> Argentina</label>
+          <label><input type="checkbox" name="country" value="Australia"> Australia</label>
+          <label><input type="checkbox" name="country" value="Austria"> Austria</label>
+          <label><input type="checkbox" name="country" value="Belgium"> Belgium</label>
+          <label><input type="checkbox" name="country" value="Brazil"> Brazil</label>
+          <label><input type="checkbox" name="country" value="Canada"> Canada</label>
+          <label><input type="checkbox" name="country" value="China"> China</label>
+          <label><input type="checkbox" name="country" value="Czech Republic"> Czech Republic</label>
+          <label><input type="checkbox" name="country" value="Denmark"> Denmark</label>
+          <label><input type="checkbox" name="country" value="Finland"> Finland</label>
+          <label><input type="checkbox" name="country" value="France"> France</label>
+          <label><input type="checkbox" name="country" value="Germany"> Germany</label>
+          <label><input type="checkbox" name="country" value="Hong Kong"> Hong Kong</label>
+          <label><input type="checkbox" name="country" value="Hungary"> Hungary</label>
+          <label><input type="checkbox" name="country" value="India"> India</label>
+          <label><input type="checkbox" name="country" value="Ireland"> Ireland</label>
+          <label><input type="checkbox" name="country" value="Israel"> Israel</label>
+          <label><input type="checkbox" name="country" value="Italy"> Italy</label>
+          <label><input type="checkbox" name="country" value="Japan"> Japan</label>
+          <label><input type="checkbox" name="country" value="Luxembourg"> Luxembourg</label>
+          <label><input type="checkbox" name="country" value="Mexico"> Mexico</label>
+          <label><input type="checkbox" name="country" value="Netherlands"> Netherlands</label>
+          <label><input type="checkbox" name="country" value="New Zealand"> New Zealand</label>
+          <label><input type="checkbox" name="country" value="Norway"> Norway</label>
+          <label><input type="checkbox" name="country" value="Poland"> Poland</label>
+          <label><input type="checkbox" name="country" value="Romania"> Romania</label>
+          <label><input type="checkbox" name="country" value="Russia"> Russia</label>
+          <label><input type="checkbox" name="country" value="South Africa"> South Africa</label>
+          <label><input type="checkbox" name="country" value="South Korea"> South Korea</label>
+          <label><input type="checkbox" name="country" value="Spain"> Spain</label>
+          <label><input type="checkbox" name="country" value="Sweden"> Sweden</label>
+          <label><input type="checkbox" value="Switzerland"> Switzerland</label>
+          <label><input type="checkbox" name="country" value="Taiwan"> Taiwan</label>
+          <label><input type="checkbox" name="country" value="Thailand"> Thailand</label>
+          <label><input type="checkbox" name="country" value="United Kingdom"> United Kingdom</label>
+          <label><input type="checkbox" name="country" value="United States of America"> United States of America</label>
+        </fieldset>
+
+        <div class="filter-actions">
+            <button id="applyFilters" class="action-btn">
+                <img src="icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="Filter Icon" /> Filter
+            </button>
+            <button id="resetFilters" class="action-btn reset-btn">
+              Reset
+            </button>
+        </div>
+      </div>
+    </div>
+
+    <input type="text" class="searchInput" placeholder="Search" />
+
+    <button class="okbtn">
+      <img src="icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="search icon"/> </button>
+  </div>
+</div>
+  </body>
