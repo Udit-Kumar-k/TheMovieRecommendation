@@ -1,1 +1,1 @@
-# myMovieRec
+# Movie Recommendation System
