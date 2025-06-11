@@ -11,7 +11,6 @@
 <body>
     <div class="title">MovieRec</div>
   <div class="searchBar">
-    <div class="filter">
       <button class="filterbtn">
         <img src="{{ url_for('static', filename='icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg') }}" alt="Filter Icon" />
       </button>
@@ -41,7 +40,6 @@
         </div>
         </div>
 
-        <div class="filter-right-columns">
         <fieldset class="filter-section filter-genres">
           <legend>Genre:</legend>
           <label><input type="checkbox" name="genre" value="Action"> Action</label>
@@ -124,17 +122,16 @@
           <label><input type="checkbox" name="country" value="United Kingdom"> United Kingdom</label>
           <label><input type="checkbox" name="country" value="United States of America"> United States of America</label>
         </fieldset>
-      </div>
 
         <div class="filter-actions">
             <button id="applyFilters" class="action-btn">
-                <img src="icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="Filter Icon" /> Filter
+                <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="Filter Icon" /> Filter
             </button>
             <button id="resetFilters" class="action-btn reset-btn">
               Reset
             </button>
         </div>
-        </form> <!-- ✅ END form here -->
+        </form>
       </div>
 
     <input type="text" class="searchInput" placeholder="Search" />
@@ -142,5 +139,7 @@
     <button class="okbtn">
       <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="search icon"/> </button>
   </div>
-</div>
+
+  <div id="results" class="results-container"></div>
+
   </body>
