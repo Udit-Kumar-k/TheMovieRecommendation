@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from sklearn.metrics.pairwise import linear_kernel
 from data_loader import get_data
 from flask import Flask, render_template
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -26,9 +27,10 @@ def smart_recommend():
         return jsonify({"error": "Movie title not found in dataset."}), 404
 
     idx = indices[title]
+    if isinstance(idx, pd.Series):
+        idx = idx.iloc[0]
 
-
-    if not isinstance(idx, int) or idx < 0 or idx >= len(df):
+    if idx < 0 or idx >= len(df):
         return jsonify({"error": "Movie title index is invalid."}), 404
 
     # Compute similarity scores
@@ -48,6 +50,7 @@ def smart_recommend():
                 'title', 'overview', 'vote_average',
                 'popularity', 'genres', 'poster_path'
             ]].to_dict()
+            movie_data = {k: (None if pd.isna(v) else v) for k, v in movie_data.items()}
             movie_data['similarity'] = round(float(sim_scores[i]), 3)
             recommendations.append(movie_data)
 

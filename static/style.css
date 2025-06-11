@@ -22,7 +22,7 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     margin: 1% auto;
     background-color: rgb(255, 255, 255);
     border-radius: 30px;
@@ -38,7 +38,7 @@ body {
     background: transparent;
     border: none;
     outline: none;
-    color: #e3e3e3;
+    color: #333;
     font-size: 1rem;
     padding: 10px;
 }
@@ -48,7 +48,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 0;
     filter: invert(1);
 }
 
@@ -106,28 +106,11 @@ body {
     max-width: 180px; /* Further reduced max-width */
 }
 
-.filter-right-columns {
-    display: flex;
-    flex-direction: row; /* Arrange Genre, Themes, Country horizontally */
-    flex-wrap: wrap; /* Allow these sections to wrap if not enough space */
-    flex-grow: 1; /* Allow this group to take remaining horizontal space */
-    gap: 10px; /* Gap between Genre, Themes, Country */
-    min-width: 450px; /* Adjust as needed, ensure there's enough space for 3 columns */
-    justify-content: flex-start; /* Align items to the start */
-    align-items: flex-start;
-}
-
-
 .filter-menu fieldset {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 10px 15px; /* Reduced padding for all fieldsets */
     margin: 0;
-}
-
-.filter-section {
-    flex: 1;
-    min-width: 160px; /* Adjusted min-width for general sections */
 }
 
 .filter-genres,
@@ -139,15 +122,15 @@ body {
     align-items: flex-start;
     gap: 10px; /* Reduced gap between internal elements for horizontal sections */
 
-    flex: 1 1 280px; /* Adjusted flex-basis for compactness */
+    flex: 1 1 250px; /* Adjusted flex-basis for compactness */
     min-width: 200px; /* Adjusted minimum width */
-    max-width: 380px; /* Adjusted maximum width */
+    max-width: 400px; /* Adjusted maximum width */
 }
 
 .filter-released,
 .filter-content-rating {
     display: flex;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     flex-direction: column; /* Vertical elements */
     flex-wrap: nowrap;
     align-items: flex-start;
@@ -182,21 +165,13 @@ body {
     width: 14px; /* Smaller checkbox size */
     height: 14px;
     border: 1px solid #ccc; /* Thinner border */
-    border-radius: 50%;
+    border-radius: 3px;
     outline: none;
     cursor: pointer;
     display: inline-block;
     vertical-align: middle;
     position: relative;
     transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.filter-menu input[type="checkbox"] {
-    border-radius: 3px; /* Slightly smaller border radius */
-}
-
-.filter-menu input[type="radio"]:checked {
-    border-color: #2196f3;
 }
 
 .filter-menu input[type="checkbox"]:checked {
@@ -258,4 +233,22 @@ body {
 
 .hidden {
     display: none;
+}
+
+.results-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+}
+.movie-card {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  width: 200px;
+  background: #fff;
+  border-radius: 10px;
+}
+.movie-card img {
+  width: 100%;
+  border-radius: 8px;
 }

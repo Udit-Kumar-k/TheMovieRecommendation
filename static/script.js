@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.querySelector('.searchInput');
   const searchBtn = document.querySelector('.okbtn');
 
-  searchBtn.addEventListener('click', () => {
+  function performSearch() {
     const title = searchInput.value.trim();
     if (!title) {
       alert("Please enter a movie title.");
@@ -85,7 +85,25 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.results) {
           console.log("Search Recommendations:", data.results);
-          // TODO: Render the results on the page
+          const resultsContainer = document.getElementById('results'); // Make sure there's a <div id="results"></div> in your HTML
+resultsContainer.innerHTML = ''; // Clear previous results
+
+data.results.forEach(movie => {
+  const card = document.createElement('div');
+  card.className = 'movie-card';
+
+  card.innerHTML = `
+    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path || ''}" alt="Poster" onerror="this.src='fallback.jpg'">
+    <h3>${movie.title || 'Untitled Movie'}</h3>
+    <p><strong>Genres:</strong> ${movie.genres || 'N/A'}</p>
+    <p><strong>Overview:</strong> ${movie.overview || 'No description available.'}</p>
+    <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
+    <p><strong>Similarity:</strong> ${movie.similarity}</p>
+  `;
+
+  resultsContainer.appendChild(card);
+});
+
         } else {
           alert(data.error || data.message || "No results.");
         }
@@ -94,6 +112,15 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Fetch error:", err);
         alert("Server error. Try again later.");
       });
-  });
+  }
+  searchBtn.addEventListener('click', performSearch);
+
+// Trigger search on Enter key press
+searchInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    performSearch();
+  }
+});
 
 });
