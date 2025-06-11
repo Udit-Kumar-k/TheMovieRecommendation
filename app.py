@@ -19,14 +19,14 @@ def smart_recommend():
     num_results = int(request.args.get('limit', 10))
 
     # Check if title exists in dataset
-    if not title or title not in indices:
+    if not title:
         return jsonify({"error": "Valid 'title' parameter is required."}), 400
 
-    idx_series = indices[indices.index == title]
-    if idx_series.empty:
+    if title not in indices:
         return jsonify({"error": "Movie title not found in dataset."}), 404
 
-    idx = idx_series.iloc[0]
+    idx = indices[title]
+
 
     if not isinstance(idx, int) or idx < 0 or idx >= len(df):
         return jsonify({"error": "Movie title index is invalid."}), 404

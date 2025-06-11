@@ -72,15 +72,8 @@ body {
     z-index: 1;
 
     width: 90vw;
-    max-width: 1800px; /* Adjusted max-width for a more compact look */
+    max-width: 1400px; /* Adjusted max-width for a more compact look */
     box-sizing: border-box;
-
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 10px; /* Reduced gap between main filter sections */
 
     opacity: 0;
     visibility: hidden;
@@ -94,6 +87,16 @@ body {
     transform: translateY(0) translateX(-50%);
 }
 
+#filterForm {
+    display: flex; /* Make the form a flex container */
+    flex-direction: row; /* Arrange its direct children (columns) horizontally */
+    flex-wrap: wrap; /* Allow columns to wrap on smaller screens if necessary */
+    justify-content: flex-start; /* Align columns to the start */
+    align-items: flex-start; /* Align columns to the top */
+    gap: 20px; /* Gap between the main columns (left-column and right-columns) */
+    width: 100%; /* Ensure form takes full width of its parent (.filter-menu) */
+}
+
 .filter-left-column {
     display: flex;
     flex-direction: column;
@@ -103,15 +106,23 @@ body {
     max-width: 180px; /* Further reduced max-width */
 }
 
+.filter-right-columns {
+    display: flex;
+    flex-direction: row; /* Arrange Genre, Themes, Country horizontally */
+    flex-wrap: wrap; /* Allow these sections to wrap if not enough space */
+    flex-grow: 1; /* Allow this group to take remaining horizontal space */
+    gap: 10px; /* Gap between Genre, Themes, Country */
+    min-width: 450px; /* Adjust as needed, ensure there's enough space for 3 columns */
+    justify-content: flex-start; /* Align items to the start */
+    align-items: flex-start;
+}
+
+
 .filter-menu fieldset {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 10px 15px; /* Reduced padding for all fieldsets */
     margin: 0;
-    gap: 10px;
-
-    flex: 1 1 220px;
-    min-width: unset;
 }
 
 .filter-section {
@@ -128,21 +139,21 @@ body {
     align-items: flex-start;
     gap: 10px; /* Reduced gap between internal elements for horizontal sections */
 
-    flex: 1 1 300px; /* Adjusted flex-basis for compactness */
-    min-width: 280px; /* Adjusted minimum width */
-    max-width: 450px; /* Adjusted maximum width */
+    flex: 1 1 280px; /* Adjusted flex-basis for compactness */
+    min-width: 200px; /* Adjusted minimum width */
+    max-width: 380px; /* Adjusted maximum width */
 }
 
 .filter-released,
 .filter-content-rating {
     display: flex;
-    flex: 0 1 180px;
+    flex: 0 1 auto;
     flex-direction: column; /* Vertical elements */
     flex-wrap: nowrap;
     align-items: flex-start;
     gap: 5px; /* Further reduced gap for vertical elements */
     padding: 10px 15px;
-    min-width: 160;
+    min-width: unset;
 }
 
 .filter-menu legend {
