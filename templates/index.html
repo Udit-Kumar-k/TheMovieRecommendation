@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MovieRec</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -13,7 +13,7 @@
   <div class="searchBar">
     <div class="filter">
       <button class="filterbtn">
-        <img src="icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="Filter Icon" />
+        <img src="{{ url_for('static', filename='icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg') }}" alt="Filter Icon" />
       </button>
       
       <div class="filter-menu" id="filterMenu">
@@ -139,7 +139,7 @@
     <input type="text" class="searchInput" placeholder="Search" />
 
     <button class="okbtn">
-      <img src="icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="search icon"/> </button>
+      <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="search icon"/> </button>
   </div>
 </div>
   </body>
