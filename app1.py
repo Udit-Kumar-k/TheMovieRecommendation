@@ -3,7 +3,6 @@ from sklearn.metrics.pairwise import linear_kernel
 from data_loader import get_data
 from flask import Flask, render_template
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 
@@ -34,9 +33,8 @@ def smart_recommend():
     if idx < 0 or idx >= len(df):
         return jsonify({"error": "Movie title index is invalid."}), 404
 
-
-    sim_scores = cosine_similarity([tfidf_matrix[idx]], tfidf_matrix).flatten()
-
+    # Compute similarity scores
+    sim_scores = linear_kernel(tfidf_matrix[idx], tfidf_matrix).flatten()
     sim_indices = sim_scores.argsort()[::-1][1:]  # skip the movie itself
 
     recommendations = []
