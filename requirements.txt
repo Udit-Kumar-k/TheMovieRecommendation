@@ -1,0 +1,6 @@
+faiss-cpu
+sentence-transformers
+scikit-learn
+pandas
+flask
+kagglehub
