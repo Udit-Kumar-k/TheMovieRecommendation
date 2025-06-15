@@ -99,17 +99,42 @@ data.results.forEach(movie => {
   const card = document.createElement('div');
   card.className = 'movie-card';
 
-  card.innerHTML = `
-    <img src= "https://image.tmdb.org/t/p/w500${movie.poster_path || ''}" alt="Poster" onerror="this.onerror=null; this.src='/static/icons/fallback.svg'">
-    <h3>${movie.title || 'Untitled Movie'}</h3>
-    <p><strong>Genres:</strong> ${movie.genres || 'N/A'}</p>
-    <p><strong>Overview:</strong> ${movie.overview || 'No description available.'}</p>
-    <p><strong>Rating:</strong> ${movie.vote_average || 'N/A'}</p>
-    <p><strong>Similarity:</strong> ${movie.similarity}</p>
-  `;
+  // Create image separately
+  const img = document.createElement('img');
+  img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
+  img.alt = 'Poster';
+  img.onerror = function () {
+    this.onerror = null;
+    this.src = '/static/icons/fallback.svg';
+  };
+
+  // Create other elements
+  const title = document.createElement('h3');
+  title.textContent = movie.title || 'Untitled Movie';
+
+  const genres = document.createElement('p');
+  genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
+
+  const overview = document.createElement('p');
+  overview.innerHTML = `<strong>Overview:</strong> ${movie.overview || 'No description available.'}`;
+
+  const rating = document.createElement('p');
+  rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
+
+  const similarity = document.createElement('p');
+  similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
+
+  // Append all to card
+  card.appendChild(img);
+  card.appendChild(title);
+  card.appendChild(genres);
+  card.appendChild(overview);
+  card.appendChild(rating);
+  card.appendChild(similarity);
 
   resultsContainer.appendChild(card);
 });
+
 
         } else {
           alert(data.error || data.message || "No results.");
