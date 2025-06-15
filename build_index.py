@@ -7,12 +7,13 @@ from sentence_transformers import SentenceTransformer
 import os
 import kagglehub
 import torch
+from data_utils import get_dataset_path
+
 
 torch.set_num_threads(2)
 
 # ---------------- Load & Prepare Dataset ---------------- #
-dataset_path = kagglehub.dataset_download("alanvourch/tmdb-movies-daily-updates")
-csv_file = os.path.join(dataset_path, "TMDB_all_movies.csv")
+csv_file = get_dataset_path()
 
 df = pd.read_csv(csv_file)
 df['overview'] = df['overview'].fillna('')
