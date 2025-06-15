@@ -18,8 +18,11 @@ def smart_recommend():
     genre = request.args.get('genre', '').strip().lower()
     num_results = int(request.args.get('limit', 10))
 
-    if not title or title not in title_to_index:
-        return jsonify({"error": "Valid and existing 'title' required."}), 400
+    if not title:
+        return jsonify({"error": "Missing 'title' parameter."}), 400
+
+    if title not in title_to_index:
+        return jsonify({"error": f"Movie '{title}' not found in index."}), 404
 
     idx = title_to_index[title]
     query_vector = embeddings[idx].reshape(1, -1)
@@ -35,14 +38,18 @@ def smart_recommend():
         if genre and genre not in str(movie.get('genres', '')).lower():
             continue
 
+        poster = movie.get('poster_path', '')
+        # Handle NaN poster
+        poster = '' if pd.isna(poster) else poster
+
         results.append({
-            'title': movie.get('title'),
-            'overview': movie.get('overview'),
-            'vote_average': movie.get('vote_average'),
-            'popularity': movie.get('popularity'),
-            'genres': movie.get('genres'),
-            'poster_path': movie.get('poster_path'),
-            'similarity': round(float(score), 3)
+        'title': movie.get('title') or '',
+        'overview': movie.get('overview') or '',
+        'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
+        'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
+        'genres': movie.get('genres') or '',
+        'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
+        'similarity': round(float(score), 3)
         })
 
         if len(results) >= num_results:

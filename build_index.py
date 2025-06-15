@@ -27,7 +27,8 @@ texts = df.apply(combine_text, axis=1).tolist()
 
 # ---------------- Embedding with MiniLM ---------------- #
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-model = model.to('cuda')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"✅ Using device: {device}")
 
 embeddings = []
 batch_size = 64
@@ -40,7 +41,7 @@ for i in range(0, total, batch_size):
         batch_embeddings = model.encode(
             batch,
             normalize_embeddings=True,
-            device='cuda'
+            device=device
         )
         embeddings.extend(batch_embeddings)
 

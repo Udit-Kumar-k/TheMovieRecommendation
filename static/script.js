@@ -81,19 +81,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=10`;
 
     fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (data.results) {
-          console.log("Search Recommendations:", data.results);
-          const resultsContainer = document.getElementById('results'); // Make sure there's a <div id="results"></div> in your HTML
-resultsContainer.innerHTML = ''; // Clear previous results
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => {
+            throw new Error(err.error || "An unexpected error occurred.");
+          });
+        }
+      return res.json();
+    })
+  .then(data => {
+    if (data.results && data.results.length > 0) {
+      console.log("Search Recommendations:", data.results);
+      const resultsContainer = document.getElementById('results');
+      resultsContainer.innerHTML = ''; // Clear previous results
 
 data.results.forEach(movie => {
   const card = document.createElement('div');
   card.className = 'movie-card';
 
   card.innerHTML = `
-    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path || ''}" alt="Poster" onerror="this.src='fallback.jpg'">
+    <img src= "https://image.tmdb.org/t/p/w500${movie.poster_path || ''}" alt="Poster" onerror="this.onerror=null; this.src='/static/icons/fallback.svg'">
     <h3>${movie.title || 'Untitled Movie'}</h3>
     <p><strong>Genres:</strong> ${movie.genres || 'N/A'}</p>
     <p><strong>Overview:</strong> ${movie.overview || 'No description available.'}</p>
