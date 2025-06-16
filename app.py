@@ -6,7 +6,7 @@ import pandas as pd
 
 app = Flask(__name__)
 
-USE_RECOMMENDATION = True  # 🔁 Set to True only if you have FAISS files
+USE_RECOMMENDATION = False # 🔁 Set to True only if you have FAISS files
 
 if USE_RECOMMENDATION:
     df, embeddings, title_to_index, index = get_data()

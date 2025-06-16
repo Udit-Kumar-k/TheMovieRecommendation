@@ -70,6 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle search button click
   const searchInput = document.querySelector('.searchInput');
   const searchBtn = document.querySelector('.okbtn');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+
+  function showLoadingForTwoSeconds() {
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'flex';
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+      }, 2000);
+    }
+  }
 
   function performSearch() {
     const title = searchInput.value.trim();
@@ -77,6 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
       alert("Please enter a movie title.");
       return;
     }
+
+    showLoadingForTwoSeconds(); // Show loader for exactly 2 seconds
 
     const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=10`;
 
