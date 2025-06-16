@@ -1,6 +1,6 @@
-import pandas as pd
 import os
 import kagglehub
+import pandas as pd
 
 path = kagglehub.dataset_download("asaniczka/tmdb-movies-dataset-2023-930k-movies")
 

@@ -1,158 +1,118 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const filterBtn = document.querySelector('.filterbtn');
-  const filterMenu = document.getElementById('filterMenu'); // Make sure your filter menu has id="filterMenu"
-  const resetBtn = document.getElementById('resetFilters'); // Make sure your reset button has id="resetFilters"
-  const filterForm = document.getElementById('filterForm'); // Your form must have id="filterForm"
+const searchInput = document.getElementById('searchInput');
+const suggestionsList = document.getElementById('suggestions');
+const ghostText = document.getElementById('ghostText');
+const didYouMean = document.getElementById('didYouMean');
+const searchBtn = document.getElementById('searchBtn');
 
-  // Toggle filter menu visibility on filter button click
-  filterBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    filterMenu.classList.toggle('show');
-  });
+// Simulated list of movies (replace with dynamic data or API in production)
+const movies = [
+  "Avengers: Endgame", "Avatar", "Titanic", "The Dark Knight",
+  "Avengers: Infinity War", "Interstellar", "Inception",
+  "The Matrix", "The Godfather", "Gladiator", "Toy Story"
+];
 
-  // Prevent clicks inside filter menu from closing it
-  filterMenu.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
+function getSuggestions(input) {
+  if (!input) return [];
+  return movies.filter(movie =>
+    movie.toLowerCase().startsWith(input.toLowerCase())
+  );
+}
 
-  // Clicking outside the filter menu closes it
-  document.addEventListener('click', () => {
-    filterMenu.classList.remove('show');
-  });
+function getClosestMatch(input) {
+  let bestMatch = "";
+  let minDistance = Infinity;
 
-  // Reset all checkboxes when reset button clicked
-  resetBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
-  });
-
-  // Optionally clear checkboxes on page load
-  window.addEventListener('load', () => {
-    const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
-  });
-
-  // Handle form submit for recommendations
-  filterForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    // Collect all selected filters
-    const selectedGenres = formData.getAll('genre');
-    const selectedCountries = formData.getAll('country');
-    const selectedYears = formData.getAll('released');
-    // Add more filters like themes and moods here if needed
-
-    // Send filters to backend via POST
-    fetch('/recommend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        genres: selectedGenres,
-        countries: selectedCountries,
-        released: selectedYears,
-        // theme: [], mood: []  <-- add later as needed
-      }),
-    })
-    .then(res => res.json())
-    .then(data => {
-      console.log('Recommendations:', data);
-      // TODO: Update your UI here with results
-    })
-    .catch(err => {
-      console.error('Error fetching recommendations:', err);
-    });
-  });
-    // Handle search button click
-  const searchInput = document.querySelector('.searchInput');
-  const searchBtn = document.querySelector('.okbtn');
-
-  function performSearch() {
-    const title = searchInput.value.trim();
-    if (!title) {
-      alert("Please enter a movie title.");
-      return;
+  for (const movie of movies) {
+    const distance = levenshteinDistance(input.toLowerCase(), movie.toLowerCase());
+    if (distance < minDistance) {
+      minDistance = distance;
+      bestMatch = movie;
     }
+  }
+  return bestMatch;
+}
+// 🔧 Filter Toggle Script
+document.addEventListener("DOMContentLoaded", function () {
+  const filterBtn = document.querySelector('.filterbtn');
+  const filterMenu = document.getElementById('filterMenu');
 
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=10`;
-
-    fetch(url)
-      .then(res => {
-        if (!res.ok) {
-          return res.json().then(err => {
-            throw new Error(err.error || "An unexpected error occurred.");
-          });
-        }
-      return res.json();
-    })
-  .then(data => {
-    if (data.results && data.results.length > 0) {
-      console.log("Search Recommendations:", data.results);
-      const resultsContainer = document.getElementById('results');
-      resultsContainer.innerHTML = ''; // Clear previous results
-
-data.results.forEach(movie => {
-  const card = document.createElement('div');
-  card.className = 'movie-card';
-
-  // Create image separately
-  const img = document.createElement('img');
-  img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
-  img.alt = 'Poster';
-  img.onerror = function () {
-    this.onerror = null;
-    this.src = '/static/icons/fallback.svg';
-  };
-
-  // Create other elements
-  const title = document.createElement('h3');
-  title.textContent = movie.title || 'Untitled Movie';
-
-  const genres = document.createElement('p');
-  genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
-
-  const overview = document.createElement('p');
-  overview.innerHTML = `<strong>Overview:</strong> ${movie.overview || 'No description available.'}`;
-
-  const rating = document.createElement('p');
-  rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
-
-  const similarity = document.createElement('p');
-  similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
-
-  // Append all to card
-  card.appendChild(img);
-  card.appendChild(title);
-  card.appendChild(genres);
-  card.appendChild(overview);
-  card.appendChild(rating);
-  card.appendChild(similarity);
-
-  resultsContainer.appendChild(card);
+  if (filterBtn && filterMenu) {
+    filterBtn.addEventListener('click', () => {
+      filterMenu.classList.toggle('show');
+    });
+  }
 });
 
 
-        } else {
-          alert(data.error || data.message || "No results.");
-        }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        alert("Server error. Try again later.");
+function levenshteinDistance(a, b) {
+  const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+
+  for (let j = 1; j <= b.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      matrix[i][j] = a[i - 1] === b[j - 1]
+        ? matrix[i - 1][j - 1]
+        : Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + 1);
+    }
+  }
+
+  return matrix[a.length][b.length];
+}
+
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value;
+  const suggestions = getSuggestions(query);
+  suggestionsList.innerHTML = "";
+
+  if (suggestions.length) {
+    suggestions.forEach(movie => {
+      const li = document.createElement("li");
+      li.textContent = movie;
+      li.addEventListener("click", () => {
+        searchInput.value = movie;
+        ghostText.textContent = "";
+        suggestionsList.innerHTML = "";
+        performSearch(movie);
       });
-  }
-  searchBtn.addEventListener('click', performSearch);
+      suggestionsList.appendChild(li);
+    });
 
-// Trigger search on Enter key press
-searchInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    performSearch();
+    const firstSuggestion = suggestions[0];
+    if (firstSuggestion.toLowerCase().startsWith(query.toLowerCase())) {
+      ghostText.textContent = firstSuggestion.substring(query.length);
+    } else {
+      ghostText.textContent = "";
+    }
+  } else {
+    ghostText.textContent = "";
   }
 });
 
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Tab" && ghostText.textContent) {
+    e.preventDefault();
+    searchInput.value += ghostText.textContent;
+    ghostText.textContent = "";
+    suggestionsList.innerHTML = "";
+  }
 });
+
+searchBtn.addEventListener("click", () => {
+  const query = searchInput.value.trim();
+  const bestMatch = getClosestMatch(query);
+
+  if (query && bestMatch.toLowerCase() !== query.toLowerCase()) {
+    didYouMean.innerHTML = `Did you mean: <strong>${bestMatch}</strong>?`;
+  } else {
+    didYouMean.innerHTML = "";
+  }
+
+  performSearch(bestMatch);
+});
+
+function performSearch(movieName) {
+  // Placeholder: Replace with your backend query or display logic
+  const results = document.getElementById('results');
+  results.innerHTML = `<p>Showing results for <strong>${movieName}</strong></p>`;
+}

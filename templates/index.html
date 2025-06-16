@@ -4,142 +4,651 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MovieRec</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: white;
+      color: black;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: black;
+      margin-bottom: 2rem;
+      text-shadow: none;
+    }
+
+    .search-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-button {
+      background: white;
+      border: 2px solid black;
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: black;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-button:hover {
+      background: #f0f0f0;
+      border-color: black;
+      transform: translateY(-2px);
+    }
+
+    .search-container {
+      position: relative;
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      background: white;
+      border: 2px solid black;
+      border-radius: 15px;
+      color: black;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 2;
+      background-color: transparent;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: black;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-input::placeholder {
+      color: #666;
+    }
+
+    .ghost-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      color: #ccc;
+      pointer-events: none;
+      z-index: 1;
+      background: white;
+      border: 2px solid black;
+      border-radius: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .search-button {
+      background: black;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .search-button:hover {
+      background: #333;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .suggestions-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid black;
+      border-radius: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      margin-top: 5px;
+    }
+
+    .suggestions-list li {
+      list-style: none;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border-bottom: 1px solid #eee;
+    }
+
+    .suggestions-list li:hover {
+      background: #f0f0f0;
+    }
+
+    .suggestions-list li:last-child {
+      border-bottom: none;
+    }
+
+    .filter-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid black;
+      border-radius: 12px;
+      padding: 20px;
+      min-width: 300px;
+      z-index: 1000;
+      display: none;
+      margin-top: 10px;
+    }
+
+    .filter-menu.show {
+      display: block;
+    }
+
+    .filter-group {
+      margin-bottom: 20px;
+    }
+
+    .filter-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: black;
+    }
+
+    .filter-input, .filter-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid black;
+      border-radius: 8px;
+      color: black;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+      outline: none;
+      border-color: black;
+    }
+
+    .did-you-mean {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: black;
+      cursor: pointer;
+    }
+
+    .did-you-mean:hover {
+      text-decoration: underline;
+    }
+
+    .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .movie-card {
+      background: white;
+      border: 1px solid black;
+      border-radius: 15px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-color: black;
+    }
+
+    .movie-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: black;
+      margin-bottom: 10px;
+    }
+
+    .movie-overview {
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
+    .movie-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .rating {
+      color: black;
+      font-weight: 600;
+    }
+
+    .loading {
+      text-align: center;
+      color: black;
+      margin: 2rem 0;
+    }
+
+
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 2.5rem;
+      }
+      
+      .search-section {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .search-container {
+        width: 100%;
+      }
+      
+      .filter-menu {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        max-width: 400px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <div class="title">MovieRec</div>
-  <div class="searchBar">
-      <button class="filterbtn">
-        <img src="{{ url_for('static', filename='icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg') }}" alt="Filter Icon" />
-      </button>
-      
-      <div class="filter-menu" id="filterMenu">
-        <form id="filterForm">
-        <div class="filter-left-column">
-
-        <fieldset class="filter-section filter-released">
-          <legend>Released:</legend>
-          <label><input type="checkbox" name="released" value="All" checked> All</label>
-          <label><input type="checkbox" name="released" value="2020s"> 2020s</label>
-          <label><input type="checkbox" name="released" value="2010s"> 2010s</label>
-          <label><input type="checkbox" name="released" value="2000s"> 2000s</label>
-          <label><input type="checkbox" name="released" value="1990s"> 1990s</label>
-          <label><input type="checkbox" name="released" value="1980s"> 1980s</label>
-          <label><input type="checkbox" name="released" value="1970s"> 1970s</label>
-          <label><input type="checkbox" name="released" value="older"> older</label>
-        </fieldset>
-
-        <div class="filter-group">
-          <fieldset class="filter-section filter-content-rating">
-            <legend>Content Rating</legend>
-            <label><input type="checkbox" name="rating" value="yes18" checked>Mature</label>
-            <label><input type="checkbox" name="rating" value="no18">General</label>
-          </fieldset>
-        </div>
-        </div>
-
-        <fieldset class="filter-section filter-genres">
-          <legend>Genre:</legend>
-          <label><input type="checkbox" name="genre" value="Action"> Action</label>
-          <label><input type="checkbox" name="genre" value="Action & Adventure"> Action & Adventure</label>
-          <label><input type="checkbox" name="genre" value="Adventure"> Adventure</label>
-          <label><input type="checkbox" name="genre" value="Animation"> Animation</label>
-          <label><input type="checkbox" name="genre" value="Biography"> Biography</label>
-          <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
-          <label><input type="checkbox" name="genre" value="Crime"> Crime</label>
-          <label><input type="checkbox" name="genre" value="Documentary"> Documentary</label>
-          <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
-          <label><input type="checkbox" name="genre" value="Family"> Family</label>
-          <label><input type="checkbox" name="genre" value="Fantasy"> Fantasy</label>
-          <label><input type="checkbox" name="genre" value="History"> History</label>
-          <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
-          <label><input type="checkbox" name="genre" value="Kids"> Kids</label>
-          <label><input type="checkbox" name="genre" value="Music"> Music</label>
-          <label><input type="checkbox" name="genre" value="Mystery"> Mystery</label>
-          <label><input type="checkbox" name="genre" value="News"> News</label>
-          <label><input type="checkbox" name="genre" value="Reality"> Reality</label>
-          <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
-          <label><input type="checkbox" name="genre" value="Sci-Fi & Fantasy"> Sci-Fi & Fantasy</label>
-          <label><input type="checkbox" name="genre" value="Science Fiction"> Science Fiction</label>
-          <label><input type="checkbox" name="genre" value="Soap"> Soap</label>
-          <label><input type="checkbox" name="genre" value="Talk"> Talk</label>
-          <label><input type="checkbox" name="genre" value="Thriller"> Thriller</label>
-          <label><input type="checkbox" name="genre" value="TV Movie"> TV Movie</label>
-          <label><input type="checkbox" name="genre" value="War"> War</label>
-          <label><input type="checkbox" name="genre" value="War & Politics"> War & Politics</label>
-          <label><input type="checkbox" name="genre" value="Western"> Western</label>
-        </fieldset>
+    
+    <div class="search-section">
+      <div style="position: relative;">
+        <button class="filter-button" id="filterBtn">
+          <span>🎬</span>
+          Filters
+        </button>
         
-        <fieldset class="filter-section filter-themes">
-         <legend>Themes: </legend>
-          <label><input type="checkbox" name="country" value="Argentina"> Argentina</label>
-          <label><input type="checkbox" name="country" value="Australia"> Australia</label>
-          <label><input type="checkbox" name="country" value="Austria"> Austria</label>
-          <label><input type="checkbox" name="country" value="Belgium"> Belgium</label>
-          <label><input type="checkbox" name="country" value="Brazil"> Brazil</label>
-          <label><input type="checkbox" name="country" value="Canada"> Canada</label>
-          <label><input type="checkbox" name="country" value="China"> China</label>
-        </fieldset>
-
-        <fieldset class="filter-section filter-countries">
-          <legend>Country:</legend>
-          <label><input type="checkbox" name="country" value="Argentina"> Argentina</label>
-          <label><input type="checkbox" name="country" value="Australia"> Australia</label>
-          <label><input type="checkbox" name="country" value="Austria"> Austria</label>
-          <label><input type="checkbox" name="country" value="Belgium"> Belgium</label>
-          <label><input type="checkbox" name="country" value="Brazil"> Brazil</label>
-          <label><input type="checkbox" name="country" value="Canada"> Canada</label>
-          <label><input type="checkbox" name="country" value="China"> China</label>
-          <label><input type="checkbox" name="country" value="Czech Republic"> Czech Republic</label>
-          <label><input type="checkbox" name="country" value="Denmark"> Denmark</label>
-          <label><input type="checkbox" name="country" value="Finland"> Finland</label>
-          <label><input type="checkbox" name="country" value="France"> France</label>
-          <label><input type="checkbox" name="country" value="Germany"> Germany</label>
-          <label><input type="checkbox" name="country" value="Hong Kong"> Hong Kong</label>
-          <label><input type="checkbox" name="country" value="Hungary"> Hungary</label>
-          <label><input type="checkbox" name="country" value="India"> India</label>
-          <label><input type="checkbox" name="country" value="Ireland"> Ireland</label>
-          <label><input type="checkbox" name="country" value="Israel"> Israel</label>
-          <label><input type="checkbox" name="country" value="Italy"> Italy</label>
-          <label><input type="checkbox" name="country" value="Japan"> Japan</label>
-          <label><input type="checkbox" name="country" value="Luxembourg"> Luxembourg</label>
-          <label><input type="checkbox" name="country" value="Mexico"> Mexico</label>
-          <label><input type="checkbox" name="country" value="Netherlands"> Netherlands</label>
-          <label><input type="checkbox" name="country" value="New Zealand"> New Zealand</label>
-          <label><input type="checkbox" name="country" value="Norway"> Norway</label>
-          <label><input type="checkbox" name="country" value="Poland"> Poland</label>
-          <label><input type="checkbox" name="country" value="Romania"> Romania</label>
-          <label><input type="checkbox" name="country" value="Russia"> Russia</label>
-          <label><input type="checkbox" name="country" value="South Africa"> South Africa</label>
-          <label><input type="checkbox" name="country" value="South Korea"> South Korea</label>
-          <label><input type="checkbox" name="country" value="Spain"> Spain</label>
-          <label><input type="checkbox" name="country" value="Sweden"> Sweden</label>
-          <label><input type="checkbox" value="Switzerland"> Switzerland</label>
-          <label><input type="checkbox" name="country" value="Taiwan"> Taiwan</label>
-          <label><input type="checkbox" name="country" value="Thailand"> Thailand</label>
-          <label><input type="checkbox" name="country" value="United Kingdom"> United Kingdom</label>
-          <label><input type="checkbox" name="country" value="United States of America"> United States of America</label>
-        </fieldset>
-
-        <div class="filter-actions">
-            <button id="applyFilters" class="action-btn">
-                <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="Filter Icon" /> Filter
-            </button>
-            <button id="resetFilters" class="action-btn reset-btn">
-              Reset
-            </button>
+        <div class="filter-menu" id="filterMenu">
+          <div class="filter-group">
+            <label class="filter-label">Genre</label>
+            <select class="filter-select" id="genreFilter">
+              <option value="">All Genres</option>
+              <option value="action">Action</option>
+              <option value="comedy">Comedy</option>
+              <option value="drama">Drama</option>
+              <option value="horror">Horror</option>
+              <option value="romance">Romance</option>
+              <option value="sci-fi">Sci-Fi</option>
+              <option value="thriller">Thriller</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Min Rating</label>
+            <input type="number" class="filter-input" id="ratingFilter" min="0" max="10" step="0.1" placeholder="e.g. 7.0">
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Release Year</label>
+            <input type="number" class="filter-input" id="yearFilter" min="1900" max="2024" placeholder="e.g. 2020">
+          </div>
         </div>
-        </form>
       </div>
+      
+      <div class="search-container">
+        <div class="search-wrapper">
+          <div class="ghost-text" id="ghostText"></div>
+          <input type="text" class="search-input" placeholder="Search for movies..." id="searchInput" autocomplete="off" />
 
-    <input type="text" class="searchInput" placeholder="Search" />
+        </div>
+        <ul id="suggestions" class="suggestions-list"></ul>
+      </div>
+      
+      <button class="search-button" id="searchBtn">
+        Search
+      </button>
+    </div>
 
-    <button class="okbtn">
-      <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="search icon"/> </button>
+    <div id="didYouMean" class="did-you-mean"></div>
+    <div id="results" class="results-container"></div>
   </div>
 
-  <div id="results" class="results-container"></div>
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const suggestionsList = document.getElementById('suggestions');
+    const ghostText = document.getElementById('ghostText');
+    const didYouMean = document.getElementById('didYouMean');
+    const searchBtn = document.getElementById('searchBtn');
+    const filterBtn = document.getElementById('filterBtn');
+    const filterMenu = document.getElementById('filterMenu');
+    const resultsContainer = document.getElementById('results');
 
-  </body>
+    let debounceTimer;
+    let currentSuggestions = [];
+
+    // Sample movies for local testing (replace with API data)
+    const localMovies = [
+      "Avengers: Endgame", "Avatar", "Titanic", "The Dark Knight",
+      "Avengers: Infinity War", "Interstellar", "Inception", 
+      "Avatar: The Way of Water", "The Matrix", "The Godfather", 
+      "Gladiator", "Toy Story", "Avatar: The Last Airbender",
+      "American Beauty", "Aliens", "The Avengers", "Alien",
+      "Apocalypse Now", "A Beautiful Mind", "The Aviator"
+    ];
+
+    // Toggle filter menu
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      filterMenu.classList.toggle('show');
+    });
+
+    // Close filter menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!filterMenu.contains(e.target) && !filterBtn.contains(e.target)) {
+        filterMenu.classList.remove('show');
+      }
+    });
+
+    // Ghost text autocomplete functionality
+    function getSuggestions(input) {
+      if (!input) return [];
+      const lowerInput = input.toLowerCase();
+      
+      // First priority: exact starts with
+      const startsWithExact = localMovies.filter(movie =>
+        movie.toLowerCase().startsWith(lowerInput)
+      );
+      
+      // Second priority: contains the input
+      const contains = localMovies.filter(movie =>
+        movie.toLowerCase().includes(lowerInput) && 
+        !movie.toLowerCase().startsWith(lowerInput)
+      );
+      
+      return [...startsWithExact, ...contains].slice(0, 10);
+    }
+
+    function updateGhostText(input, suggestions) {
+      if (!input || !suggestions.length) {
+        ghostText.textContent = '';
+        return;
+      }
+
+      const firstSuggestion = suggestions[0];
+      const lowerInput = input.toLowerCase();
+      const lowerSuggestion = firstSuggestion.toLowerCase();
+
+      if (lowerSuggestion.startsWith(lowerInput)) {
+        // Show the remaining part of the first suggestion
+        const remainingText = firstSuggestion.substring(input.length);
+        ghostText.textContent = input + remainingText;
+      } else {
+        ghostText.textContent = '';
+      }
+    }
+
+    // Auto-complete functionality
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value;
+      
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (query.length >= 1) {
+          // Try API first, fallback to local
+          fetchSuggestions(query).then(apiSuggestions => {
+            if (apiSuggestions && apiSuggestions.length > 0) {
+              currentSuggestions = apiSuggestions;
+              displaySuggestions(apiSuggestions);
+              updateGhostText(query, apiSuggestions);
+            } else {
+              // Fallback to local suggestions
+              const localSuggestions = getSuggestions(query);
+              currentSuggestions = localSuggestions;
+              displaySuggestions(localSuggestions);
+              updateGhostText(query, localSuggestions);
+            }
+          }).catch(() => {
+            // Fallback to local suggestions on error
+            const localSuggestions = getSuggestions(query);
+            currentSuggestions = localSuggestions;
+            displaySuggestions(localSuggestions);
+            updateGhostText(query, localSuggestions);
+          });
+        } else {
+          currentSuggestions = [];
+          suggestionsList.innerHTML = '';
+          ghostText.textContent = '';
+        }
+      }, 150);
+    });
+
+    // Tab key autocomplete
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && ghostText.textContent && ghostText.textContent !== searchInput.value) {
+        e.preventDefault();
+        searchInput.value = ghostText.textContent;
+        ghostText.textContent = '';
+        suggestionsList.innerHTML = '';
+        currentSuggestions = [];
+      } else if (e.key === 'ArrowDown' && currentSuggestions.length > 0) {
+        e.preventDefault();
+        if (suggestionsList.children.length > 0) {
+          suggestionsList.children[0].focus();
+        }
+      } else if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+          suggestionsList.innerHTML = '';
+          ghostText.textContent = '';
+          performSearch(query);
+        }
+      }
+    });
+
+    async function fetchSuggestions(query) {
+      try {
+        const response = await fetch(`/autocomplete?q=${encodeURIComponent(query)}&limit=8`);
+        const data = await response.json();
+        return data.suggestions || [];
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        return [];
+      }
+    }
+
+    function displaySuggestions(suggestions) {
+      suggestionsList.innerHTML = '';
+      
+      suggestions.forEach((suggestion, index) => {
+        const li = document.createElement('li');
+        li.textContent = suggestion;
+        li.tabIndex = 0;
+        
+        li.addEventListener('click', () => {
+          searchInput.value = suggestion;
+          ghostText.textContent = '';
+          suggestionsList.innerHTML = '';
+          performSearch(suggestion);
+        });
+
+        li.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            searchInput.value = suggestion;
+            ghostText.textContent = '';
+            suggestionsList.innerHTML = '';
+            performSearch(suggestion);
+          } else if (e.key === 'ArrowDown' && index < suggestions.length - 1) {
+            e.preventDefault();
+            suggestionsList.children[index + 1].focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (index > 0) {
+              suggestionsList.children[index - 1].focus();
+            } else {
+              searchInput.focus();
+            }
+          }
+        });
+        
+        suggestionsList.appendChild(li);
+      });
+    }
+
+    // Search functionality
+    searchBtn.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        suggestionsList.innerHTML = '';
+        ghostText.textContent = '';
+        performSearch(query);
+      }
+    });
+
+    // Did you mean functionality
+    function getClosestMatch(input) {
+      if (!input) return '';
+      
+      let bestMatch = '';
+      let minDistance = Infinity;
+      const allMovies = [...localMovies];
+
+      for (const movie of allMovies) {
+        const distance = levenshteinDistance(input.toLowerCase(), movie.toLowerCase());
+        if (distance < minDistance && distance > 0) {
+          minDistance = distance;
+          bestMatch = movie;
+        }
+      }
+      
+      return minDistance <= 3 ? bestMatch : ''; // Only suggest if distance is reasonable
+    }
+
+    function levenshteinDistance(a, b) {
+      const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+
+      for (let j = 1; j <= b.length; j++) matrix[0][j] = j;
+
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          matrix[i][j] = a[i - 1] === b[j - 1]
+            ? matrix[i - 1][j - 1]
+            : Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + 1);
+        }
+      }
+
+      return matrix[a.length][b.length];
+    }
+
+    async function performSearch(query) {
+      try {
+        resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+        didYouMean.innerHTML = '';
+        
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          displayResults(data.results, query);
+        } else {
+          // Show "did you mean" suggestion
+          const closestMatch = getClosestMatch(query);
+          if (closestMatch && closestMatch.toLowerCase() !== query.toLowerCase()) {
+            didYouMean.innerHTML = `Did you mean: <strong onclick="performSearch('${closestMatch}'); document.getElementById('searchInput').value='${closestMatch}'">${closestMatch}</strong>?`;
+          }
+          resultsContainer.innerHTML = `<div style="text-align: center; color: black;">No movies found for "${query}"</div>`;
+        }
+      } catch (error) {
+        console.error('Error performing search:', error);
+        resultsContainer.innerHTML = '<div style="text-align: center; color: black;">Error occurred while searching. Please try again.</div>';
+      }
+    }
+
+    function displayResults(movies, query) {
+      resultsContainer.innerHTML = '';
+      
+      const header = document.createElement('div');
+      header.style.cssText = 'grid-column: 1 / -1; text-align: center; margin-bottom: 1rem; color: black; font-size: 1.2rem;';
+      header.innerHTML = `Found ${movies.length} results for "<strong>${query}</strong>"`;
+      resultsContainer.appendChild(header);
+      
+      movies.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.className = 'movie-card';
+        
+        movieCard.innerHTML = `
+          <div class="movie-title">${movie.title}</div>
+          <div class="movie-overview">${movie.overview ? movie.overview.substring(0, 150) + '...' : 'No description available'}</div>
+          <div class="movie-meta">
+            <span class="rating">⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</span>
+            <span>${movie.release_date ? new Date(movie.release_date).getFullYear() : 'Unknown'}</span>
+          </div>
+          ${movie.genres ? `<div style="margin-top: 10px; font-size: 0.9rem; color: #666;">${movie.genres}</div>` : ''}
+        `;
+        
+        resultsContainer.appendChild(movieCard);
+      });
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+        suggestionsList.innerHTML = '';
+        ghostText.textContent = '';
+      }
+    });
+
+    // Clear ghost text when input loses focus (optional)
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!suggestionsList.contains(document.activeElement)) {
+          ghostText.textContent = '';
+        }
+      }, 150);
+    });
+  </script>
+</body>
+</html>
