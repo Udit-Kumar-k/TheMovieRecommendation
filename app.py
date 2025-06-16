@@ -1,12 +1,18 @@
 from flask import Flask, request, jsonify
 from sklearn.metrics.pairwise import linear_kernel
-from data_loader import get_data
+from data_loader import get_data, get_basic_data
 from flask import Flask, render_template
 import pandas as pd
 
 app = Flask(__name__)
 
-df, embeddings, title_to_index, index = get_data()
+USE_RECOMMENDATION = True  # 🔁 Set to True only if you have FAISS files
+
+if USE_RECOMMENDATION:
+    df, embeddings, title_to_index, index = get_data()
+else:
+    df = get_basic_data()
+
 
 @app.route('/')
 def home():
