@@ -10,7 +10,7 @@ import torch
 from data_utils import get_dataset_path
 
 
-torch.set_num_threads(2)
+#torch.set_num_threads(2)
 
 # ---------------- Load & Prepare Dataset ---------------- #
 csv_file = get_dataset_path()
@@ -26,30 +26,17 @@ def combine_text(row):
 texts = df.apply(combine_text, axis=1).tolist()
 
 # ---------------- Embedding with MiniLM ---------------- #
+print("✅ Using CPU")
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f"✅ Using device: {device}")
 
-embeddings = []
-batch_size = 64
-total = len(texts)
-
-for i in range(0, total, batch_size):
-    batch = texts[i:i+batch_size]
-    
-    try:
-        batch_embeddings = model.encode(
-            batch,
-            normalize_embeddings=True,
-            device=device
-        )
-        embeddings.extend(batch_embeddings)
-
-        print(f"✅ Encoded {min(i + batch_size, total)} / {total}")
-
-    except RuntimeError as e:
-        print(f"\n⚠️ Batch {i}-{i+batch_size} failed. Consider lowering batch_size (currently {batch_size}).\nError: {e}")
-        break
+print("✅ Encoding started...")
+embeddings = model.encode(
+    texts,
+    show_progress_bar=True,
+    normalize_embeddings=True,
+    batch_size=32
+)
+print("✅ Encoding done!")
 
 # ---------------- Save FAISS Index ---------------- #
 embeddings = np.array(embeddings).astype('float32')
@@ -63,7 +50,8 @@ with open('index_data.pkl', 'wb') as f:
     pickle.dump({
         'df': df,
         'embeddings': embeddings,
-        'title_to_index': {title.lower(): i for i, title in enumerate(df['title'].fillna('').tolist())}
+        'title_to_index': {title.lower(): i for i, title in enumerate(df['title'].fillna('').tolist())},
+        'faiss_index': index
     }, f)
 
 print("✅ Index build complete.")

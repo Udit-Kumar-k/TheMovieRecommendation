@@ -107,11 +107,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const resultsContainer = document.getElementById('results');
       resultsContainer.innerHTML = ''; // Clear previous results
 
-data.results.forEach(movie => {
+
+
+  data.results.forEach((movie, index) => {
   const card = document.createElement('div');
   card.className = 'movie-card';
 
-  // Create image separately
+  // 🟡 Add "Selected" badge to the first movie
+  if (index === 0) {
+    const badge = document.createElement('div');
+    badge.className = 'selected-badge';
+    badge.textContent = 'Selected';
+    card.appendChild(badge);
+  }
+
+  // Create image
   const img = document.createElement('img');
   img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
   img.alt = 'Poster';
@@ -120,23 +130,34 @@ data.results.forEach(movie => {
     this.src = '/static/icons/fallback.svg';
   };
 
-  // Create other elements
+  // Create title
   const title = document.createElement('h3');
   title.textContent = movie.title || 'Untitled Movie';
 
+  // Create genres
   const genres = document.createElement('p');
   genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
 
-  const overview = document.createElement('p');
-  overview.innerHTML = `<strong>Overview:</strong> ${movie.overview || 'No description available.'}`;
+  // Truncate overview to 3–4 lines and add "..."
+const overview = document.createElement('p');
+overview.className = 'overview';
+overview.innerHTML = `<strong>Overview:</strong> ${movie.overview || 'No description available.'}`;
 
+
+  // Rating and similarity
   const rating = document.createElement('p');
   rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
 
   const similarity = document.createElement('p');
   similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
 
-  // Append all to card
+  // ✅ Make the whole card clickable
+  card.onclick = () => {
+    window.location.href = `/movie/${encodeURIComponent(movie.title)}`;
+  };
+
+
+  // Append everything
   card.appendChild(img);
   card.appendChild(title);
   card.appendChild(genres);
