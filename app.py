@@ -107,4 +107,5 @@ def movie_detail():
 
     return render_template('movie_detail.html', movie=movie)
 
-app.run(debud=True)
+if __name__ == '__main__':
+    app.run(debug=True)
