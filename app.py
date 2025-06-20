@@ -55,7 +55,7 @@ def smart_recommend():
         'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
         'genres': movie.get('genres') or '',
         'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-        'similarity': round(float(score), 3)
+        'similarity': f"{round(float(score) * 100, 2)}%"
         })
 
         if len(results) >= num_results:
