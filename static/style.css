@@ -266,3 +266,64 @@ body {
     0% { transform: rotate(0deg);}
     100% { transform: rotate(360deg);}
   }
+.selected-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: crimson;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 10;
+}
+.movie-card {
+  position: relative;
+}
+
+.movie-card p {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 7.5em; /* ensures height for 5 lines */
+}
+
+.selected-movie {
+  border: 2px solid #FF0066;
+  box-shadow: 0 0 8px rgba(255, 0, 102, 0.3);
+  position: relative;
+  border-radius: 10px;
+}
+
+.selected-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: #FF0066;
+  color: white;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+.movie-card {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.movie-card:hover {
+  transform: scale(1.02);
+}
+
+.overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 7.5em; /* adjust if needed */
+}

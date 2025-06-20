@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ movie.title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="movie-detail-page">
+    <h1>{{ movie.title }}</h1>
+    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path or '' }}" alt="Poster" style="max-width: 300px;">
+    <p><strong>Genres:</strong> {{ movie.genres }}</p>
+    <p><strong>Overview:</strong> {{ movie.overview }}</p>
+    <p><strong>Rating:</strong> {{ movie.vote_average }}</p>
+    <p><strong>Popularity:</strong> {{ movie.popularity }}</p>
+  </div>
+</body>
+</html>
