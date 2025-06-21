@@ -56,7 +56,7 @@ def smart_recommend():
                 'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
                 'genres': movie.get('genres') or '',
                 'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-                'similarity': round(float(score), 3)
+                'similarity': f"{round(float(score)*100,2)}%"
             })
 
             seen.add(i)
@@ -72,7 +72,7 @@ def smart_recommend():
             'popularity': main_movie.get('popularity') if pd.notna(main_movie.get('popularity')) else 0.0,
             'genres': main_movie.get('genres') or '',
             'poster_path': main_movie.get('poster_path') if pd.notna(main_movie.get('poster_path')) else '',
-            'similarity': 1.0
+            'similarity': "100%"
         }
 
         return jsonify({"results": [exact_result] + related_results, "count": len(related_results) + 1})
@@ -102,3 +102,6 @@ def movie_detail():
     movie = df.iloc[idx]
 
     return render_template('movie_detail.html', movie=movie)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
