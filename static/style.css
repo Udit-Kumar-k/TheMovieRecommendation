@@ -282,13 +282,13 @@ body {
   position: relative;
 }
 
-.movie-card p {
+.overview {
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: 7.5em; /* ensures height for 5 lines */
+  min-height: 7.5em;
 }
 
 .selected-movie {
@@ -314,16 +314,20 @@ body {
 .movie-card {
   cursor: pointer;
   transition: transform 0.2s ease;
+  width: 200px;
 }
 .movie-card:hover {
   transform: scale(1.02);
 }
-
+ 
 .overview {
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 7.5em; /* adjust if needed */
+  line-height: 1.5em;
+  max-height: 7.5em;
+  white-space: normal;
+  word-break: break-word;
 }

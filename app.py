@@ -49,14 +49,18 @@ def smart_recommend():
             if genre and genre not in str(movie.get('genres', '')).lower():
                 continue
 
+            poster = movie.get('poster_path', '')
+            # Handle NaN poster
+            poster = '' if pd.isna(poster) else poster
+
             related_results.append({
-                'title': movie.get('title') or '',
-                'overview': movie.get('overview') or '',
-                'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
-                'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
-                'genres': movie.get('genres') or '',
-                'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-                'similarity': round(float(score), 3)
+            'title': movie.get('title') or '',
+            'overview': movie.get('overview') or '',
+            'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
+            'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
+            'genres': movie.get('genres') or '',
+            'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
+            'similarity': f"{round(float(score) * 100, 2)}%"
             })
 
             seen.add(i)
@@ -72,7 +76,7 @@ def smart_recommend():
             'popularity': main_movie.get('popularity') if pd.notna(main_movie.get('popularity')) else 0.0,
             'genres': main_movie.get('genres') or '',
             'poster_path': main_movie.get('poster_path') if pd.notna(main_movie.get('poster_path')) else '',
-            'similarity': 1.0
+            'similarity': "100%"
         }
 
         return jsonify({"results": [exact_result] + related_results, "count": len(related_results) + 1})
@@ -104,4 +108,4 @@ def movie_detail():
     return render_template('movie_detail.html', movie=movie)
 
 if __name__ == '__main__':
-        app.run(debug=True)
+    app.run(debug=True)

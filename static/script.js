@@ -138,11 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const genres = document.createElement('p');
   genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
 
-  // Truncate overview to 3–4 lines and add "..."
+// Truncate overview to 3–4 lines and add "..."
 const overview = document.createElement('p');
 overview.className = 'overview';
-overview.innerHTML = `<strong>Overview:</strong> ${movie.overview || 'No description available.'}`;
 
+const cleanText = (movie.overview || 'No description available.').replace(/\n/g, ' ');
+
+// Set as innerHTML: bold "Overview:" followed by plain text
+overview.innerHTML = `<strong>Overview:</strong> ${cleanText}`;
 
   // Rating and similarity
   const rating = document.createElement('p');
