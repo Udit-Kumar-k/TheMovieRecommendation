@@ -76,7 +76,7 @@ def smart_recommend():
             'popularity': main_movie.get('popularity') if pd.notna(main_movie.get('popularity')) else 0.0,
             'genres': main_movie.get('genres') or '',
             'poster_path': main_movie.get('poster_path') if pd.notna(main_movie.get('poster_path')) else '',
-            'similarity': 1.0
+            'similarity': "100%"
         }
 
         return jsonify({"results": [exact_result] + related_results, "count": len(related_results) + 1})
