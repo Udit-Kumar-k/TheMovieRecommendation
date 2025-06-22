@@ -52,16 +52,18 @@ def smart_recommend():
             poster = movie.get('poster_path', '')
             # Handle NaN poster
             poster = '' if pd.isna(poster) else poster
-
+            # Vallabh2 change
             related_results.append({
-            'title': movie.get('title') or '',
-            'overview': movie.get('overview') or '',
-            'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
-            'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
-            'genres': movie.get('genres') or '',
-            'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-            'similarity': f"{round(float(score) * 100, 2)}%"
-            })
+                'title': movie.get('title') or '',
+                 'overview': movie.get('overview') or '',
+                'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
+                'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
+                'genres': movie.get('genres') or '',
+                 'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
+                'similarity': f"{round(float(score) * 100, 2)}%",
+                'adult': str(movie.get('adult')).lower() in ['true', '1', 'yes']
+             })
+
 
             seen.add(i)
             if len(related_results) >= num_results:
@@ -69,15 +71,18 @@ def smart_recommend():
 
         # Add the exact movie on top
         main_movie = df.iloc[idx]
+        #Vallabh2 change
         exact_result = {
             'title': main_movie.get('title') or '',
             'overview': main_movie.get('overview') or '',
-            'vote_average': main_movie.get('vote_average') if pd.notna(main_movie.get('vote_average')) else 0.0,
+             'vote_average': main_movie.get('vote_average') if pd.notna(main_movie.get('vote_average')) else 0.0,
             'popularity': main_movie.get('popularity') if pd.notna(main_movie.get('popularity')) else 0.0,
             'genres': main_movie.get('genres') or '',
             'poster_path': main_movie.get('poster_path') if pd.notna(main_movie.get('poster_path')) else '',
-            'similarity': "100%"
+            'similarity': "100%",
+            'adult': bool(main_movie.get('adult', False))  # ✅ Added line
         }
+
 
         return jsonify({"results": [exact_result] + related_results, "count": len(related_results) + 1})
 

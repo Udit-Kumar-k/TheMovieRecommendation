@@ -121,14 +121,24 @@ document.addEventListener('DOMContentLoaded', () => {
     card.appendChild(badge);
   }
 
-  // Create image
+  // Create image #vallabh2 change
   const img = document.createElement('img');
-  img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
-  img.alt = 'Poster';
-  img.onerror = function () {
+    img.className = 'movie-poster'; // ✅ Required for CSS
+    img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
+    img.alt = 'Poster';
+    img.onerror = function () {
     this.onerror = null;
     this.src = '/static/icons/fallback.svg';
   };
+
+// ✅ Add blur if movie is adult #vallabh2 change
+img.setAttribute('data-blur', movie.adult ? 'true' : 'false');
+
+if (movie.adult) {
+  img.style.filter = 'blur(10px)';
+  img.style.cursor = 'default';  // no pointer
+  img.setAttribute('data-blur', 'true');
+}
 
   // Create title
   const title = document.createElement('h3');
@@ -154,10 +164,20 @@ overview.innerHTML = `<strong>Overview:</strong> ${cleanText}`;
   const similarity = document.createElement('p');
   similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
 
-  // ✅ Make the whole card clickable
-  card.onclick = () => {
-    window.location.href = `/movie/${encodeURIComponent(movie.title)}`;
-  };
+  // ✅ Make the whole card clickable #vallabh2
+  card.onclick = (e) => {
+  if (e.target.classList.contains('movie-poster') && e.target.getAttribute('data-blur') === 'true') {
+    return;  // skip redirect if image is blurred
+  }
+  window.open(`/movie_detail?title=${encodeURIComponent(movie.title)}`, '_blank');
+};
+card.onclick = (e) => {
+  if (e.target.classList.contains('movie-poster') && e.target.getAttribute('data-blur') === 'true') {
+    return;  // skip redirect if image is blurred
+  }
+  window.open(`/movie_detail?title=${encodeURIComponent(movie.title)}`, '_blank');
+};
+
 
 
   // Append everything
@@ -192,3 +212,5 @@ searchInput.addEventListener('keydown', (event) => {
 });
 
 });
+
+

@@ -331,3 +331,15 @@ body {
   white-space: normal;
   word-break: break-word;
 }
+.movie-poster[data-blur="false"] {
+  filter: none;
+}
+.movie-poster[data-blur="true"] {
+  filter: blur(50px);
+  cursor: not-allowed;
+  transition: filter 0.3s ease;
+}
+
+.movie-poster[data-blur="false"] {
+  filter: none;
+}

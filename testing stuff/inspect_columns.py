@@ -7,7 +7,7 @@ path = kagglehub.dataset_download("asaniczka/tmdb-movies-dataset-2023-930k-movie
 csv_file = os.path.join(path, "TMDB_movie_dataset_v11.csv")
 df = pd.read_csv(csv_file, engine='python')
 
-print("\n🧾 Columns in the dataset:")
+print("\n Columns in the dataset:")
 print(df.columns.tolist())
 
 if 'genres' in df.columns:
@@ -20,11 +20,11 @@ if 'genres' in df.columns:
         for genre in genre_str.split(','):
             all_genres.add(genre.strip())
 
-    print("\n🎬 Unique genres in the dataset:")
+    print("\n Unique genres in the dataset:")
     for genre in sorted(all_genres):
         print("-", genre)
 else:
-    print("❌ 'genres' column not found in the dataset.")
+    print(" 'genres' column not found in the dataset.")
 
 #Unique genres in the dataset:
 #- Action

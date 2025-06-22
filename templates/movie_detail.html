@@ -3,16 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <title>{{ movie.title }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      background: #f2f2f2;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .poster {
+      float: left;
+      margin-right: 30px;
+      max-width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .info {
+      overflow: hidden;
+    }
+
+    .info h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .info p {
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+
+    .info strong {
+      color: #333;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+      .poster {
+        float: none;
+        display: block;
+        margin: 0 auto 20px;
+      }
+
+      .info {
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="movie-detail-page">
-    <h1>{{ movie.title }}</h1>
-    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path or '' }}" alt="Poster" style="max-width: 300px;">
-    <p><strong>Genres:</strong> {{ movie.genres }}</p>
-    <p><strong>Overview:</strong> {{ movie.overview }}</p>
-    <p><strong>Rating:</strong> {{ movie.vote_average }}</p>
-    <p><strong>Popularity:</strong> {{ movie.popularity }}</p>
+
+  <div class="container">
+    {% if movie.poster_path %}
+      <img class="poster" src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+    {% endif %}
+
+    <div class="info">
+      <h1>{{ movie.title }}</h1>
+
+      {% for key, value in movie.items() %}
+        {% if key not in ['poster_path', 'title'] and value %}
+          <p><strong>{{ key.replace('_', ' ').capitalize() }}:</strong> {{ value }}</p>
+        {% endif %}
+      {% endfor %}
+
+      <a class="back-btn" href="/">← Back to Home</a>
+    </div>
   </div>
+
 </body>
 </html>
