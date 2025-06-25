@@ -1,73 +1,59 @@
 document.addEventListener('DOMContentLoaded', () => {
   const filterBtn = document.querySelector('.filterbtn');
-  const filterMenu = document.getElementById('filterMenu'); // Make sure your filter menu has id="filterMenu"
-  const resetBtn = document.getElementById('resetFilters'); // Make sure your reset button has id="resetFilters"
-  const filterForm = document.getElementById('filterForm'); // Your form must have id="filterForm"
+  const filterMenu = document.getElementById('filterMenu');
+  const resetBtn = document.getElementById('resetFilters');
+  const filterForm = document.getElementById('filterForm');
 
-  // Toggle filter menu visibility on filter button click
   filterBtn.addEventListener('click', (event) => {
     event.stopPropagation();
     filterMenu.classList.toggle('show');
   });
 
-  // Prevent clicks inside filter menu from closing it
   filterMenu.addEventListener('click', (event) => {
     event.stopPropagation();
   });
 
-  // Clicking outside the filter menu closes it
   document.addEventListener('click', () => {
     filterMenu.classList.remove('show');
   });
 
-  // Reset all checkboxes when reset button clicked
   resetBtn.addEventListener('click', (event) => {
     event.stopPropagation();
     const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(cb => cb.checked = false);
   });
 
-  // Optionally clear checkboxes on page load
   window.addEventListener('load', () => {
     const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(cb => cb.checked = false);
   });
 
-  // Handle form submit for recommendations
   filterForm.addEventListener('submit', function (e) {
     e.preventDefault();
-
     const formData = new FormData(this);
-
-    // Collect all selected filters
     const selectedGenres = formData.getAll('genre');
     const selectedCountries = formData.getAll('country');
     const selectedYears = formData.getAll('released');
-    // Add more filters like themes and moods here if needed
 
-    // Send filters to backend via POST
     fetch('/recommend', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         genres: selectedGenres,
         countries: selectedCountries,
         released: selectedYears,
-        // theme: [], mood: []  <-- add later as needed
       }),
     })
     .then(res => res.json())
     .then(data => {
       console.log('Recommendations:', data);
-      // TODO: Update your UI here with results
+      // TODO: Handle results if needed
     })
     .catch(err => {
       console.error('Error fetching recommendations:', err);
     });
   });
-    // Handle search button click
+
   const searchInput = document.querySelector('.searchInput');
   const searchBtn = document.querySelector('.okbtn');
   const loadingOverlay = document.getElementById('loadingOverlay');
@@ -88,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    showLoadingForTwoSeconds(); // Show loader for exactly 2 seconds
+    showLoadingForTwoSeconds();
 
     const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=10`;
 
@@ -99,99 +85,95 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(err.error || "An unexpected error occurred.");
           });
         }
-      return res.json();
-    })
-  .then(data => {
-    if (data.results && data.results.length > 0) {
-      console.log("Search Recommendations:", data.results);
-      const resultsContainer = document.getElementById('results');
-      resultsContainer.innerHTML = ''; // Clear previous results
+        return res.json();
+      })
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          console.log("Search Recommendations:", data.results);
+          const resultsContainer = document.getElementById('results');
+          resultsContainer.innerHTML = '';
 
+          data.results.forEach((movie, index) => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
 
+            if (index === 0) {
+              const badge = document.createElement('div');
+              badge.className = 'selected-badge';
+              badge.textContent = 'Selected';
+              card.appendChild(badge);
+            }
 
-  data.results.forEach((movie, index) => {
-  const card = document.createElement('div');
-  card.className = 'movie-card';
+            const img = document.createElement('img');
+            img.className = 'movie-poster';
+            img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
+            img.alt = 'Poster';
+            img.onerror = function () {
+              this.onerror = null;
+              this.src = '/static/icons/fallback.svg';
+            };
+            img.setAttribute('data-blur', movie.adult ? 'true' : 'false');
 
-  // 🟡 Add "Selected" badge to the first movie
-  if (index === 0) {
-    const badge = document.createElement('div');
-    badge.className = 'selected-badge';
-    badge.textContent = 'Selected';
-    card.appendChild(badge);
-  }
+            if (movie.adult) {
+              img.style.display = 'none';
 
-  // Create image #vallabh2 change
-  const img = document.createElement('img');
-    img.className = 'movie-poster'; // ✅ Required for CSS
-    img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
-    img.alt = 'Poster';
-    img.onerror = function () {
-    this.onerror = null;
-    this.src = '/static/icons/fallback.svg';
-  };
+              const blackOverlay = document.createElement('div');
+              blackOverlay.className = 'black-overlay';
 
-// ✅ Add blur if movie is adult #vallabh2 change
-img.setAttribute('data-blur', movie.adult ? 'true' : 'false');
+              const badge18 = document.createElement('div');
+              badge18.className = 'badge-18';
+              badge18.textContent = '18+';
 
-if (movie.adult) {
-  img.style.filter = 'blur(10px)';
-  img.style.cursor = 'default';  // no pointer
-  img.setAttribute('data-blur', 'true');
-}
+              blackOverlay.appendChild(badge18);
+              card.appendChild(blackOverlay);
+            }
 
-  // Create title
-  const title = document.createElement('h3');
-  title.textContent = movie.title || 'Untitled Movie';
+            const title = document.createElement('h3');
+            title.textContent = movie.title || 'Untitled Movie';
 
-  // Create genres
-  const genres = document.createElement('p');
-  genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
+            const genres = document.createElement('p');
+            genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
 
-// Truncate overview to 3–4 lines and add "..."
-const overview = document.createElement('p');
-overview.className = 'overview';
+            const overview = document.createElement('p');
+            overview.className = 'overview';
+            const cleanText = (movie.overview || 'No description available.').replace(/\n/g, ' ');
+            overview.innerHTML = `<strong>Overview:</strong> ${cleanText}`;
 
-const cleanText = (movie.overview || 'No description available.').replace(/\n/g, ' ');
+            const rating = document.createElement('p');
+            rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
 
-// Set as innerHTML: bold "Overview:" followed by plain text
-overview.innerHTML = `<strong>Overview:</strong> ${cleanText}`;
+            const similarity = document.createElement('p');
+            similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
 
-  // Rating and similarity
-  const rating = document.createElement('p');
-  rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
+            // ✅ Final click behavior — show modal
+            card.onclick = (e) => {
+              if (e.target.classList.contains('movie-poster') && e.target.getAttribute('data-blur') === 'true') return;
 
-  const similarity = document.createElement('p');
-  similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
+              const overlay = document.getElementById('movieOverlay');
+              const content = document.getElementById('movieDetailContent');
 
-  // ✅ Make the whole card clickable #vallabh2
-  card.onclick = (e) => {
-  if (e.target.classList.contains('movie-poster') && e.target.getAttribute('data-blur') === 'true') {
-    return;  // skip redirect if image is blurred
-  }
-  window.open(`/movie_detail?title=${encodeURIComponent(movie.title)}`, '_blank');
-};
-card.onclick = (e) => {
-  if (e.target.classList.contains('movie-poster') && e.target.getAttribute('data-blur') === 'true') {
-    return;  // skip redirect if image is blurred
-  }
-  window.open(`/movie_detail?title=${encodeURIComponent(movie.title)}`, '_blank');
-};
+              overlay.classList.remove('hidden');
+              content.innerHTML = 'Loading...';
 
+              fetch(`/movie_detail?title=${encodeURIComponent(movie.title)}`)
+                .then(res => res.text())
+                .then(html => {
+                  content.innerHTML = html;
+                })
+                .catch(() => {
+                  content.innerHTML = 'Failed to load details.';
+                });
+            };
 
+            card.appendChild(img);
+            card.appendChild(title);
+            card.appendChild(genres);
+            card.appendChild(overview);
+            card.appendChild(rating);
+            card.appendChild(similarity);
 
-  // Append everything
-  card.appendChild(img);
-  card.appendChild(title);
-  card.appendChild(genres);
-  card.appendChild(overview);
-  card.appendChild(rating);
-  card.appendChild(similarity);
-
-  resultsContainer.appendChild(card);
-});
-
-
+            resultsContainer.appendChild(card);
+          });
         } else {
           alert(data.error || data.message || "No results.");
         }
@@ -201,16 +183,20 @@ card.onclick = (e) => {
         alert("Server error. Try again later.");
       });
   }
+
   searchBtn.addEventListener('click', performSearch);
 
-// Trigger search on Enter key press
-searchInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    performSearch();
-  }
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      performSearch();
+    }
+  });
+
+  // ✅ Close popup
+  document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('close-popup')) {
+      document.getElementById('movieOverlay').classList.add('hidden');
+    }
+  });
 });
-
-});
-
-

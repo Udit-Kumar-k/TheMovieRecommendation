@@ -85,13 +85,32 @@
     <div class="info">
       <h1>{{ movie.title }}</h1>
 
-      {% for key, value in movie.items() %}
-        {% if key not in ['poster_path', 'title'] and value %}
-          <p><strong>{{ key.replace('_', ' ').capitalize() }}:</strong> {{ value }}</p>
-        {% endif %}
-      {% endfor %}
+      {# ✅ Content Rating based on adult flag #}
+      <p><strong>Content Rating:</strong> {{ 'A' if movie.adult else 'U/A' }}</p>
 
-      <a class="back-btn" href="/">← Back to Home</a>
+      {% if movie.overview %}
+        <p><strong>Overview:</strong> {{ movie.overview }}</p>
+      {% endif %}
+
+      {% if movie.genres %}
+        <p><strong>Genres:</strong> {{ movie.genres }}</p>
+      {% endif %}
+
+      {% if movie.vote_average %}
+        <p><strong>Rating:</strong> {{ movie.vote_average }}</p>
+      {% endif %}
+
+      {% if movie.popularity %}
+        <p><strong>Popularity:</strong> {{ movie.popularity }}</p>
+      {% endif %}
+
+      {% if movie.cast %}
+        <p><strong>Main Cast:</strong> {{ movie.cast }}</p>
+      {% endif %}
+
+      {% if movie.director %}
+        <p><strong>Director:</strong> {{ movie.director }}</p>
+      {% endif %}
     </div>
   </div>
 
