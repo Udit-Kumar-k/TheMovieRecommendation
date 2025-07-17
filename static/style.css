@@ -69,7 +69,7 @@ body {
     padding: 20px 25px; /* Reduced padding for the overall menu */
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    z-index: 1;
+    z-index: 10000;
 
     width: 90vw;
     max-width: 1400px; /* Adjusted max-width for a more compact look */
@@ -240,6 +240,7 @@ body {
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem;
+  position: relative;
 }
 .movie-card {
   border: 1px solid #ccc;
@@ -247,37 +248,72 @@ body {
   width: 200px;
   background: #fff;
   border-radius: 10px;
+  position: relative;
 }
 .movie-card img {
-  width: 100%;
-  border-radius: 8px;
+  width: 200px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+  /* Ensures all posters fit the same box and are cropped/zoomed as needed */
+}
+
+#loadingOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255,255,255,0.7);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Prevents accidental interaction */
+}
+
+#loadingOverlay.active {
+  display: flex;
+  pointer-events: all;
 }
 
 .spinner {
-  border: 4px solid transparent;
-  border-top: 4px solid #222;
+  display: none;
+  width: 60px;
+  height: 60px;
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  animation: classicSpin 0.8s linear infinite;
-  background: transparent; /* <-- make center transparent */
+  background: transparent !important;
+  animation: classicSpin 1s linear infinite;
+  box-shadow: none;
+}
+
+#loadingOverlay.active .spinner {
+  display: block;
 }
   @keyframes classicSpin {
     0% { transform: rotate(0deg);}
     100% { transform: rotate(360deg);}
   }
+/* Only one .selected-badge rule, no z-index */
 .selected-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  background-color: crimson;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+  top: 10px;
+  left: 10px;
+  background: #2e2e2e; /* Use the site's dark accent color */
+  color: #fff; /* Use the site's light text color */
   font-weight: bold;
-  z-index: 10;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 1em;
+  /* No z-index here, so filter menu is always on top */
+  border: 2px solid #2e2e2e;
 }
+
+/* Add your background image here later: */
+/* body { background-image: url('your-image.jpg'); background-size: cover; } */
+
 .movie-card {
   position: relative;
 }
@@ -296,19 +332,6 @@ body {
   box-shadow: 0 0 8px rgba(255, 0, 102, 0.3);
   position: relative;
   border-radius: 10px;
-}
-
-.selected-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background-color: #FF0066;
-  color: white;
-  padding: 2px 8px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  border-radius: 6px;
-  z-index: 2;
 }
 
 .movie-card {
@@ -330,4 +353,15 @@ body {
   max-height: 7.5em;
   white-space: normal;
   word-break: break-word;
+}
+
+.movie-card img.fallback {
+  object-fit: contain;
+  background: #f0f0f0;
+}
+
+/* Highlight the main selected poster with a border */
+
+.movie-card.selected img {
+  border: 4px solid #2e2e2e; /* Use the site's dark accent color */
 }

@@ -23,7 +23,7 @@ def smart_recommend():
     try:
         title = request.args.get('title', '').strip().lower()
         genre = request.args.get('genre', '').strip().lower()
-        num_results = int(request.args.get('limit', 10))
+        num_results = int(request.args.get('limit', 30))  # Default to 30
 
         print(f"[INFO] Searching for title: {title} | genre: {genre}")
 

@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 🟡 Add "Selected" badge to the first movie
   if (index === 0) {
+    card.classList.add('selected');
     const badge = document.createElement('div');
     badge.className = 'selected-badge';
     badge.textContent = 'Selected';
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
   img.onerror = function () {
     this.onerror = null;
     this.src = '/static/icons/fallback.svg';
+    this.classList.add('fallback');
   };
 
   // Create title

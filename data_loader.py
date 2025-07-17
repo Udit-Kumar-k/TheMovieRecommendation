@@ -18,12 +18,13 @@ def get_basic_data():
 
 # Export everything
 def get_data():
-    with open('index_data.pkl', 'rb') as f:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(BASE_DIR, 'index_data.pkl'), 'rb') as f:
         data = pickle.load(f)
     
     df = data['df']
     embeddings = data['embeddings']
     title_to_index = data['title_to_index']
-    index = faiss.read_index('faiss.index')
+    index = faiss.read_index(os.path.join(BASE_DIR, 'faiss.index'))
 
     return df, embeddings, title_to_index, index
