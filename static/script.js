@@ -191,4 +191,65 @@ searchInput.addEventListener('keydown', (event) => {
   }
 });
 
+// Remove Fuse.js and client-side fuzzy search logic
+// Only keep search bar, search button, and dropdown rendering if needed for server-side results
+
+const suggestionDropdown = document.getElementById('suggestionDropdown');
+
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.trim();
+  if (!query) {
+    suggestionDropdown.style.display = 'none';
+    return;
+  }
+  fetch(`/suggest_fuzzy?q=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(suggestions => {
+      renderServerSuggestions(suggestions);
+    });
+});
+
+function renderServerSuggestions(suggestions) {
+  suggestionDropdown.innerHTML = '';
+  if (!suggestions.length) {
+    suggestionDropdown.style.display = 'none';
+    return;
+  }
+  suggestions.slice(0, 10).forEach((item) => {
+    const div = document.createElement('div');
+    div.className = 'suggestion-item';
+    // Main title
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = item.title;
+    titleSpan.style.fontSize = '1.1em';
+    titleSpan.style.fontWeight = 'bold';
+    titleSpan.style.opacity = '1';
+    // Sub info
+    const subSpan = document.createElement('span');
+    subSpan.textContent = ` (${item.year || 'N/A'}) directed by ${item.director || 'Unknown'}`;
+    subSpan.style.fontSize = '0.85em';
+    subSpan.style.opacity = '0.5';
+    subSpan.style.marginLeft = '6px';
+    div.appendChild(titleSpan);
+    div.appendChild(subSpan);
+    div.onclick = () => {
+      searchInput.value = item.title;
+      suggestionDropdown.style.display = 'none';
+    };
+    suggestionDropdown.appendChild(div);
+  });
+  suggestionDropdown.style.display = 'block';
+  suggestionDropdown.style.maxHeight = '320px'; // 10 items * ~32px each
+  suggestionDropdown.style.overflowY = 'auto';
+  suggestionDropdown.style.borderRadius = '0 0 12px 12px';
+  suggestionDropdown.style.zIndex = '1002'; // Above loading overlay
+}
+
+// Hide dropdown on outside click
+window.addEventListener('click', (e) => {
+  if (!suggestionDropdown.contains(e.target) && e.target !== searchInput) {
+    suggestionDropdown.style.display = 'none';
+  }
+});
+
 });
