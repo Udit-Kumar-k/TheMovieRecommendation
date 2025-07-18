@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showLoadingForTwoSeconds(); // Show loader for exactly 2 seconds
 
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=10`;
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20`;
 
     fetch(url)
       .then(res => {
@@ -123,14 +123,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Create image
-  const img = document.createElement('img');
-  img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
-  img.alt = 'Poster';
-  img.onerror = function () {
-    this.onerror = null;
-    this.src = '/static/icons/fallback.svg';
-    this.classList.add('fallback');
-  };
+  let img;
+  if (movie.adult === 'TRUE') {
+    // 🚩 Imprinting: Show 18+ icon for adult movies, no zoom/crop, object-fit: contain
+    img = document.createElement('img');
+    img.src = '/static/icons/18_up_rating_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
+    img.alt = '18+ Poster';
+    img.classList.add('fallback'); // fallback class ensures object-fit: contain and background
+  } else {
+    img = document.createElement('img');
+    img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
+    img.alt = 'Poster';
+    img.onerror = function () {
+      this.onerror = null;
+      this.src = '/static/icons/fallback.svg';
+      this.classList.add('fallback');
+    };
+  }
 
   // Create title
   const title = document.createElement('h3');

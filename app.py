@@ -46,6 +46,10 @@ def smart_recommend():
                 continue
 
             movie = df.iloc[i]
+            # 🚩 Toggle this line to filter out movies with runtime <= 40 minutes
+            if pd.notna(movie.get('runtime')) and float(movie.get('runtime', 0)) <= 40:
+                continue
+
             if genre and genre not in str(movie.get('genres', '')).lower():
                 continue
 
@@ -60,7 +64,8 @@ def smart_recommend():
             'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
             'genres': movie.get('genres') or '',
             'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-            'similarity': f"{round(float(score) * 100, 2)}%"
+            'similarity': f"{round(float(score) * 100, 2)}%",
+            'adult': str(movie.get('adult', 'FALSE')).upper()  # 🚩 Imprinting: Pass 'adult' flag to frontend for 18+ icon logic
             })
 
             seen.add(i)
@@ -76,7 +81,8 @@ def smart_recommend():
             'popularity': main_movie.get('popularity') if pd.notna(main_movie.get('popularity')) else 0.0,
             'genres': main_movie.get('genres') or '',
             'poster_path': main_movie.get('poster_path') if pd.notna(main_movie.get('poster_path')) else '',
-            'similarity': "100%"
+            'similarity': "100%",
+            'adult': str(main_movie.get('adult', 'FALSE')).upper()  # 🚩 Imprinting: Pass 'adult' flag to frontend for 18+ icon logic
         }
 
         return jsonify({"results": [exact_result] + related_results, "count": len(related_results) + 1})
