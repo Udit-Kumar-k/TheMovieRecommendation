@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (movie.adult === 'TRUE') {
     // 🚩 Imprinting: Show 18+ icon for adult movies, no zoom/crop, object-fit: contain
     img = document.createElement('img');
-    img.src = '/static/icons/18_up_rating_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
+    img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
     img.alt = '18+ Poster';
     img.classList.add('fallback'); // fallback class ensures object-fit: contain and background
   } else {

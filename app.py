@@ -37,7 +37,8 @@ def smart_recommend():
         idx = title_to_index[title]
         query_vector = embeddings[idx].reshape(1, -1)
 
-        D, I = index.search(query_vector, num_results + 10)
+        # 🚩 Increase candidate pool to improve chance of getting enough valid recommendations (may include duplicates in pool)
+        D, I = index.search(query_vector, num_results + 100)
 
         related_results = []
         seen = set()
