@@ -21,7 +21,12 @@ df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
 
 def combine_text(row):
-    return f"{row['overview']} {row['genres']} {row['keywords']}"
+    genres = row['genres'] if pd.notna(row['genres']) else ''
+    keywords = row['keywords'] if pd.notna(row['keywords']) else ''
+    overview = row['overview'] if pd.notna(row['overview']) else ''
+    
+    # This tells the model "these words are VERY important"
+    return f"{genres} {genres} {genres} {keywords} {keywords} {overview}"
 
 texts = df.apply(combine_text, axis=1).tolist()
 
