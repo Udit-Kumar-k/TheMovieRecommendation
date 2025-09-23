@@ -63,12 +63,11 @@ index = faiss.IndexFlatIP(dimension)
 index.add(embeddings)
 faiss.write_index(index, 'faiss.index')
 
-# ---------------- Save DataFrame + Embeddings ---------------- #
+# ---------------- Save DataFrame + Embeddings ---------------- #d
 with open('index_data.pkl', 'wb') as f:
     pickle.dump({
         'df': df,
-        'embeddings': embeddings,
         'title_to_index': {title.lower(): i for i, title in enumerate(df['title'].fillna('').tolist())}
     }, f)
 
-print("✅ Index build complete.")
+print("✅ Initial Index build complete.")
