@@ -9,7 +9,7 @@ app = Flask(__name__)
 USE_RECOMMENDATION = True # 🔁 Set to True only if you have FAISS files
 
 if USE_RECOMMENDATION:
-    df, embeddings, title_to_index, index = get_data()
+    df, title_to_index, index = get_data()
 else:
     df = get_basic_data()
 
@@ -35,7 +35,7 @@ def smart_recommend():
             return jsonify({"error": f"Movie '{title}' not found in index."}), 404
 
         idx = title_to_index[title]
-        query_vector = embeddings[idx].reshape(1, -1)
+        query_vector = index.reconstruct(idx).reshape(1, -1)
 
         # 🚩 Increase candidate pool to improve chance of getting enough valid recommendations (may include duplicates in pool)
         D, I = index.search(query_vector, num_results + 100)

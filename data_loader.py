@@ -23,8 +23,7 @@ def get_data():
         data = pickle.load(f)
     
     df = data['df']
-    embeddings = data['embeddings']
     title_to_index = data['title_to_index']
     index = faiss.read_index(os.path.join(BASE_DIR, 'faiss.index'))
 
-    return df, embeddings, title_to_index, index
+    return df, title_to_index, index
