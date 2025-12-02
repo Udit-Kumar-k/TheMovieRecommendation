@@ -10,6 +10,10 @@
 </head>
 <body>
     <div class="title">MovieRec</div>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
   <div class="searchBar">
       <button class="filterbtn">
         <img src="{{ url_for('static', filename='icons/tune_37dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg') }}" alt="Filter Icon" />
@@ -143,6 +147,37 @@
   <div id="results" class="results-container"></div>
   <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:9999; align-items:center; justify-content:center;">
     <div class="spinner"></div>
+  </div>
+
+  <!-- Movie Detail Modal -->
+  <div id="movieModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div class="modal-header">
+        <div class="modal-backdrop-container">
+            <img id="modalBackdrop" src="" alt="Backdrop" class="modal-backdrop">
+            <div class="modal-gradient-overlay"></div>
+        </div>
+        <div class="modal-title-container">
+          <h2 id="modalTitle">Movie Title</h2>
+          <p id="modalTagline">Tagline goes here</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info-row">
+          <span id="modalYear" class="modal-badge">Year</span>
+          <span id="modalRuntime" class="modal-badge">Runtime</span>
+          <span id="modalRating" class="modal-badge">Rating</span>
+        </div>
+        <div class="modal-genres" id="modalGenres">
+            <!-- Genres injected here -->
+        </div>
+        <p id="modalOverview">Overview text...</p>
+        <div class="modal-production">
+          <strong>Production:</strong> <span id="modalProduction">Company Name</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   </body>
