@@ -33,6 +33,7 @@ print(f"Index currently contains {index.ntotal} movies.")
 
 # --- 3. Load the new CSV and identify new movies ---
 df_new_full = pd.read_csv(csv_file)
+df_new_full = df_new_full[df_new_full['popularity'] > 1.75]
 # Find titles in the new CSV that are NOT in our existing title map
 existing_titles = set(title_to_index.keys())
 new_titles_mask = ~df_new_full['title'].str.lower().isin(existing_titles)

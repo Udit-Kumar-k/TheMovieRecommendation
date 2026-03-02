@@ -16,6 +16,7 @@ torch.set_num_threads(2)
 csv_file = get_dataset_path()
 
 df = pd.read_csv(csv_file)
+df = df[df['popularity'] > 1.75]
 df['overview'] = df['overview'].fillna('')
 df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
