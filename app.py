@@ -24,6 +24,18 @@ if USE_RECOMMENDATION:
 else:
     df = get_basic_data()
 
+print("[INFO] Building id_to_index map for O(1) lookups...")
+id_to_index = {}
+for i, id_val in enumerate(df['id']):
+    if pd.notna(id_val):
+        # The CSV load sometimes parses ID as float due to NaNs, safely cast to int then str
+        try:
+            str_id = str(int(float(id_val)))
+            id_to_index[str_id] = i
+        except ValueError:
+            id_to_index[str(id_val)] = i
+print(f"[INFO] Map built with {len(id_to_index)} entries!")
+
 @app.route('/enrich_tmdb_results', methods=['POST'])
 def enrich_tmdb_results():
     """
@@ -35,22 +47,23 @@ def enrich_tmdb_results():
         tmdb_results = data.get('results', [])
         
         enriched_results = []
+        seen_indices = set()
+        
         for item in tmdb_results:
             tmdb_id = item.get('id')
             title = item.get('title', '').lower()
             
             idx = None
             if tmdb_id:
-                # Local dataset uses TMDB IDs in the 'id' column
-                matches = df.index[df['id'].astype(str) == str(tmdb_id)].tolist()
-                if matches:
-                    idx = matches[0]
+                # O(1) lookup using pre-built dictionary
+                idx = id_to_index.get(str(tmdb_id))
             
             # Fallback to title matching if ID wasn't found in our dataset
             if idx is None and title in title_to_index:
                  idx = title_to_index[title]
                  
-            if idx is not None:
+            if idx is not None and idx not in seen_indices:
+                 seen_indices.add(idx)
                  movie = df.iloc[idx]
                  
                  enriched_results.append({
@@ -93,9 +106,7 @@ def smart_recommend():
 
         idx = None
         if movie_id:
-            matches = df.index[df['id'].astype(str) == str(movie_id)].tolist()
-            if matches:
-                idx = matches[0]
+            idx = id_to_index.get(str(movie_id))
         
         if idx is None and title:
             if title in title_to_index:
@@ -105,6 +116,7 @@ def smart_recommend():
             print("[ERROR] Title/ID not found in index.")
             return jsonify({"error": f"Movie not found in index."}), 404
 
+        idx = int(idx)
         query_vector = index.reconstruct(idx).reshape(1, -1)
 
         # 🚩 Increase candidate pool to improve chance of getting enough valid recommendations (may include duplicates in pool)
@@ -129,6 +141,7 @@ def smart_recommend():
             poster = '' if pd.isna(poster) else poster
 
             related_results.append({
+            'id': str(movie.get('id', '')),
             'title': movie.get('title') or '',
             'overview': movie.get('overview') or '',
             'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
@@ -146,6 +159,7 @@ def smart_recommend():
         # Add the exact movie on top
         main_movie = df.iloc[idx]
         exact_result = {
+            'id': str(main_movie.get('id', '')),
             'title': main_movie.get('title') or '',
             'overview': main_movie.get('overview') or '',
             'vote_average': main_movie.get('vote_average') if pd.notna(main_movie.get('vote_average')) else 0.0,
@@ -184,18 +198,12 @@ def find_similar_movies():
     if query in title_to_index:
         return jsonify([])  # Exact match found, no suggestions needed
     
-    # Use fuzzy matching to find similar titles
+    # Use C-optimized fuzzy matching to find similar titles
     all_titles = list(title_to_index.keys())
     
-    # Calculate similarity scores
-    similarities = []
-    for title in all_titles:
-        ratio = SequenceMatcher(None, query, title).ratio()
-        if ratio > 0.5:  # Only include if more than 50% similar
-            similarities.append((title, ratio))
-    
-    # Sort by similarity score (highest first) and return top 10
-    similar_movies = sorted(similarities, key=lambda x: x[1], reverse=True)[:10]
+    import difflib
+    matches = difflib.get_close_matches(query, all_titles, n=10, cutoff=0.5)
+    similar_movies = [(m, SequenceMatcher(None, query, m).ratio()) for m in matches]
     
     results = []
     for title, score in similar_movies:
@@ -211,16 +219,32 @@ def find_similar_movies():
     
     return jsonify(results)
 
-@app.route('/movie_detail')
-def movie_detail():
-    title = request.args.get('title', '').strip().lower()
-    if not title or title not in title_to_index:
-        return "Movie not found", 404
+@app.route('/movie/<movie_id>')
+def movie_detail(movie_id):
+    idx = None
+    if movie_id in id_to_index:
+        idx = id_to_index[movie_id]
+        
+    if idx is None:
+        dummy_movie = {'id': movie_id, 'title': 'Movie Not Found', 'release_date': '', 'vote_average': 0.0, 'runtime': 0, 'genres': '', 'overview': ''}
+        return render_template('movie_detail.html', movie=dummy_movie, tmdb_api_key=os.getenv('TMDB_API_KEY'), error=True, original_title=movie_id)
 
-    idx = title_to_index[title]
-    movie = df.iloc[idx]
-
-    return render_template('movie_detail.html', movie=movie)
+    movie_series = df.iloc[idx]
+    
+    movie = {
+        'id': movie_id,
+        'title': movie_series.get('title', ''),
+        'release_date': str(movie_series.get('release_date', '')) if pd.notna(movie_series.get('release_date')) else '',
+        'vote_average': float(movie_series.get('vote_average', 0.0)) if pd.notna(movie_series.get('vote_average')) else 0.0,
+        'runtime': int(movie_series.get('runtime', 0)) if pd.notna(movie_series.get('runtime')) else 0,
+        'genres': movie_series.get('genres', '') if pd.notna(movie_series.get('genres')) else '',
+        'overview': movie_series.get('overview', '') if pd.notna(movie_series.get('overview')) else ''
+    }
+    
+    # We pass the ID and Title. The frontend template will do the heavy lifting of fetching
+    # high-res TMDB metadata, cast, and trailers securely.
+    api_key = os.getenv('TMDB_API_KEY')
+    return render_template('movie_detail.html', movie=movie, tmdb_api_key=api_key, error=False)
 
 if __name__ == '__main__':
     app.run(debug=True)

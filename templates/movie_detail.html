@@ -1,18 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>{{ movie.title }}</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ movie.title }} - MovieRec</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <script>
+    window.TMDB_API_KEY = "{{ tmdb_api_key }}";
+    const MOVIE_ID = "{{ movie.id }}";
+    const MOVIE_TITLE = "{{ movie.title | safe }}";
+    const MOVIE_YEAR = "{{ movie.release_date[:4] if movie.release_date else '' }}";
+  </script>
 </head>
-<body>
-  <div class="movie-detail-page">
-    <h1>{{ movie.title }}</h1>
-    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path or '' }}" alt="Poster" style="max-width: 300px;">
-    <p><strong>Genres:</strong> {{ movie.genres }}</p>
-    <p><strong>Overview:</strong> {{ movie.overview }}</p>
-    <p><strong>Rating:</strong> {{ movie.vote_average }}</p>
-    <p><strong>Popularity:</strong> {{ movie.popularity }}</p>
+
+<body class="detail-page-body">
+
+  <div class="top-nav">
+    <button class="back-btn" onclick="history.back()">
+      <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}"
+        alt="Back icon" style="transform: rotate(180deg);" />
+      Back to Search
+    </button>
   </div>
+
+  <div id="movieDetailContainer" class="movie-detail-container" style="display:none;">
+    <!-- Backdrop will be heavily blurred behind content -->
+    <div class="detail-backdrop" id="detailBackdrop"></div>
+
+    <div class="detail-content">
+      <div class="detail-poster">
+        <img id="posterImg" src="/static/icons/fallback.svg" alt="Poster" />
+      </div>
+
+      <div class="detail-info">
+        <h1 id="detailTitle">{{ movie.title }}</h1>
+        <div class="detail-meta">
+          <span id="detailYear" class="meta-badge">{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
+          <span class="meta-badge accent-badge">★ {{ movie.vote_average | round(1) if movie.vote_average else 'N/A'
+            }}</span>
+          <span id="detailRuntime" class="meta-badge">{{ movie.runtime if movie.runtime else 'N/A' }} min</span>
+        </div>
+
+        <div class="detail-genres" id="detailGenres">
+          {{ movie.genres if movie.genres else '' }}
+        </div>
+
+        <div class="detail-synopsis">
+          <h3>Synopsis</h3>
+          <p>{{ movie.overview if movie.overview else 'No synopsis available.' }}</p>
+        </div>
+
+        <div class="detail-cast" id="castContainer" style="display:none;">
+          <h3>Top Cast</h3>
+          <div class="cast-list" id="castList"></div>
+        </div>
+
+        <div class="detail-trailer" id="trailerContainer" style="display:none;">
+          <h3>Trailer</h3>
+          <div class="video-wrapper">
+            <iframe id="trailerFrame" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="detailLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Fetching rich movie data...</p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Step 1: Query TMDB for the exact movie ID directly
+      if (MOVIE_ID) {
+        fetchMovieDetails(MOVIE_ID);
+      } else {
+        showBasicDetails();
+      }
+
+      // Step 2: Fetch the full rich details from TMDB Movie API
+      function fetchMovieDetails(id) {
+        const detailUrl = `https://api.themoviedb.org/3/movie/${id}?append_to_response=videos,credits&api_key=${window.TMDB_API_KEY}`;
+        fetch(detailUrl)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('detailLoading').style.display = 'none';
+            document.getElementById('movieDetailContainer').style.display = 'block';
+
+            // Backdrop
+            if (data.backdrop_path) {
+              document.getElementById('detailBackdrop').style.backgroundImage = `url('https://image.tmdb.org/t/p/original${data.backdrop_path}')`;
+            }
+
+            // Poster
+            if (data.poster_path) {
+              document.getElementById('posterImg').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+            }
+
+            // Cast
+            if (data.credits && data.credits.cast && data.credits.cast.length > 0) {
+              const topCast = data.credits.cast.slice(0, 5);
+              const castList = document.getElementById('castList');
+              topCast.forEach(actor => {
+                const actorDiv = document.createElement('div');
+                actorDiv.className = 'actor-card';
+
+                const img = document.createElement('img');
+                img.src = actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : '/static/icons/fallback.svg';
+
+                const name = document.createElement('div');
+                name.className = 'actor-name';
+                name.textContent = actor.name;
+
+                const character = document.createElement('div');
+                character.className = 'actor-character';
+                character.textContent = actor.character;
+
+                actorDiv.appendChild(img);
+                actorDiv.appendChild(name);
+                actorDiv.appendChild(character);
+                castList.appendChild(actorDiv);
+              });
+              document.getElementById('castContainer').style.display = 'block';
+            }
+
+            // Trailer
+            if (data.videos && data.videos.results) {
+              const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+              if (trailer) {
+                document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${trailer.key}`;
+                document.getElementById('trailerContainer').style.display = 'block';
+              }
+            }
+          })
+          .catch(() => showBasicDetails());
+      }
+
+      function showBasicDetails() {
+        document.getElementById('detailLoading').style.display = 'none';
+        document.getElementById('movieDetailContainer').style.display = 'block';
+        // Leave the jinja template fallbacks visible
+      }
+    });
+  </script>
 </body>
+
 </html>

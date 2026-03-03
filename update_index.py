@@ -23,17 +23,40 @@ if not os.path.exists(INDEX_FILE) or not os.path.exists(DATA_FILE):
 
 # --- 2. Load existing index and data ---
 print("✅ Loading existing index and data...")
-index = faiss.read_index(INDEX_FILE)
-with open(DATA_FILE, 'rb') as f:
-    data = pickle.load(f)
-    df_existing = data['df']
-    title_to_index = data['title_to_index']
+index = faiss.read_index(INDEX_FILE, faiss.IO_FLAG_MMAP)
+
+print("✅ Loading dataframe from CSV instead of pickle...")
+df_existing = pd.read_csv(csv_file)
+df_existing = df_existing[df_existing['popularity'] > 1.75]
+df_existing['title'] = df_existing['title'].fillna('')
+
+# Ensure we drop overview-less movies to match the new strict build logic
+df_existing = df_existing.dropna(subset=['overview'])
+df_existing = df_existing[df_existing['overview'].str.strip() != '']
+
+# Filter out older movies with NO ratings while keeping upcoming releases
+from datetime import datetime
+current_year = datetime.now().year
+df_existing['release_year'] = pd.to_datetime(df_existing['release_date'], errors='coerce').dt.year
+df_existing = df_existing[(df_existing['vote_average'] > 0) | (df_existing['release_year'] >= (current_year - 2))]
+df_existing = df_existing.drop(columns=['release_year'])
+
+df_existing.reset_index(drop=True, inplace=True)
+title_to_index = {title.lower(): i for i, title in enumerate(df_existing['title'].tolist())}
 
 print(f"Index currently contains {index.ntotal} movies.")
 
 # --- 3. Load the new CSV and identify new movies ---
 df_new_full = pd.read_csv(csv_file)
 df_new_full = df_new_full[df_new_full['popularity'] > 1.75]
+df_new_full = df_new_full.dropna(subset=['overview'])
+df_new_full = df_new_full[df_new_full['overview'].str.strip() != '']
+
+# Filter out older movies with NO ratings while keeping upcoming releases
+df_new_full['release_year'] = pd.to_datetime(df_new_full['release_date'], errors='coerce').dt.year
+df_new_full = df_new_full[(df_new_full['vote_average'] > 0) | (df_new_full['release_year'] >= (current_year - 2))]
+df_new_full = df_new_full.drop(columns=['release_year'])
+
 # Find titles in the new CSV that are NOT in our existing title map
 existing_titles = set(title_to_index.keys())
 new_titles_mask = ~df_new_full['title'].str.lower().isin(existing_titles)
@@ -49,10 +72,13 @@ print(f"Found {len(df_new)} new movies to add.")
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def combine_text(row):
+    title = row['title'] if pd.notna(row['title']) else ''
     genres = row['genres'] if pd.notna(row['genres']) else ''
     keywords = row['keywords'] if pd.notna(row['keywords']) else ''
     overview = row['overview'] if pd.notna(row['overview']) else ''
-    return f"{genres} {genres} {genres} {keywords} {keywords} {overview}"
+    
+    # Reverting to the artificial multiplier hack. 
+    return f"{title} {genres} {genres} {genres} {keywords} {keywords} {overview}"
 
 texts_new = df_new.apply(combine_text, axis=1).tolist()
 

@@ -17,17 +17,43 @@ csv_file = get_dataset_path()
 
 df = pd.read_csv(csv_file)
 df = df[df['popularity'] > 1.75]
+
+# Filter out movies that have NO overview (empty or pure whitespace)
+df = df.dropna(subset=['overview'])
+df = df[df['overview'].str.strip() != '']
+
+# Filter out older movies with NO ratings while keeping upcoming releases
+from datetime import datetime
+current_year = datetime.now().year
+
+# Convert release_date to datetime to extract year safely
+df['release_year'] = pd.to_datetime(df['release_date'], errors='coerce').dt.year
+
+# Keep a movie IF:
+# 1. It came out in the last 2 years, this year, or in the future
+# 2. OR it actually has some votes (vote_average > 0 or vote_count > 0)
+has_ratings = df['vote_average'] > 0
+is_recent = df['release_year'] >= (current_year - 2)
+df = df[has_ratings | is_recent]
+
+# Clean up the temporary column
+df = df.drop(columns=['release_year'])
+
 df['overview'] = df['overview'].fillna('')
 df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
 
 def combine_text(row):
+    title = row['title'] if pd.notna(row['title']) else ''
     genres = row['genres'] if pd.notna(row['genres']) else ''
     keywords = row['keywords'] if pd.notna(row['keywords']) else ''
     overview = row['overview'] if pd.notna(row['overview']) else ''
     
-    # This tells the model "these words are VERY important"
-    return f"{genres} {genres} {genres} {keywords} {keywords} {overview}"
+    # Reverting to the artificial multiplier hack. 
+    # Small models like MiniLM use mean-pooling attention. By repeating genres 3 times 
+    # and keywords 2 times, we FORCE the model to heavily factor them into the math 
+    # over just matching random words in the plot!
+    return f"{title} {genres} {genres} {genres} {keywords} {keywords} {overview}"
 
 texts = df.apply(combine_text, axis=1).tolist()
 

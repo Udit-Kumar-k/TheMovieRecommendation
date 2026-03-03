@@ -90,69 +90,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showLoadingForTwoSeconds();
 
-    // Directly query TMDB from the frontend using the exposed API key
-    const apiKey = window.TMDB_API_KEY || '';
-    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(title)}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
+    // Update URL so the Back button works
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('q', title);
+    // Ensure we drop any recommendation parameters from the URL when doing a raw search!
+    newUrl.searchParams.delete('recommend_id');
+    newUrl.searchParams.delete('recommend_title');
+    window.history.pushState({ query: title }, '', newUrl);
 
-    fetch(url, {
-      headers: {
-        'accept': 'application/json'
-      }
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch from TMDB");
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data.results && data.results.length > 0) {
-          // We need to fetch local matching data to get similarity, exact matching stats, etc.
-          // Since we can't do this purely frontend, let's POST the raw TMDB results to the backend to filter/enrich
-          return fetch('/enrich_tmdb_results', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ results: data.results.slice(0, 15) })
-          })
-            .then(res => res.json())
-            .then(enrichedData => {
-              if (enrichedData.results && enrichedData.results.length > 0) {
-                console.log("Enriched Search Results:", enrichedData.results);
-                renderMovieCards(enrichedData.results, true);
-              } else {
-                showSimilarMovies(title);
-              }
-            });
-        } else {
-          showSimilarMovies(title); // Fallback
-        }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        alert("Network or Server error. Try again later.");
-      });
+    // Refactored out to avoid duplication with popstate logic
+    fetchAndRender(title);
   }
 
   // Helper function to render cards (used by both search results and recommendations)
   function renderMovieCards(movies, isSearchResult = false) {
+    if (loadingOverlay) loadingOverlay.style.display = 'none'; // Dismiss overlay immediately on success
     const resultsContainer = document.getElementById('results');
     resultsContainer.innerHTML = '';
 
     movies.forEach((movie, index) => {
       const card = document.createElement('div');
       card.className = 'movie-card';
-
-      // Add "Selected" badge to the first movie ONLY if these are recommendations (not search results)
-      if (!isSearchResult && index === 0) {
-        card.classList.add('selected');
-        const badge = document.createElement('div');
-        badge.className = 'selected-badge';
-        badge.textContent = 'Selected';
-        card.appendChild(badge);
-      } else if (isSearchResult) {
-        // Optional: Add a subtle badge to indicate it's a search result lookup
-        card.classList.add('search-result-card');
-      }
 
       let img;
       if (movie.adult === 'TRUE') {
@@ -170,50 +128,103 @@ document.addEventListener('DOMContentLoaded', () => {
           this.classList.add('fallback');
         };
       }
+      card.appendChild(img);
 
-      const title = document.createElement('h3');
-      title.textContent = movie.title || 'Untitled Movie';
+      // Create hovering overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'hover-overlay';
 
-      const genres = document.createElement('p');
-      genres.innerHTML = `<strong>Genres:</strong> ${movie.genres || 'N/A'}`;
+      const hoverContent = document.createElement('div');
+      hoverContent.className = 'hover-content';
 
-      const overview = document.createElement('p');
-      overview.className = 'overview';
-      const cleanText = (movie.overview || 'No description available.').replace(/\n/g, ' ');
-      overview.innerHTML = `<strong>Overview:</strong> ${cleanText}`;
+      const hoverTitle = document.createElement('h3');
+      hoverTitle.className = 'hover-title';
+      hoverTitle.textContent = movie.title || 'Untitled Movie';
 
-      const rating = document.createElement('p');
-      rating.innerHTML = `<strong>Rating:</strong> ${movie.vote_average || 'N/A'}`;
+      const hoverRating = document.createElement('div');
+      hoverRating.className = 'hover-rating';
+      hoverRating.innerHTML = `<span class="tmdb-star">★</span> <span class="rating-value">--</span>`;
 
-      const similarity = document.createElement('p');
-      similarity.innerHTML = `<strong>Similarity:</strong> ${movie.similarity}`;
+      const hoverOverview = document.createElement('p');
+      hoverOverview.className = 'hover-overview';
+      hoverOverview.textContent = movie.overview || 'No description available.';
+
+      hoverContent.appendChild(hoverTitle);
+      hoverContent.appendChild(hoverRating);
+      hoverContent.appendChild(hoverOverview);
+      overlay.appendChild(hoverContent);
+      card.appendChild(overlay);
+
+      // Similarity Badge (Only for recommendations, exclude the top exact match)
+      if (!isSearchResult && index !== 0 && movie.similarity) {
+        const simBadge = document.createElement('div');
+        simBadge.className = 'similarity-badge';
+        // Ensure it has % sign
+        simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
+        card.appendChild(simBadge);
+      }
+
+      // Add "Selected" badge to the highest match
+      if (!isSearchResult && index === 0) {
+        card.classList.add('selected');
+        const badge = document.createElement('div');
+        badge.className = 'selected-badge';
+        badge.textContent = 'Selected';
+        card.appendChild(badge);
+      }
+
+      // Live TMDB Rating fetch on hover
+      let fetchedRating = false;
+      card.addEventListener('mouseenter', () => {
+        if (!fetchedRating) {
+          fetchedRating = true;
+          const targetId = movie.id || movie.tmdb_id;
+          if (targetId) {
+            const apiKey = window.TMDB_API_KEY || '';
+            fetch(`https://api.themoviedb.org/3/movie/${targetId}?api_key=${apiKey}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.vote_average) {
+                  hoverRating.querySelector('.rating-value').textContent = data.vote_average.toFixed(1);
+                } else {
+                  hoverRating.querySelector('.rating-value').textContent = 'NR';
+                }
+              })
+              .catch(() => hoverRating.querySelector('.rating-value').textContent = 'Error');
+          }
+        }
+      });
 
       // Step 2: When a card is clicked...
       card.onclick = () => {
         if (isSearchResult) {
-          // If we clicked a search result, populate the input and trigger the recommendation engine!
+          // If we clicked a search result, trigger the recommendation engine and update the URL!
+          const newUrl = new URL(window.location);
+          newUrl.searchParams.set('recommend_id', movie.id);
+          newUrl.searchParams.set('recommend_title', movie.title);
+          window.history.pushState({ recommend_id: movie.id, recommend_title: movie.title }, '', newUrl);
+
           searchInput.value = movie.title;
-          fetchRecommendations(movie.title, movie.id);
+          fetchRecommendations(movie.title, movie.id, false); // false = don't show loading overlay if it interrupts scroll
         } else {
-          // If we clicked a recommendation, go to its detail page
-          window.location.href = `/movie/${encodeURIComponent(movie.title)}`;
+          // If we clicked a recommendation, go to its detail page using its UNIQUE ID, not title
+          let targetId = movie.id || movie.tmdb_id;
+          if (!targetId) {
+            console.error("Missing movie ID in payload!", movie);
+            alert("Error: Movie ID not found.");
+            return;
+          }
+          window.location.href = `/movie/${targetId}`;
         }
       };
-
-      card.appendChild(img);
-      card.appendChild(title);
-      card.appendChild(genres);
-      card.appendChild(overview);
-      card.appendChild(rating);
-      card.appendChild(similarity);
 
       resultsContainer.appendChild(card);
     });
   }
 
   // Function to actually trigger the AI Recommendations
-  function fetchRecommendations(title, id) {
-    showLoadingForTwoSeconds();
+  function fetchRecommendations(title, id, showLoading = true) {
+    if (showLoading) showLoadingForTwoSeconds();
     // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
     const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}`;
 
@@ -310,5 +321,74 @@ document.addEventListener('DOMContentLoaded', () => {
       performSearch();
     }
   });
+
+  // Handle Browser Back/Forward Buttons
+  window.addEventListener('popstate', (event) => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('q');
+    const recId = params.get('recommend_id');
+    const recTitle = params.get('recommend_title');
+
+    if (recId && recTitle) {
+      searchInput.value = recTitle;
+      fetchRecommendations(recTitle, recId, true);
+    } else if (query) {
+      searchInput.value = query;
+      // Re-run the search without pushing a new history state
+      fetchAndRender(query);
+    } else {
+      // If we went back to the home page (no ?q=), clear results
+      searchInput.value = '';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  });
+
+  // Read URL parameters on initial page load
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialQuery = initialParams.get('q');
+  const initialRecId = initialParams.get('recommend_id');
+  const initialRecTitle = initialParams.get('recommend_title');
+
+  if (initialRecId && initialRecTitle) {
+    searchInput.value = initialRecTitle;
+    fetchRecommendations(initialRecTitle, initialRecId, true);
+  } else if (initialQuery) {
+    searchInput.value = initialQuery;
+    fetchAndRender(initialQuery);
+  }
+
+  // Refactored fetch logic to allow reusable calls without pushing state
+  function fetchAndRender(title) {
+    showLoadingForTwoSeconds();
+    const apiKey = window.TMDB_API_KEY || '';
+    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(title)}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
+
+    fetch(url, { headers: { 'accept': 'application/json' } })
+      .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch from TMDB"))
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          return fetch('/enrich_tmdb_results', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ results: data.results.slice(0, 15) })
+          })
+            .then(res => res.json())
+            .then(enrichedData => {
+              if (enrichedData.results && enrichedData.results.length > 0) {
+                renderMovieCards(enrichedData.results, true);
+              } else {
+                showSimilarMovies(title);
+              }
+            });
+        } else {
+          showSimilarMovies(title);
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        alert("Network or Server error. Try again later.");
+      });
+  }
 
 });

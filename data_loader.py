@@ -19,11 +19,15 @@ def get_basic_data():
 # Export everything
 def get_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    
+    # Load DataFrame and indices from the optimized pickle file (only 73MB)
+    # This prevents the huge MemoryError Pandas throws when parsing the 500MB CSV file on Windows!
     with open(os.path.join(BASE_DIR, 'index_data.pkl'), 'rb') as f:
         data = pickle.load(f)
+        df = data['df']
+        title_to_index = data['title_to_index']
     
-    df = data['df']
-    title_to_index = data['title_to_index']
+    # Load FAISS Index without MMAP to prevent contiguous memory allocation failures
     index = faiss.read_index(os.path.join(BASE_DIR, 'faiss.index'))
 
     return df, title_to_index, index

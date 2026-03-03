@@ -1,7 +1,7 @@
-#torch==2.7.1+cu118
-#torchaudio==2.7.1+cu118
-#torchvision==0.22.1+cu118
-#--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.5.1+cu124
+torchaudio==2.5.1+cu124
+torchvision==0.20.1+cu124
+--extra-index-url https://download.pytorch.org/whl/cu124
 
 faiss-cpu
 sentence-transformers
@@ -9,3 +9,4 @@ scikit-learn
 pandas
 flask
 kagglehub
+python-dotenv
