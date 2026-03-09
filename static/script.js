@@ -121,17 +121,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'movie-card';
 
-      const img = document.createElement('img');
-      img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
-      img.alt = 'Poster';
-      if (!movie.poster_path) img.classList.add('fallback');
+      // Default to what the backend thinks or a placeholder
+      let img;
+      img = document.createElement('img');
+      if (movie.adult === 'TRUE') {
+        img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
+        img.alt = '18+ Poster';
+        img.classList.add('fallback');
+      } else {
+        img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
+        img.alt = 'Poster';
+        if (!movie.poster_path) img.classList.add('fallback');
 
-      img.onerror = function () {
-        this.onerror = null;
-        this.src = '/static/icons/fallback.svg';
-        this.classList.add('fallback');
-      };
-
+        img.onerror = function () {
+          this.onerror = null;
+          this.src = '/static/icons/fallback.svg';
+          this.classList.add('fallback');
+        };
+      }
       card.appendChild(img);
 
       // Create hovering overlay
@@ -184,7 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`https://api.themoviedb.org/3/movie/${targetId}?api_key=${apiKey}`)
           .then(res => res.json())
           .then(data => {
-            if (data.poster_path) {
+            // Live TMDB Adult overriding
+            if (data.adult === true) {
+              img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
+              img.classList.add('fallback');
+            } else if (data.poster_path && img.src.includes('fallback.svg') && !img.src.includes('18_up')) {
+              // Only override with poster if it wasn't already caught by the local adult flag
               img.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
               img.classList.remove('fallback');
             }
@@ -243,8 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
 
     // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
-    // Fetch limit is 20
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}&sort=${sortMode}`;
+    // Fetch limit is 15
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=15&id=${id || ''}&sort=${sortMode}`;
 
     fetch(url)
       .then(res => {
@@ -319,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             similarMovies.sort((a, b) => b.vote_average - a.vote_average);
           }
 
-          return { results: [mockedResults[0], ...similarMovies].slice(0, 21) }; // top item + 20 related
+          return { results: [mockedResults[0], ...similarMovies].slice(0, 16) }; // top item + 15 related
         } else {
           showSimilarMovies(title);
           throw new Error("");

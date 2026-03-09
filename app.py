@@ -134,6 +134,14 @@ def smart_recommend():
 
         idx = int(idx)
         query_vector = index.reconstruct(idx).reshape(1, -1)
+        
+        main_movie = df.iloc[idx]
+        query_genres_raw = main_movie.get('genres', '')
+        if isinstance(query_genres_raw, list):
+            query_genres = set(g.strip().lower() for g in query_genres_raw if g and isinstance(g, str))
+        else:
+            query_genres_str = str(query_genres_raw)
+            query_genres = set(g.strip().lower() for g in query_genres_str.split(',') if g.strip()) if query_genres_str else set()
 
         # 🚩 Increase candidate pool drastically to allow for quality sorting
         pool_size = num_results * 15 
@@ -156,19 +164,38 @@ def smart_recommend():
             # Math: similarity is 0 to 1 usually (inner product on normalized vectors), popularity can be 0 or 100+, vote_average is 0 to 10
             vote = float(movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0)
             pop = float(movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0)
-            sim = float(score)
+            cosine_sim = float(score)
             
-            # Use combined score to get a good pool of candidates that aren't complete trash
+            # --- Genre Jaccard Boost Logic ---
+            cand_genres_raw = movie.get('genres', '')
+            if isinstance(cand_genres_raw, list):
+                cand_genres = set(g.strip().lower() for g in cand_genres_raw if g and isinstance(g, str))
+            else:
+                cand_genres_str = str(cand_genres_raw)
+                cand_genres = set(g.strip().lower() for g in cand_genres_str.split(',') if g.strip()) if cand_genres_str else set()
+            
+            if query_genres and cand_genres:
+                intersect = len(query_genres.intersection(cand_genres))
+                union = len(query_genres.union(cand_genres))
+                genre_jaccard = intersect / union if union > 0 else 0.0
+            else:
+                genre_jaccard = 0.0
+                
+            # Compute new soft-boosted similarity score
+            # User Constraints: 0.85 * cosine_sim + 0.15 * genre_jaccard
+            final_sim = (0.85 * cosine_sim) + (0.15 * genre_jaccard)
+            
+            # Additional heuristic scoring for 'quality'
             import math
             pop_score = math.log1p(pop) / 10.0 # scales popularity down
             vote_score = vote / 10.0
             
             # Filter pool to generally good/relevant movies
-            combined_score = (sim * 0.60) + (vote_score * 0.20) + (pop_score * 0.20)
+            combined_score = (final_sim * 0.60) + (vote_score * 0.20) + (pop_score * 0.20)
 
             candidate_movies.append({
                 'movie': movie,
-                'similarity_val': sim,
+                'similarity_val': final_sim,
                 'combined_score': combined_score,
                 'vote': vote
             })

@@ -49,38 +49,12 @@ df['overview'] = df['overview'].fillna('')
 df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
 
-print("✅ Masking PERSON entities in overviews using spaCy...")
-import spacy
-from tqdm import tqdm
-
-# Disable everything except NER and its dependencies to drastically speed up processing
-nlp = spacy.load('en_core_web_sm', disable=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer'])
-
-def mask_batch(texts):
-    masked = []
-    # Adding tqdm for progress bar
-    for doc in tqdm(nlp.pipe(texts, batch_size=256), total=len(texts), desc="NER Masking"):
-        text = doc.text
-        # Replace entities in reverse order to avoid shifting indices
-        for ent in reversed(doc.ents):
-            if ent.label_ == "PERSON":
-                text = text[:ent.start_char] + "protagonist" + text[ent.end_char:]
-        masked.append(text)
-    return masked
-
-df['masked_overview'] = mask_batch(df['overview'].tolist())
-
 def combine_text(row):
-    title = row['title'] if pd.notna(row['title']) else ''
-    genres = row['genres'] if pd.notna(row['genres']) else ''
     keywords = row['keywords'] if pd.notna(row['keywords']) else ''
-    overview = row['masked_overview'] if pd.notna(row['masked_overview']) else ''
+    overview = row['overview'] if pd.notna(row['overview']) else ''
     
-    # Reverting to the artificial multiplier hack. 
-    # Small models like MiniLM use mean-pooling attention. By repeating genres 3 times 
-    # and keywords 2 times, we FORCE the model to heavily factor them into the math 
-    # over just matching random words in the plot!
-    return f"{genres} {keywords} {keywords} {overview}"
+    # Generate embeddings using only keywords and overview
+    return f"{keywords} {overview}"
 
 texts = df.apply(combine_text, axis=1).tolist()
 

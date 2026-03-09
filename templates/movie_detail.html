@@ -100,8 +100,11 @@
               document.getElementById('detailBackdrop').style.backgroundImage = `url('https://image.tmdb.org/t/p/original${data.backdrop_path}')`;
             }
 
-            // Poster
-            if (data.poster_path) {
+            // TMDB Adult Safety check
+            if (data.adult === true) {
+              document.getElementById('posterImg').src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
+              document.getElementById('posterImg').style.backgroundColor = '#2c2c2c';
+            } else if (data.poster_path) {
               document.getElementById('posterImg').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
             }
 
@@ -134,6 +137,11 @@
             }
             if (data.status) {
               extraHTML += `<div class="extra-info-row"><strong>Status:</strong> ${data.status}</div>`;
+            }
+            if (data.adult !== undefined) {
+              const ratingText = data.adult ? 'Explicit (18+)' : 'General';
+              const color = data.adult ? '#b30000' : '#444';
+              extraHTML += `<div class="extra-info-row"><strong>Content Rating:</strong> <span style="color: ${color}; font-weight: 600;">${ratingText}</span></div>`;
             }
 
             // Keywords
