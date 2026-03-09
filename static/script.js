@@ -255,8 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
 
     // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
-    // Fetch limit is 15
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=15&id=${id || ''}&sort=${sortMode}`;
+    // Fetch limit is 20
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}&sort=${sortMode}`;
 
     fetch(url)
       .then(res => {
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             similarMovies.sort((a, b) => b.vote_average - a.vote_average);
           }
 
-          return { results: [mockedResults[0], ...similarMovies].slice(0, 16) }; // top item + 15 related
+          return { results: [mockedResults[0], ...similarMovies].slice(0, 21) }; // top item + 20 related
         } else {
           showSimilarMovies(title);
           throw new Error("");

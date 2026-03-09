@@ -50,11 +50,11 @@ df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
 
 def combine_text(row):
-    keywords = row['keywords'] if pd.notna(row['keywords']) else ''
-    overview = row['overview'] if pd.notna(row['overview']) else ''
-    
-    # Generate embeddings using only keywords and overview
-    return f"{keywords} {overview}"
+    overview = row['overview'] or ''
+    keywords = row['keywords'] or ''
+    genres = row['genres'] or ''
+
+    return f"Genres: {genres}. Keywords: {keywords}. Overview: {overview}"
 
 texts = df.apply(combine_text, axis=1).tolist()
 

@@ -191,7 +191,9 @@ def smart_recommend():
             vote_score = vote / 10.0
             
             # Filter pool to generally good/relevant movies
-            combined_score = (final_sim * 0.60) + (vote_score * 0.20) + (pop_score * 0.20)
+            # Tweak: 85% weight on similarity to prevent popular but completely unrelated movies (e.g. American Beauty) 
+            # from brute-forcing their way into the candidate pool. 
+            combined_score = (final_sim * 0.85) + (vote_score * 0.05) + (pop_score * 0.10)
 
             candidate_movies.append({
                 'movie': movie,
