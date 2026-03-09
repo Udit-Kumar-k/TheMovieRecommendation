@@ -47,36 +47,47 @@ def enrich_tmdb_results():
         tmdb_results = data.get('results', [])
         
         enriched_results = []
-        seen_indices = set()
+        seen_tmdb_ids = set()
         
         for item in tmdb_results:
-            tmdb_id = item.get('id')
-            title = item.get('title', '').lower()
+            tmdb_id = str(item.get('id', ''))
             
-            idx = None
-            if tmdb_id:
-                # O(1) lookup using pre-built dictionary
-                idx = id_to_index.get(str(tmdb_id))
+            if not tmdb_id or tmdb_id in seen_tmdb_ids:
+                continue
+            seen_tmdb_ids.add(tmdb_id)
             
-            # Fallback to title matching if ID wasn't found in our dataset
-            if idx is None and title in title_to_index:
-                 idx = title_to_index[title]
+            idx = id_to_index.get(tmdb_id)
                  
-            if idx is not None and idx not in seen_indices:
-                 seen_indices.add(idx)
+            if idx is not None:
                  movie = df.iloc[idx]
                  
                  enriched_results.append({
                     'id': str(movie.get('id', tmdb_id)),
-                    'title': movie.get('title') or item.get('title'),
-                    'overview': movie.get('overview') or item.get('overview', ''),
-                    'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else item.get('vote_average', 0.0),
-                    'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else item.get('popularity', 0.0),
+                    'title': item.get('title') or movie.get('title'), # Prefer TMDB for display
+                    'overview': item.get('overview') or movie.get('overview', ''),
+                    'vote_average': item.get('vote_average') if item.get('vote_average') else (movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0),
+                    'popularity': item.get('popularity') if item.get('popularity') else (movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0),
                     'genres': movie.get('genres') or '',
-                    'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else item.get('poster_path', ''),
+                    'poster_path': item.get('poster_path') if item.get('poster_path') else (movie.get('poster_path') if pd.notna(movie.get('poster_path')) else ''),
                     'similarity': "Search Match",
-                    'adult': str(movie.get('adult', item.get('adult', 'FALSE'))).upper(),
-                    'is_search_result': True # Flag to differentiate from recommendations
+                    'adult': str(item.get('adult', movie.get('adult', 'FALSE'))).upper(),
+                    'is_search_result': True,
+                    'in_index': True
+                })
+            else:
+                # Still include the TMDB result even if not in our DB so users can find very obscure/new movies!
+                enriched_results.append({
+                    'id': str(tmdb_id),
+                    'title': item.get('title'),
+                    'overview': item.get('overview', ''),
+                    'vote_average': item.get('vote_average', 0.0),
+                    'popularity': item.get('popularity', 0.0),
+                    'genres': '', # We don't have local genres for this
+                    'poster_path': item.get('poster_path', ''),
+                    'similarity': "Search Match",
+                    'adult': str(item.get('adult', 'FALSE')).upper(),
+                    'is_search_result': True,
+                    'in_index': False
                 })
         return jsonify({"results": enriched_results, "count": len(enriched_results)})
 
@@ -98,8 +109,9 @@ def smart_recommend():
         movie_id = request.args.get('id', '').strip()
         genre = request.args.get('genre', '').strip().lower()
         num_results = int(request.args.get('limit', 30))  # Default to 30
+        sort_mode = request.args.get('sort', 'similarity').strip().lower()
 
-        print(f"[INFO] Searching for title: {title} | id: {movie_id} | genre: {genre}")
+        print(f"[INFO] Searching for title: {title} | id: {movie_id} | genre: {genre} | sort: {sort_mode}")
 
         if not title and not movie_id:
             return jsonify({"error": "Missing 'title' or 'id' parameter."}), 400
@@ -107,8 +119,12 @@ def smart_recommend():
         idx = None
         if movie_id:
             idx = id_to_index.get(str(movie_id))
-        
-        if idx is None and title:
+            if idx is None:
+                # If an exact ID is provided and we don't have it, don't fall back to title.
+                # Title fallback merges unrelated movies (e.g. "Secret Agent 2025" vs "Secret Agent 1996").
+                print(f"[ERROR] Movie ID {movie_id} not found in index.")
+                return jsonify({"error": f"Movie ID not found in index."}), 404
+        elif title:
             if title in title_to_index:
                 idx = title_to_index[title]
 
@@ -119,42 +135,73 @@ def smart_recommend():
         idx = int(idx)
         query_vector = index.reconstruct(idx).reshape(1, -1)
 
-        # 🚩 Increase candidate pool to improve chance of getting enough valid recommendations (may include duplicates in pool)
-        D, I = index.search(query_vector, num_results + 100)
+        # 🚩 Increase candidate pool drastically to allow for quality sorting
+        pool_size = num_results * 15 
+        D, I = index.search(query_vector, pool_size)
 
-        related_results = []
+        candidate_movies = []
         seen = set()
         for score, i in zip(D[0], I[0]):
             if i == idx or i >= len(df) or i in seen:
                 continue
 
             movie = df.iloc[i]
-            # 🚩 Toggle this line to filter out movies with runtime <= 40 minutes
             if pd.notna(movie.get('runtime')) and float(movie.get('runtime', 0)) <= 40:
                 continue
 
             if genre and genre not in str(movie.get('genres', '')).lower():
                 continue
+            
+            seen.add(i)
+            # Math: similarity is 0 to 1 usually (inner product on normalized vectors), popularity can be 0 or 100+, vote_average is 0 to 10
+            vote = float(movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0)
+            pop = float(movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0)
+            sim = float(score)
+            
+            # Use combined score to get a good pool of candidates that aren't complete trash
+            import math
+            pop_score = math.log1p(pop) / 10.0 # scales popularity down
+            vote_score = vote / 10.0
+            
+            # Filter pool to generally good/relevant movies
+            combined_score = (sim * 0.60) + (vote_score * 0.20) + (pop_score * 0.20)
 
+            candidate_movies.append({
+                'movie': movie,
+                'similarity_val': sim,
+                'combined_score': combined_score,
+                'vote': vote
+            })
+
+        # Base pool selected by combined score so we still avoid obscure garbage
+        candidate_movies.sort(key=lambda x: x['combined_score'], reverse=True)
+        top_candidates = candidate_movies[:num_results]
+
+        # Then apply the user's specific sort preference over this clean pool
+        if sort_mode == 'quality':
+            top_candidates.sort(key=lambda x: x['vote'], reverse=True)
+        else: # 'similarity' default
+            top_candidates.sort(key=lambda x: x['similarity_val'], reverse=True)
+        
+        related_results = []
+        for item in top_candidates:
+            movie = item['movie']
+            sim_val = item['similarity_val']
+            
             poster = movie.get('poster_path', '')
-            # Handle NaN poster
             poster = '' if pd.isna(poster) else poster
 
             related_results.append({
-            'id': str(movie.get('id', '')),
-            'title': movie.get('title') or '',
-            'overview': movie.get('overview') or '',
-            'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
-            'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
-            'genres': movie.get('genres') or '',
-            'poster_path': movie.get('poster_path') if pd.notna(movie.get('poster_path')) else '',
-            'similarity': f"{round(float(score) * 100, 2)}%",
-            'adult': str(movie.get('adult', 'FALSE')).upper()  # 🚩 Imprinting: Pass 'adult' flag to frontend for 18+ icon logic
+                'id': str(movie.get('id', '')),
+                'title': movie.get('title') or '',
+                'overview': movie.get('overview') or '',
+                'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
+                'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
+                'genres': movie.get('genres') or '',
+                'poster_path': poster,
+                'similarity': f"{round(sim_val * 100, 2)}%",
+                'adult': str(movie.get('adult', 'FALSE')).upper() 
             })
-
-            seen.add(i)
-            if len(related_results) >= num_results:
-                break
 
         # Add the exact movie on top
         main_movie = df.iloc[idx]

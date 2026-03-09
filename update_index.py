@@ -68,6 +68,27 @@ if df_new.empty:
 
 print(f"Found {len(df_new)} new movies to add.")
 
+print("✅ Masking PERSON entities in overviews using spaCy...")
+import spacy
+from tqdm import tqdm
+
+nlp = spacy.load('en_core_web_sm', disable=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer']) # keep NER
+
+def mask_batch(texts):
+    masked = []
+    for doc in tqdm(nlp.pipe(texts, batch_size=256), total=len(texts), desc="NER Masking"):
+        text = doc.text
+        # Replace entities in reverse order to avoid shifting indices
+        for ent in reversed(doc.ents):
+            if ent.label_ == "PERSON":
+                text = text[:ent.start_char] + "the protagonist" + text[ent.end_char:]
+        masked.append(text)
+    return masked
+
+# Use .copy() to avoid SettingWithCopyWarning
+df_new = df_new.copy()
+df_new['masked_overview'] = mask_batch(df_new['overview'].fillna('').tolist())
+
 # --- 4. Process and encode ONLY the new movies ---
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
@@ -75,7 +96,7 @@ def combine_text(row):
     title = row['title'] if pd.notna(row['title']) else ''
     genres = row['genres'] if pd.notna(row['genres']) else ''
     keywords = row['keywords'] if pd.notna(row['keywords']) else ''
-    overview = row['overview'] if pd.notna(row['overview']) else ''
+    overview = row['masked_overview'] if pd.notna(row['masked_overview']) else ''
     
     # Reverting to the artificial multiplier hack. 
     return f"{title} {genres} {genres} {genres} {keywords} {keywords} {overview}"

@@ -49,7 +49,11 @@
 
         <div class="detail-synopsis">
           <h3>Synopsis</h3>
-          <p>{{ movie.overview if movie.overview else 'No synopsis available.' }}</p>
+          <p id="synopsisText">{{ movie.overview if movie.overview else 'No synopsis available.' }}</p>
+        </div>
+
+        <div class="detail-extra-info" id="extraInfoContainer" style="display:none;">
+          <!-- Populated by JS -->
         </div>
 
         <div class="detail-cast" id="castContainer" style="display:none;">
@@ -84,7 +88,7 @@
 
       // Step 2: Fetch the full rich details from TMDB Movie API
       function fetchMovieDetails(id) {
-        const detailUrl = `https://api.themoviedb.org/3/movie/${id}?append_to_response=videos,credits&api_key=${window.TMDB_API_KEY}`;
+        const detailUrl = `https://api.themoviedb.org/3/movie/${id}?append_to_response=videos,credits,keywords&api_key=${window.TMDB_API_KEY}`;
         fetch(detailUrl)
           .then(res => res.json())
           .then(data => {
@@ -99,6 +103,53 @@
             // Poster
             if (data.poster_path) {
               document.getElementById('posterImg').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+            }
+
+            // Sync with actual TMDB data instead of local DB to ensure no masking leaks
+            if (data.overview) {
+              document.getElementById('synopsisText').textContent = data.overview;
+            }
+            if (data.runtime) {
+              document.getElementById('detailRuntime').textContent = `${data.runtime} min`;
+            }
+
+            // Extra Info (Tagline, Budget, Revenue, Director)
+            const extraInfoContainer = document.getElementById('extraInfoContainer');
+            let extraHTML = '';
+
+            if (data.tagline) {
+              extraHTML += `<div class="tagline-text">${data.tagline}</div>`;
+            }
+            if (data.credits && data.credits.crew) {
+              const director = data.credits.crew.find(c => c.job === 'Director');
+              if (director) {
+                extraHTML += `<div class="extra-info-row"><strong>Director:</strong> ${director.name}</div>`;
+              }
+            }
+            if (data.budget && data.budget > 0) {
+              extraHTML += `<div class="extra-info-row"><strong>Budget:</strong> $${data.budget.toLocaleString()}</div>`;
+            }
+            if (data.revenue && data.revenue > 0) {
+              extraHTML += `<div class="extra-info-row"><strong>Revenue:</strong> $${data.revenue.toLocaleString()}</div>`;
+            }
+            if (data.status) {
+              extraHTML += `<div class="extra-info-row"><strong>Status:</strong> ${data.status}</div>`;
+            }
+
+            // Keywords
+            const keywordsArray = data.keywords?.keywords || data.keywords?.results || [];
+            if (keywordsArray.length > 0) {
+              extraHTML += `<div class="extra-info-row" style="margin-top: 15px;"><strong>Keywords:</strong><div class="keywords-container">`;
+              // Show up to 15 keywords
+              keywordsArray.slice(0, 15).forEach(kw => {
+                extraHTML += `<span class="keyword-badge">${kw.name}</span>`;
+              });
+              extraHTML += `</div></div>`;
+            }
+
+            if (extraHTML !== '') {
+              extraInfoContainer.innerHTML = extraHTML;
+              extraInfoContainer.style.display = 'block';
             }
 
             // Cast

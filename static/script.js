@@ -108,26 +108,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results');
     resultsContainer.innerHTML = '';
 
+    const sortControls = document.getElementById('sortControls');
+    if (sortControls) {
+      if (isSearchResult) {
+        sortControls.classList.add('hidden');
+      } else {
+        sortControls.classList.remove('hidden');
+      }
+    }
+
     movies.forEach((movie, index) => {
       const card = document.createElement('div');
       card.className = 'movie-card';
 
-      let img;
-      if (movie.adult === 'TRUE') {
-        img = document.createElement('img');
-        img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
-        img.alt = '18+ Poster';
-        img.classList.add('fallback');
-      } else {
-        img = document.createElement('img');
-        img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path || ''}`;
-        img.alt = 'Poster';
-        img.onerror = function () {
-          this.onerror = null;
-          this.src = '/static/icons/fallback.svg';
-          this.classList.add('fallback');
-        };
-      }
+      const img = document.createElement('img');
+      img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
+      img.alt = 'Poster';
+      if (!movie.poster_path) img.classList.add('fallback');
+
+      img.onerror = function () {
+        this.onerror = null;
+        this.src = '/static/icons/fallback.svg';
+        this.classList.add('fallback');
+      };
+
       card.appendChild(img);
 
       // Create hovering overlay
@@ -173,27 +177,35 @@ document.addEventListener('DOMContentLoaded', () => {
         card.appendChild(badge);
       }
 
-      // Live TMDB Rating fetch on hover
-      let fetchedRating = false;
-      card.addEventListener('mouseenter', () => {
-        if (!fetchedRating) {
-          fetchedRating = true;
-          const targetId = movie.id || movie.tmdb_id;
-          if (targetId) {
-            const apiKey = window.TMDB_API_KEY || '';
-            fetch(`https://api.themoviedb.org/3/movie/${targetId}?api_key=${apiKey}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.vote_average) {
-                  hoverRating.querySelector('.rating-value').textContent = data.vote_average.toFixed(1);
-                } else {
-                  hoverRating.querySelector('.rating-value').textContent = 'NR';
-                }
-              })
-              .catch(() => hoverRating.querySelector('.rating-value').textContent = 'Error');
-          }
-        }
-      });
+      // Live TMDB Data Fetch on render (removes local CSV dependency)
+      const targetId = movie.id || movie.tmdb_id;
+      if (targetId) {
+        const apiKey = window.TMDB_API_KEY || '';
+        fetch(`https://api.themoviedb.org/3/movie/${targetId}?api_key=${apiKey}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.poster_path) {
+              img.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+              img.classList.remove('fallback');
+            }
+            if (data.vote_average) {
+              hoverRating.querySelector('.rating-value').textContent = data.vote_average.toFixed(1);
+            } else {
+              hoverRating.querySelector('.rating-value').textContent = 'NR';
+            }
+            if (data.title) {
+              hoverTitle.textContent = data.title;
+            }
+            if (data.overview) {
+              hoverOverview.textContent = data.overview;
+            }
+          })
+          .catch(() => {
+            if (hoverRating.querySelector('.rating-value').textContent === '--') {
+              hoverRating.querySelector('.rating-value').textContent = 'NR';
+            }
+          });
+      }
 
       // Step 2: When a card is clicked...
       card.onclick = () => {
@@ -225,16 +237,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to actually trigger the AI Recommendations
   function fetchRecommendations(title, id, showLoading = true) {
     if (showLoading) showLoadingForTwoSeconds();
+
+    // Check user's preferred sort method
+    const sortToggle = document.getElementById('qualitySortToggle');
+    const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
+
     // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}`;
+    // Fetch limit is 20
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}&sort=${sortMode}`;
 
     fetch(url)
       .then(res => {
         if (!res.ok) {
           return res.json().then(err => {
             if (res.status === 404) {
-              showSimilarMovies(title);
-              throw new Error("");
+              // Fallback: If not found in local index, fetch directly from TMDB API Recommendations
+              if (id) {
+                console.log(`Movie ID ${id} not found in local index. Falling back to TMDB recommendations...`);
+                return fetchTMDBRecommendations(id, title);
+              } else {
+                showSimilarMovies(title);
+                throw new Error("");
+              }
             }
             throw new Error(err.error || "An unexpected error occurred.");
           });
@@ -242,7 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.json();
       })
       .then(data => {
-        if (data.results && data.results.length > 0) {
+        // If the inner layer threw an error (e.g. TMDB fallback returning nothing), data might be undefined
+        if (data && data.results && data.results.length > 0) {
           console.log("Recommendations:", data.results);
           renderMovieCards(data.results, false); // false = these are recommendations
         }
@@ -250,12 +275,63 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         if (err.message === "") return;
         console.error("Fetch errors:", err);
-        alert("Server error. Try again later.");
+        // Only alert if we totally failed and didn't trigger `showSimilarMovies`
+      });
+  }
+
+  function fetchTMDBRecommendations(id, title) {
+    const apiKey = window.TMDB_API_KEY || '';
+    const url = `https://api.themoviedb.org/3/movie/${id}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
+    return fetch(url)
+      .then(res => {
+        if (!res.ok) {
+          showSimilarMovies(title);
+          throw new Error("");
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          // Mock the expected backend structure
+          const mockedResults = [{
+            'id': id.toString(),
+            'title': title,
+            'overview': 'Showing TMDB Recommendations',
+            'similarity': '100%'
+          }]; // The exact movie as the first element like local backend does
+
+          data.results.forEach(movie => {
+            mockedResults.push({
+              'id': movie.id.toString(),
+              'title': movie.title,
+              'overview': movie.overview,
+              'vote_average': movie.vote_average,
+              'popularity': movie.popularity,
+              'poster_path': movie.poster_path,
+              'similarity': 'TMDB', // Badge
+              'adult': movie.adult ? 'TRUE' : 'FALSE'
+            });
+          });
+          let similarMovies = mockedResults.slice(1);
+
+          const sortToggle = document.getElementById('qualitySortToggle');
+          if (sortToggle && sortToggle.checked) {
+            similarMovies.sort((a, b) => b.vote_average - a.vote_average);
+          }
+
+          return { results: [mockedResults[0], ...similarMovies].slice(0, 21) }; // top item + 20 related
+        } else {
+          showSimilarMovies(title);
+          throw new Error("");
+        }
       });
   }
 
   function showSimilarMovies(query) {
     loadingOverlay.style.display = 'none'; // Hide loading overlay
+
+    const sortControls = document.getElementById('sortControls');
+    if (sortControls) sortControls.classList.add('hidden');
 
     fetch(`/find_similar_movies?q=${encodeURIComponent(query)}`)
       .then(res => res.json())
@@ -309,6 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Error fetching similar movies:", err);
         resultsContainer.innerHTML = `<div class="no-results"><p>Error finding similar movies. Please try again.</p></div>`;
       });
+  }
+
+  // Handle Sort Toggle Change
+  const sortToggle = document.getElementById('qualitySortToggle');
+  if (sortToggle) {
+    sortToggle.addEventListener('change', () => {
+      const params = new URLSearchParams(window.location.search);
+      const recId = params.get('recommend_id');
+      const recTitle = params.get('recommend_title');
+      if (recId && recTitle) {
+        fetchRecommendations(recTitle, recId, true);
+      }
+    });
   }
 
   // Handle Search button and Enter key
