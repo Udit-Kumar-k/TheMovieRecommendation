@@ -13,7 +13,14 @@ torch.set_num_threads(2)
 # ---------------- Configuration ---------------- #
 INDEX_FILE = 'faiss.index'
 DATA_FILE = 'index_data.pkl'
-csv_file = get_dataset_path()
+
+if os.path.exists('healed_tmdb_dataset.csv'):
+    print("✅ Found healed dataset! Loading 'healed_tmdb_dataset.csv'...")
+    csv_file = 'healed_tmdb_dataset.csv'
+else:
+    print("⚠️ Healed dataset not found. Loading base dataset...")
+    csv_file = get_dataset_path()
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # --- 1. Check if an index exists. If not, exit. ---
@@ -52,6 +59,10 @@ df_new_full = df_new_full[df_new_full['popularity'] > 1.75]
 df_new_full = df_new_full.dropna(subset=['overview'])
 df_new_full = df_new_full[df_new_full['overview'].str.strip() != '']
 
+# Filter out TV Movies and Documentaries
+df_new_full['genres'] = df_new_full['genres'].fillna('')
+df_new_full = df_new_full[~df_new_full['genres'].str.contains('TV Movie|Documentary', case=False, na=False)]
+
 # Filter out older movies with NO ratings while keeping upcoming releases
 df_new_full['release_year'] = pd.to_datetime(df_new_full['release_date'], errors='coerce').dt.year
 df_new_full = df_new_full[(df_new_full['vote_average'] > 0) | (df_new_full['release_year'] >= (current_year - 2))]
@@ -68,38 +79,15 @@ if df_new.empty:
 
 print(f"Found {len(df_new)} new movies to add.")
 
-print("✅ Masking PERSON entities in overviews using spaCy...")
-import spacy
-from tqdm import tqdm
-
-nlp = spacy.load('en_core_web_sm', disable=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer']) # keep NER
-
-def mask_batch(texts):
-    masked = []
-    for doc in tqdm(nlp.pipe(texts, batch_size=256), total=len(texts), desc="NER Masking"):
-        text = doc.text
-        # Replace entities in reverse order to avoid shifting indices
-        for ent in reversed(doc.ents):
-            if ent.label_ == "PERSON":
-                text = text[:ent.start_char] + "the protagonist" + text[ent.end_char:]
-        masked.append(text)
-    return masked
-
-# Use .copy() to avoid SettingWithCopyWarning
-df_new = df_new.copy()
-df_new['masked_overview'] = mask_batch(df_new['overview'].fillna('').tolist())
-
 # --- 4. Process and encode ONLY the new movies ---
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
 def combine_text(row):
-    title = row['title'] if pd.notna(row['title']) else ''
-    genres = row['genres'] if pd.notna(row['genres']) else ''
+    overview = row['overview'] if pd.notna(row['overview']) else ''
     keywords = row['keywords'] if pd.notna(row['keywords']) else ''
-    overview = row['masked_overview'] if pd.notna(row['masked_overview']) else ''
-    
-    # Reverting to the artificial multiplier hack. 
-    return f"{title} {genres} {genres} {genres} {keywords} {keywords} {overview}"
+    genres = row['genres'] if pd.notna(row['genres']) else ''
+
+    return f"Genres: {genres}. Keywords: {keywords}. Overview: {overview}"
 
 texts_new = df_new.apply(combine_text, axis=1).tolist()
 

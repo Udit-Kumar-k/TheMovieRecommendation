@@ -108,8 +108,9 @@ def smart_recommend():
         title = request.args.get('title', '').strip().lower()
         movie_id = request.args.get('id', '').strip()
         genre = request.args.get('genre', '').strip().lower()
-        num_results = int(request.args.get('limit', 30))  # Default to 30
+        num_results = int(request.args.get('limit', 50))  # Default to 50
         sort_mode = request.args.get('sort', 'similarity').strip().lower()
+        strict_genre = request.args.get('strict_genre', 'false').lower() == 'true'
 
         print(f"[INFO] Searching for title: {title} | id: {movie_id} | genre: {genre} | sort: {sort_mode}")
 
@@ -174,6 +175,11 @@ def smart_recommend():
                 cand_genres_str = str(cand_genres_raw)
                 cand_genres = set(g.strip().lower() for g in cand_genres_str.split(',') if g.strip()) if cand_genres_str else set()
             
+            if strict_genre:
+                # If Strict Genre is on, the candidate MUST have genres and MUST contain ALL query genres
+                if not cand_genres or (query_genres and not query_genres.issubset(cand_genres)):
+                    continue
+
             if query_genres and cand_genres:
                 intersect = len(query_genres.intersection(cand_genres))
                 union = len(query_genres.union(cand_genres))
@@ -191,9 +197,9 @@ def smart_recommend():
             vote_score = vote / 10.0
             
             # Filter pool to generally good/relevant movies
-            # Tweak: 85% weight on similarity to prevent popular but completely unrelated movies (e.g. American Beauty) 
+            # Tweak: 80% weight on similarity to prevent popular but completely unrelated movies (e.g. American Beauty) 
             # from brute-forcing their way into the candidate pool. 
-            combined_score = (final_sim * 0.85) + (vote_score * 0.05) + (pop_score * 0.10)
+            combined_score = (final_sim * 0.80) + (vote_score * 0.05) + (pop_score * 0.15)
 
             candidate_movies.append({
                 'movie': movie,

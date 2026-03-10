@@ -13,7 +13,12 @@ from data_utils import get_dataset_path
 torch.set_num_threads(2)
 
 # ---------------- Load & Prepare Dataset ---------------- #
-csv_file = get_dataset_path()
+if os.path.exists('healed_tmdb_dataset.csv'):
+    print("✅ Found healed dataset! Loading 'healed_tmdb_dataset.csv'...")
+    csv_file = 'healed_tmdb_dataset.csv'
+else:
+    print("⚠️ Healed dataset not found. Loading base dataset...")
+    csv_file = get_dataset_path()
 
 df = pd.read_csv(csv_file)
 df = df[df['popularity'] > 1.75]
@@ -49,6 +54,9 @@ df['overview'] = df['overview'].fillna('')
 df['genres'] = df['genres'].fillna('')
 df['keywords'] = df['keywords'].fillna('')
 
+# Filter out TV Movies and Documentaries
+df = df[~df['genres'].str.contains('TV Movie|Documentary', case=False, na=False)]
+
 def combine_text(row):
     overview = row['overview'] or ''
     keywords = row['keywords'] or ''
@@ -58,16 +66,27 @@ def combine_text(row):
 
 texts = df.apply(combine_text, axis=1).tolist()
 
-# ---------------- Embedding with MiniLM ---------------- #
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+# ---------------- Embedding with MPNet ---------------- #
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"✅ Using device: {device}")
 
+checkpoint_file = 'embeddings_checkpoint.pkl'
 embeddings = []
-batch_size = 64
+start_idx = 0
+
+if os.path.exists(checkpoint_file):
+    print("🔄 Found checkpoint file! Loading previously saved embeddings...")
+    with open(checkpoint_file, 'rb') as f:
+        embeddings = pickle.load(f)
+    start_idx = len(embeddings)
+    print(f"✅ Resuming exactly where we left off: item {start_idx} / {len(texts)}")
+
+batch_size = 8  # Reduced for 4GB VRAM safety with heavier MPNet
 total = len(texts)
 
-for i in range(0, total, batch_size):
+for i in range(start_idx, total, batch_size):
+    batch_start = time.time()
     batch = texts[i:i+batch_size]
     
     try:
@@ -78,7 +97,25 @@ for i in range(0, total, batch_size):
         )
         embeddings.extend(batch_embeddings)
 
-        print(f"✅ Encoded {min(i + batch_size, total)} / {total}")
+        # Pause to let GPU cool down and decrease load over time
+        time.sleep(1.0) 
+        
+        # Clear CUDA cache periodically to free VRAM
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        # Auto-save checkpoint every ~100 batches
+        batches_done = (i - start_idx) // batch_size + 1
+        if batches_done % 125 == 0 or len(embeddings) >= total:
+            with open(checkpoint_file, 'wb') as f:
+                pickle.dump(embeddings, f)
+            print(f"💾 Checkpoint Auto-Saved! ({len(embeddings)} / {total})")
+
+        batch_time = time.time() - batch_start
+        items_left = total - len(embeddings)
+        batches_left = items_left / batch_size
+        eta_mins = (batches_left * batch_time) / 60
+        print(f"✅ Encoded {len(embeddings)} / {total} | Batch time: {batch_time:.2f}s | ETA: {eta_mins:.1f} mins")
 
     except RuntimeError as e:
         print(f"\n⚠️ Batch {i}-{i+batch_size} failed. Consider lowering batch_size (currently {batch_size}).\nError: {e}")
@@ -97,5 +134,9 @@ with open('index_data.pkl', 'wb') as f:
         'df': df,
         'title_to_index': {title.lower(): i for i, title in enumerate(df['title'].fillna('').tolist())}
     }, f)
+
+if os.path.exists(checkpoint_file):
+    os.remove(checkpoint_file)
+    print("🧹 Cleaned up temporary checkpoint file.")
 
 print("✅ Initial Index build complete.")

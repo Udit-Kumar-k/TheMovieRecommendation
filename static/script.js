@@ -254,9 +254,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortToggle = document.getElementById('qualitySortToggle');
     const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
 
+    // Check strict genre preference
+    const strictGenreToggle = document.getElementById('strictGenreToggle');
+    const strictGenre = (strictGenreToggle && strictGenreToggle.checked) ? 'true' : 'false';
+
     // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
-    // Fetch limit is 20
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=20&id=${id || ''}&sort=${sortMode}`;
+    // Fetch limit is 50
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=50&id=${id || ''}&sort=${sortMode}&strict_genre=${strictGenre}`;
 
     fetch(url)
       .then(res => {
@@ -331,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             similarMovies.sort((a, b) => b.vote_average - a.vote_average);
           }
 
-          return { results: [mockedResults[0], ...similarMovies].slice(0, 21) }; // top item + 20 related
+          return { results: [mockedResults[0], ...similarMovies].slice(0, 26) }; // top item + 25 related
         } else {
           showSimilarMovies(title);
           throw new Error("");
@@ -403,6 +407,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const sortToggle = document.getElementById('qualitySortToggle');
   if (sortToggle) {
     sortToggle.addEventListener('change', () => {
+      const params = new URLSearchParams(window.location.search);
+      const recId = params.get('recommend_id');
+      const recTitle = params.get('recommend_title');
+      if (recId && recTitle) {
+        fetchRecommendations(recTitle, recId, true);
+      }
+    });
+  }
+
+  // Handle Strict Genre Toggle Change
+  const strictGenreToggle = document.getElementById('strictGenreToggle');
+  if (strictGenreToggle) {
+    strictGenreToggle.addEventListener('change', () => {
       const params = new URLSearchParams(window.location.search);
       const recId = params.get('recommend_id');
       const recTitle = params.get('recommend_title');
