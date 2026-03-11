@@ -3,6 +3,7 @@ import requests
 import json
 import pandas as pd
 import time
+from datetime import datetime, timedelta
 from tqdm import tqdm
 from dotenv import load_dotenv
 from data_utils import get_dataset_path
@@ -28,13 +29,13 @@ except Exception as e:
     print(f"Failed to fetch genres: {e}")
     genre_map = {}
 
-def get_recent_movies(max_pages=500):
+def get_recent_movies(max_pages=500, start_date="2023-01-01"):
     movies = []
-    print(f"🚀 Fetching top {max_pages * 20} most popular movies globally since Jan 1, 2023 directly from TMDB Discover API...")
+    print(f"🚀 Fetching up to {max_pages * 20} most popular movies globally since {start_date} directly from TMDB Discover API...")
     
     for page in tqdm(range(1, max_pages + 1)):
         # Sort by popularity to get the most relevant upcoming/recent movies worldwide
-        url = f"https://api.tmdb.org/3/discover/movie?api_key={API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte=2023-01-01&page={page}"
+        url = f"https://api.tmdb.org/3/discover/movie?api_key={API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte={start_date}&page={page}"
         try:
             res = session.get(url, timeout=30)
             if res.status_code != 200:
@@ -72,8 +73,25 @@ def get_recent_movies(max_pages=500):
     return pd.DataFrame(movies)
 
 def main():
-    # Fetch top 10,000 most popular movies of 23/24/25
-    df_tmdb = get_recent_movies(max_pages=500)
+    output_path = 'healed_tmdb_dataset.csv'
+    
+    # Check if we already have the healed dataset built
+    if os.path.exists(output_path):
+        print(f"\n📂 Found existing {output_path}. Running FAST incremental sync for the last 60 days...")
+        sixty_days_ago = (datetime.now() - timedelta(days=60)).strftime('%Y-%m-%d')
+        # Only fetch 50 pages (1000 movies) since we only care about the last 60 days
+        df_tmdb = get_recent_movies(max_pages=50, start_date=sixty_days_ago)
+        
+        print(f"\n📂 Loading existing Master Database from {output_path} to append new movies...")
+        df_kaggle = pd.read_csv(output_path)
+    else:
+        print(f"\n⚠️ {output_path} not found. Running FULL historical sync (10,000 movies since 2023)...")
+        df_tmdb = get_recent_movies(max_pages=500, start_date="2023-01-01")
+        
+        # Load bulk Kaggle CSV for the historical long-tail
+        kaggle_path = get_dataset_path()
+        print(f"\n📂 Loading old Kaggle dataset from {kaggle_path} to merge...")
+        df_kaggle = pd.read_csv(kaggle_path)
     
     # --- Apply robust DB filters to the TMDB data before saving ---
     df_tmdb['vote_count'] = pd.to_numeric(df_tmdb['vote_count'], errors='coerce').fillna(0)
@@ -92,16 +110,15 @@ def main():
     df_kaggle.set_index('id', inplace=True)
     df_tmdb.set_index('id', inplace=True)
     
-    # Drop existing corrupted rows and append the pristine TMDB data
+    # Drop existing rows that we just fetched (to update their popularity/votes) and append the new TMDB data
     intersecting_ids = df_kaggle.index.intersection(df_tmdb.index)
     df_kaggle = df_kaggle.drop(index=intersecting_ids)
     
     df_kaggle = pd.concat([df_kaggle, df_tmdb])
-    print(f"✨ Injected {len(df_tmdb)} perfectly clean modern movies into the database!")
+    print(f"✨ Successfully injected/updated {len(df_tmdb)} pristine modern movies into the database!")
     
     df_kaggle.reset_index(inplace=True)
     
-    output_path = 'healed_tmdb_dataset.csv'
     print(f"\n💾 Saving Master Database to {output_path}...")
     df_kaggle.to_csv(output_path, index=False)
     print("✅ Done! You can now uncomment the dataset override in build_index.py safely!")
