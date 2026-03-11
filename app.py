@@ -176,7 +176,7 @@ def smart_recommend():
                 cand_genres = set(g.strip().lower() for g in cand_genres_str.split(',') if g.strip()) if cand_genres_str else set()
             
             if strict_genre:
-                # If Strict Genre is on, the candidate MUST have genres and MUST contain ALL query genres
+                # If Strict Genre is on, the candidate MUST share ALL genres with the query movie
                 if not cand_genres or (query_genres and not query_genres.issubset(cand_genres)):
                     continue
 
@@ -209,14 +209,15 @@ def smart_recommend():
             })
 
         # Base pool selected by combined score so we still avoid obscure garbage
-        candidate_movies.sort(key=lambda x: x['combined_score'], reverse=True)
-        top_candidates = candidate_movies[:num_results]
-
-        # Then apply the user's specific sort preference over this clean pool
+        # Sort the HUGE pool first by the user's specific preference before truncating
         if sort_mode == 'quality':
-            top_candidates.sort(key=lambda x: x['vote'], reverse=True)
+            # Give massive weight to vote rating, but keep a tiny bit of similarity so it doesn't just pull the most popular unrelated movie
+            candidate_movies.sort(key=lambda x: (x['vote'] * 0.8) + (x['similarity_val'] * 0.2), reverse=True)
         else: # 'similarity' default
-            top_candidates.sort(key=lambda x: x['similarity_val'], reverse=True)
+            # Give massive weight to pure mathematical similarity
+            candidate_movies.sort(key=lambda x: x['similarity_val'], reverse=True)
+            
+        top_candidates = candidate_movies[:num_results]
         
         related_results = []
         for item in top_candidates:

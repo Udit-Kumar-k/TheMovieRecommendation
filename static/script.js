@@ -1,72 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const filterBtn = document.querySelector('.filterbtn');
-  const filterMenu = document.getElementById('filterMenu'); // Make sure your filter menu has id="filterMenu"
-  const resetBtn = document.getElementById('resetFilters'); // Make sure your reset button has id="resetFilters"
-  const filterForm = document.getElementById('filterForm'); // Your form must have id="filterForm"
 
-  // Toggle filter menu visibility on filter button click
-  filterBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    filterMenu.classList.toggle('show');
-  });
-
-  // Prevent clicks inside filter menu from closing it
-  filterMenu.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
-
-  // Clicking outside the filter menu closes it
-  document.addEventListener('click', () => {
-    filterMenu.classList.remove('show');
-  });
-
-  // Reset all checkboxes when reset button clicked
-  resetBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
-  });
-
-  // Optionally clear checkboxes on page load
-  window.addEventListener('load', () => {
-    const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
-  });
-
-  // Handle form submit for recommendations
-  filterForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    // Collect all selected filters
-    const selectedGenres = formData.getAll('genre');
-    const selectedCountries = formData.getAll('country');
-    const selectedYears = formData.getAll('released');
-    // Add more filters like themes and moods here if needed
-
-    // Send filters to backend via POST
-    fetch('/recommend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        genres: selectedGenres,
-        countries: selectedCountries,
-        released: selectedYears,
-        // theme: [], mood: []  <-- add later as needed
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Recommendations:', data);
-        // TODO: Update your UI here with results
-      })
-      .catch(err => {
-        console.error('Error fetching recommendations:', err);
-      });
-  });
   // Handle search button click
   const searchInput = document.querySelector('.searchInput');
   const searchBtn = document.querySelector('.okbtn');
@@ -188,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetId = movie.id || movie.tmdb_id;
       if (targetId) {
         const apiKey = window.TMDB_API_KEY || '';
-        fetch(`https://api.themoviedb.org/3/movie/${targetId}?api_key=${apiKey}`)
+        fetch(`https://api.tmdb.org/3/movie/${targetId}?api_key=${apiKey}`)
           .then(res => res.json())
           .then(data => {
             // Live TMDB Adult overriding
@@ -250,6 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function fetchRecommendations(title, id, showLoading = true) {
     if (showLoading) showLoadingForTwoSeconds();
 
+    // Check TMDB API Override
+    const tmdbToggle = document.getElementById('tmdbApiToggle');
+    if (tmdbToggle && tmdbToggle.checked) {
+      if (id) {
+        console.log("TMDB API Toggle ON - Bypassing FAISS and fetching from TMDB directly...");
+        fetchTMDBRecommendations(id, title).then(data => {
+          if (data && data.results && data.results.length > 0) {
+            renderMovieCards(data.results, false);
+          }
+        });
+      } else {
+        showSimilarMovies(title);
+      }
+      return;
+    }
+
     // Check user's preferred sort method
     const sortToggle = document.getElementById('qualitySortToggle');
     const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
@@ -297,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function fetchTMDBRecommendations(id, title) {
     const apiKey = window.TMDB_API_KEY || '';
-    const url = `https://api.themoviedb.org/3/movie/${id}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
+    const url = `https://api.tmdb.org/3/movie/${id}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
     return fetch(url)
       .then(res => {
         if (!res.ok) {
@@ -429,6 +378,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Handle TMDB API Toggle Change
+  const tmdbApiToggle = document.getElementById('tmdbApiToggle');
+  if (tmdbApiToggle) {
+    tmdbApiToggle.addEventListener('change', () => {
+      const params = new URLSearchParams(window.location.search);
+      const recId = params.get('recommend_id');
+      const recTitle = params.get('recommend_title');
+      if (recId && recTitle) {
+        fetchRecommendations(recTitle, recId, true);
+      }
+    });
+  }
+
   // Handle Search button and Enter key
   searchBtn.addEventListener('click', performSearch);
 
@@ -479,8 +441,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Refactored fetch logic to allow reusable calls without pushing state
   function fetchAndRender(title) {
     showLoadingForTwoSeconds();
+
+    // Parse (Year) if present in the search query
+    let searchQuery = title.trim();
+    let yearParam = '';
+    const yearMatch = searchQuery.match(/\s*\((\d{4})\)$/);
+    if (yearMatch) {
+      yearParam = `&primary_release_year=${yearMatch[1]}`;
+      searchQuery = searchQuery.replace(/\s*\(\d{4}\)$/, '');
+    }
+
     const apiKey = window.TMDB_API_KEY || '';
-    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(title)}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
+    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(searchQuery)}${yearParam}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
 
     fetch(url, { headers: { 'accept': 'application/json' } })
       .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch from TMDB"))
@@ -496,11 +468,11 @@ document.addEventListener('DOMContentLoaded', () => {
               if (enrichedData.results && enrichedData.results.length > 0) {
                 renderMovieCards(enrichedData.results, true);
               } else {
-                showSimilarMovies(title);
+                showSimilarMovies(searchQuery);
               }
             });
         } else {
-          showSimilarMovies(title);
+          showSimilarMovies(searchQuery);
         }
       })
       .catch(err => {

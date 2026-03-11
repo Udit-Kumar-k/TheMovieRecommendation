@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 import os
 import kagglehub
 import torch
+import time
 from data_utils import get_dataset_path
 
 
@@ -14,11 +15,11 @@ torch.set_num_threads(2)
 
 # ---------------- Load & Prepare Dataset ---------------- #
 if os.path.exists('healed_tmdb_dataset.csv'):
-    print("✅ Found healed dataset! Loading 'healed_tmdb_dataset.csv'...")
     csv_file = 'healed_tmdb_dataset.csv'
+    print(f"Loading HEALED pristine dataset from: {csv_file}")
 else:
-    print("⚠️ Healed dataset not found. Loading base dataset...")
     csv_file = get_dataset_path()
+    print(f"Loading raw Kaggle dataset from: {csv_file}")
 
 df = pd.read_csv(csv_file)
 df = df[df['popularity'] > 1.75]
@@ -66,8 +67,14 @@ def combine_text(row):
 
 texts = df.apply(combine_text, axis=1).tolist()
 
-# ---------------- Embedding with MPNet ---------------- #
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+# ---------------- Embedding Model Selection ---------------- #
+# Uncomment the model you want to use to build the index:
+
+# 1. MiniLM (Faster, lighter, uses less VRAM, 384 dimensions)
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# 2. MPNet (Slower, heavier, more accurate, 768 dimensions)
+# model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"✅ Using device: {device}")
 
@@ -82,7 +89,7 @@ if os.path.exists(checkpoint_file):
     start_idx = len(embeddings)
     print(f"✅ Resuming exactly where we left off: item {start_idx} / {len(texts)}")
 
-batch_size = 8  # Reduced for 4GB VRAM safety with heavier MPNet
+batch_size = 32  # Reduced for 4GB VRAM safety with heavier MPNet
 total = len(texts)
 
 for i in range(start_idx, total, batch_size):
@@ -98,7 +105,7 @@ for i in range(start_idx, total, batch_size):
         embeddings.extend(batch_embeddings)
 
         # Pause to let GPU cool down and decrease load over time
-        time.sleep(1.0) 
+        # time.sleep(1.0) 
         
         # Clear CUDA cache periodically to free VRAM
         if torch.cuda.is_available():
