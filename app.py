@@ -20,7 +20,12 @@ print(f"Global API Key is: {'*'*5 + TMDB_API_KEY[-4:] if TMDB_API_KEY else 'None
 USE_RECOMMENDATION = True # 🔁 Set to True only if you have FAISS files
 
 if USE_RECOMMENDATION:
-    df, title_to_index, index = get_data()
+    MODEL_PATH = os.getenv('MODEL_PATH', None)  # e.g. 'models/mpnet' or 'models/minilm'
+    if MODEL_PATH:
+        print(f"[INFO] Loading model from: {MODEL_PATH}")
+    else:
+        print(f"[INFO] Loading model from root directory (default)")
+    df, title_to_index, index = get_data(model_path=MODEL_PATH)
 else:
     df = get_basic_data()
 
@@ -211,8 +216,8 @@ def smart_recommend():
         # Base pool selected by combined score so we still avoid obscure garbage
         # Sort the HUGE pool first by the user's specific preference before truncating
         if sort_mode == 'quality':
-            # Give massive weight to vote rating, but keep a tiny bit of similarity so it doesn't just pull the most popular unrelated movie
-            candidate_movies.sort(key=lambda x: (x['vote'] * 0.8) + (x['similarity_val'] * 0.2), reverse=True)
+            # Normalize vote to 0-1 (same scale as similarity) so the weights actually work
+            candidate_movies.sort(key=lambda x: ((x['vote'] / 10.0) * 0.65) + (x['similarity_val'] * 0.35), reverse=True)
         else: # 'similarity' default
             # Give massive weight to pure mathematical similarity
             candidate_movies.sort(key=lambda x: x['similarity_val'], reverse=True)

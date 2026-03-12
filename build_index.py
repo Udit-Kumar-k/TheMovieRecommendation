@@ -8,8 +8,44 @@ import os
 import kagglehub
 import torch
 import time
+import argparse
 from data_utils import get_dataset_path
 
+# ----------------  CLI Arguments  ---------------- #
+parser = argparse.ArgumentParser(description='Build FAISS index with a chosen embedding model.')
+parser.add_argument('--model', type=str, default='minilm', choices=['minilm', 'mpnet'],
+                    help='Embedding model to use: minilm (fast) or mpnet (accurate)')
+parser.add_argument('--output-dir', type=str, default='.',
+                    help='Directory to save faiss.index and index_data.pkl (default: current dir)')
+args = parser.parse_args()
+
+# ----------------  Model Config  ---------------- #
+MODEL_CONFIG = {
+    'minilm': {
+        'name': 'all-MiniLM-L6-v2',
+        'batch_size': 32,
+        'sleep_between_batches': 0,       # No throttle
+        'checkpoint_interval': 125,        # Save every 125 batches
+    },
+    'mpnet': {
+        'name': 'sentence-transformers/all-mpnet-base-v2',
+        'batch_size': 16,                  # Smaller batches for 4GB VRAM safety
+        'sleep_between_batches': 1.0,      # 1 second cooldown between batches
+        'checkpoint_interval': 50,         # Frequent auto-saves
+    }
+}
+
+config = MODEL_CONFIG[args.model]
+print(f"\n{'='*50}")
+print(f"  Building index with: {config['name']}")
+print(f"  Output directory:    {args.output_dir}")
+print(f"  Batch size:          {config['batch_size']}")
+print(f"  Sleep between:       {config['sleep_between_batches']}s")
+print(f"  Checkpoint every:    {config['checkpoint_interval']} batches")
+print(f"{'='*50}\n")
+
+# Ensure output directory exists
+os.makedirs(args.output_dir, exist_ok=True)
 
 torch.set_num_threads(2)
 
@@ -68,17 +104,12 @@ def combine_text(row):
 texts = df.apply(combine_text, axis=1).tolist()
 
 # ---------------- Embedding Model Selection ---------------- #
-# Uncomment the model you want to use to build the index:
-
-# 1. MiniLM (Faster, lighter, uses less VRAM, 384 dimensions)
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
-# 2. MPNet (Slower, heavier, more accurate, 768 dimensions)
-# model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer(config['name'])
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"✅ Using device: {device}")
 
-checkpoint_file = 'embeddings_checkpoint.pkl'
+# Checkpoint lives INSIDE the output dir so parallel builds don't collide
+checkpoint_file = os.path.join(args.output_dir, 'embeddings_checkpoint.pkl')
 embeddings = []
 start_idx = 0
 
@@ -89,7 +120,7 @@ if os.path.exists(checkpoint_file):
     start_idx = len(embeddings)
     print(f"✅ Resuming exactly where we left off: item {start_idx} / {len(texts)}")
 
-batch_size = 32  # Reduced for 4GB VRAM safety with heavier MPNet
+batch_size = config['batch_size']
 total = len(texts)
 
 for i in range(start_idx, total, batch_size):
@@ -104,16 +135,17 @@ for i in range(start_idx, total, batch_size):
         )
         embeddings.extend(batch_embeddings)
 
-        # Pause to let GPU cool down and decrease load over time
-        # time.sleep(1.0) 
+        # Cooldown between batches (0 for MiniLM, 1s for MPNet)
+        if config['sleep_between_batches'] > 0:
+            time.sleep(config['sleep_between_batches'])
         
-        # Clear CUDA cache periodically to free VRAM
+        # Clear CUDA cache every batch for MPNet, periodically for MiniLM
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # Auto-save checkpoint every ~100 batches
+        # Auto-save checkpoint at the configured interval
         batches_done = (i - start_idx) // batch_size + 1
-        if batches_done % 125 == 0 or len(embeddings) >= total:
+        if batches_done % config['checkpoint_interval'] == 0 or len(embeddings) >= total:
             with open(checkpoint_file, 'wb') as f:
                 pickle.dump(embeddings, f)
             print(f"💾 Checkpoint Auto-Saved! ({len(embeddings)} / {total})")
@@ -125,7 +157,11 @@ for i in range(start_idx, total, batch_size):
         print(f"✅ Encoded {len(embeddings)} / {total} | Batch time: {batch_time:.2f}s | ETA: {eta_mins:.1f} mins")
 
     except RuntimeError as e:
-        print(f"\n⚠️ Batch {i}-{i+batch_size} failed. Consider lowering batch_size (currently {batch_size}).\nError: {e}")
+        # Emergency save on crash
+        with open(checkpoint_file, 'wb') as f:
+            pickle.dump(embeddings, f)
+        print(f"\n💾 Emergency checkpoint saved! ({len(embeddings)} / {total})")
+        print(f"⚠️ Batch {i}-{i+batch_size} failed. Error: {e}")
         break
 
 # ---------------- Save FAISS Index ---------------- #
@@ -133,10 +169,13 @@ embeddings = np.array(embeddings).astype('float32')
 dimension = embeddings.shape[1]
 index = faiss.IndexFlatIP(dimension)
 index.add(embeddings)
-faiss.write_index(index, 'faiss.index')
 
-# ---------------- Save DataFrame + Embeddings ---------------- #d
-with open('index_data.pkl', 'wb') as f:
+output_index = os.path.join(args.output_dir, 'faiss.index')
+faiss.write_index(index, output_index)
+
+# ---------------- Save DataFrame + Embeddings ---------------- #
+output_pkl = os.path.join(args.output_dir, 'index_data.pkl')
+with open(output_pkl, 'wb') as f:
     pickle.dump({
         'df': df,
         'title_to_index': {title.lower(): i for i, title in enumerate(df['title'].fillna('').tolist())}
@@ -146,4 +185,6 @@ if os.path.exists(checkpoint_file):
     os.remove(checkpoint_file)
     print("🧹 Cleaned up temporary checkpoint file.")
 
-print("✅ Initial Index build complete.")
+print(f"\n✅ Index build complete! Files saved to: {args.output_dir}/")
+print(f"   → {output_index}")
+print(f"   → {output_pkl}")

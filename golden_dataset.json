@@ -1,0 +1,152 @@
+[
+  {
+    "anchor": "Inception",
+    "ground_truth": [
+      { "title": "Interstellar", "relevance": 2 },
+      { "title": "Shutter Island", "relevance": 2 },
+      { "title": "Memento", "relevance": 2 },
+      { "title": "The Prestige", "relevance": 2 },
+      { "title": "Tenet", "relevance": 2 }
+    ]
+  },
+  {
+    "anchor": "The Dark Knight",
+    "ground_truth": [
+      { "title": "Batman Begins", "relevance": 2 },
+      { "title": "The Dark Knight Rises", "relevance": 2 },
+      { "title": "Joker", "relevance": 2 },
+      { "title": "Se7en", "relevance": 2 },
+      { "title": "Heat", "relevance": 2 }
+    ]
+  },
+  {
+    "anchor": "Parasite",
+    "ground_truth": [
+      { "title": "Burning", "relevance": 2 },
+      { "title": "Oldboy", "relevance": 2 },
+      { "title": "Memories of Murder", "relevance": 2 },
+      { "title": "Shoplifters", "relevance": 2 },
+      { "title": "Snowpiercer", "relevance": 2 }
+    ]
+  },
+  {
+    "anchor": "Spirited Away",
+    "ground_truth": [
+      { "title": "Howl's Moving Castle", "relevance": 2 },
+      { "title": "My Neighbor Totoro", "relevance": 2 },
+      { "title": "Princess Mononoke", "relevance": 2 },
+      { "title": "Ponyo", "relevance": 2 },
+      { "title": "Kiki's Delivery Service", "relevance": 2 }
+    ]
+  },
+  {
+    "anchor": "Pulp Fiction",
+    "ground_truth": [
+      { "title": "Reservoir Dogs", "relevance": 2 },
+      { "title": "Kill Bill: Volume 1", "relevance": 2 },
+      { "title": "Snatch", "relevance": 2 },
+      { "title": "Lock, Stock and Two Smoking Barrels", "relevance": 2 },
+      { "title": "Fight Club", "relevance": 2 }
+    ]
+  },
+  {
+    "anchor": "Amélie",
+    "ground_truth": [
+      { "title": "The Fabulous Destiny of Amélie Poulain", "relevance": 2 },
+      { "title": "Delicatessen", "relevance": 2 },
+      { "title": "A Very Long Engagement", "relevance": 2 },
+      { "title": "Mood Indigo", "relevance": 1.5 },
+      { "title": "The Grand Budapest Hotel", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "Pan's Labyrinth",
+    "ground_truth": [
+      { "title": "The Shape of Water", "relevance": 2 },
+      { "title": "Crimson Peak", "relevance": 2 },
+      { "title": "The Devil's Backbone", "relevance": 2 },
+      { "title": "The Orphanage", "relevance": 1.5 },
+      { "title": "A Monster Calls", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "Get Out",
+    "ground_truth": [
+      { "title": "Us", "relevance": 2 },
+      { "title": "The Stepford Wives", "relevance": 2 },
+      { "title": "Midsommar", "relevance": 2 },
+      { "title": "The Invitation", "relevance": 1.5 },
+      { "title": "Sorry to Bother You", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "Mad Max: Fury Road",
+    "ground_truth": [
+      { "title": "Mad Max 2", "relevance": 2 },
+      { "title": "Furiosa: A Mad Max Saga", "relevance": 2 },
+      { "title": "Dredd", "relevance": 2 },
+      { "title": "Snowpiercer", "relevance": 1.5 },
+      { "title": "Doomsday", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "Toy Story",
+    "ground_truth": [
+      { "title": "Toy Story 2", "relevance": 2 },
+      { "title": "Toy Story 3", "relevance": 2 },
+      { "title": "Monsters, Inc.", "relevance": 2 },
+      { "title": "Finding Nemo", "relevance": 1.5 },
+      { "title": "Inside Out", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "3 Idiots",
+    "ground_truth": [
+      { "title": "PK", "relevance": 2 },
+      { "title": "Taare Zameen Par", "relevance": 2 },
+      { "title": "Dangal", "relevance": 2 },
+      { "title": "Munna Bhai M.B.B.S.", "relevance": 1.5 },
+      { "title": "Zindagi Na Milegi Dobara", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "Your Name.",
+    "ground_truth": [
+      { "title": "Weathering with You", "relevance": 2 },
+      { "title": "A Silent Voice", "relevance": 2 },
+      { "title": "The Garden of Words", "relevance": 2 },
+      { "title": "5 Centimeters per Second", "relevance": 1.5 },
+      { "title": "Suzume", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "The Shawshank Redemption",
+    "ground_truth": [
+      { "title": "The Green Mile", "relevance": 2 },
+      { "title": "Escape from Alcatraz", "relevance": 2 },
+      { "title": "Cool Hand Luke", "relevance": 2 },
+      { "title": "A Prophet", "relevance": 1.5 },
+      { "title": "The Count of Monte Cristo", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "City of God",
+    "ground_truth": [
+      { "title": "Elite Squad", "relevance": 2 },
+      { "title": "Carandiru", "relevance": 2 },
+      { "title": "Pixote", "relevance": 2 },
+      { "title": "Central Station", "relevance": 1.5 },
+      { "title": "The Motorcycle Diaries", "relevance": 1.5 }
+    ]
+  },
+  {
+    "anchor": "The Matrix",
+    "ground_truth": [
+      { "title": "The Matrix Reloaded", "relevance": 2 },
+      { "title": "The Matrix Revolutions", "relevance": 2 },
+      { "title": "Blade Runner", "relevance": 2 },
+      { "title": "Ghost in the Shell", "relevance": 1.5 },
+      { "title": "Dark City", "relevance": 1.5 }
+    ]
+  }
+]
