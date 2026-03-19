@@ -3,12 +3,22 @@
 Latency Benchmark: Measures the inference penalty of MPNet vs MiniLM.
 Encodes 500 random movie overviews with each model and compares avg latency per query.
 """
+import sys
 import time
 import random
 import pickle
 import os
 import torch
 from sentence_transformers import SentenceTransformer
+
+# Ensure Windows terminals can print Unicode (emojis, accents)
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 # ------- Load 500 random overviews from the dataset ------- #
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

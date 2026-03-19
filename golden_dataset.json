@@ -1,152 +1,362 @@
 [
   {
     "anchor": "Inception",
-    "ground_truth": [
-      { "title": "Interstellar", "relevance": 2 },
-      { "title": "Shutter Island", "relevance": 2 },
-      { "title": "Memento", "relevance": 2 },
-      { "title": "The Prestige", "relevance": 2 },
-      { "title": "Tenet", "relevance": 2 }
-    ]
+    "ground_truth": ["Interstellar", "Shutter Island", "Memento", "The Prestige", "Tenet"]
   },
   {
     "anchor": "The Dark Knight",
-    "ground_truth": [
-      { "title": "Batman Begins", "relevance": 2 },
-      { "title": "The Dark Knight Rises", "relevance": 2 },
-      { "title": "Joker", "relevance": 2 },
-      { "title": "Se7en", "relevance": 2 },
-      { "title": "Heat", "relevance": 2 }
-    ]
+    "ground_truth": ["Batman Begins", "The Dark Knight Rises", "Joker", "Se7en", "Heat"]
   },
   {
     "anchor": "Parasite",
-    "ground_truth": [
-      { "title": "Burning", "relevance": 2 },
-      { "title": "Oldboy", "relevance": 2 },
-      { "title": "Memories of Murder", "relevance": 2 },
-      { "title": "Shoplifters", "relevance": 2 },
-      { "title": "Snowpiercer", "relevance": 2 }
-    ]
+    "ground_truth": ["Burning", "Oldboy", "Memories of Murder", "Shoplifters", "Snowpiercer"]
   },
   {
     "anchor": "Spirited Away",
-    "ground_truth": [
-      { "title": "Howl's Moving Castle", "relevance": 2 },
-      { "title": "My Neighbor Totoro", "relevance": 2 },
-      { "title": "Princess Mononoke", "relevance": 2 },
-      { "title": "Ponyo", "relevance": 2 },
-      { "title": "Kiki's Delivery Service", "relevance": 2 }
-    ]
+    "ground_truth": ["Howl's Moving Castle", "My Neighbor Totoro", "Princess Mononoke", "Ponyo", "Kiki's Delivery Service"]
   },
   {
     "anchor": "Pulp Fiction",
-    "ground_truth": [
-      { "title": "Reservoir Dogs", "relevance": 2 },
-      { "title": "Kill Bill: Volume 1", "relevance": 2 },
-      { "title": "Snatch", "relevance": 2 },
-      { "title": "Lock, Stock and Two Smoking Barrels", "relevance": 2 },
-      { "title": "Fight Club", "relevance": 2 }
-    ]
+    "ground_truth": ["Reservoir Dogs", "Kill Bill: Volume 1", "Snatch", "Lock, Stock and Two Smoking Barrels", "Fight Club"]
   },
   {
-    "anchor": "Amélie",
-    "ground_truth": [
-      { "title": "The Fabulous Destiny of Amélie Poulain", "relevance": 2 },
-      { "title": "Delicatessen", "relevance": 2 },
-      { "title": "A Very Long Engagement", "relevance": 2 },
-      { "title": "Mood Indigo", "relevance": 1.5 },
-      { "title": "The Grand Budapest Hotel", "relevance": 1.5 }
-    ]
+    "anchor": "Gone Girl",
+    "ground_truth": ["The Girl with the Dragon Tattoo", "Prisoners", "Nocturnal Animals", "A Simple Favor", "The Invisible Man"]
   },
   {
     "anchor": "Pan's Labyrinth",
-    "ground_truth": [
-      { "title": "The Shape of Water", "relevance": 2 },
-      { "title": "Crimson Peak", "relevance": 2 },
-      { "title": "The Devil's Backbone", "relevance": 2 },
-      { "title": "The Orphanage", "relevance": 1.5 },
-      { "title": "A Monster Calls", "relevance": 1.5 }
-    ]
+    "ground_truth": ["The Shape of Water", "Crimson Peak", "The Devil's Backbone", "The Orphanage", "A Monster Calls"]
   },
   {
     "anchor": "Get Out",
-    "ground_truth": [
-      { "title": "Us", "relevance": 2 },
-      { "title": "The Stepford Wives", "relevance": 2 },
-      { "title": "Midsommar", "relevance": 2 },
-      { "title": "The Invitation", "relevance": 1.5 },
-      { "title": "Sorry to Bother You", "relevance": 1.5 }
-    ]
+    "ground_truth": ["Us", "The Stepford Wives", "Midsommar", "The Invitation", "Sorry to Bother You"]
   },
   {
     "anchor": "Mad Max: Fury Road",
-    "ground_truth": [
-      { "title": "Mad Max 2", "relevance": 2 },
-      { "title": "Furiosa: A Mad Max Saga", "relevance": 2 },
-      { "title": "Dredd", "relevance": 2 },
-      { "title": "Snowpiercer", "relevance": 1.5 },
-      { "title": "Doomsday", "relevance": 1.5 }
-    ]
+    "ground_truth": ["Mad Max 2", "Furiosa: A Mad Max Saga", "Dredd", "Snowpiercer", "Doomsday"]
   },
   {
-    "anchor": "Toy Story",
-    "ground_truth": [
-      { "title": "Toy Story 2", "relevance": 2 },
-      { "title": "Toy Story 3", "relevance": 2 },
-      { "title": "Monsters, Inc.", "relevance": 2 },
-      { "title": "Finding Nemo", "relevance": 1.5 },
-      { "title": "Inside Out", "relevance": 1.5 }
-    ]
+    "anchor": "Enemy",
+    "ground_truth": ["The Double", "Nightcrawler", "Prisoners", "Mulholland Drive", "The Machinist"]
   },
   {
     "anchor": "3 Idiots",
-    "ground_truth": [
-      { "title": "PK", "relevance": 2 },
-      { "title": "Taare Zameen Par", "relevance": 2 },
-      { "title": "Dangal", "relevance": 2 },
-      { "title": "Munna Bhai M.B.B.S.", "relevance": 1.5 },
-      { "title": "Zindagi Na Milegi Dobara", "relevance": 1.5 }
-    ]
+    "ground_truth": ["PK", "Taare Zameen Par", "Dangal", "Munna Bhai M.B.B.S.", "Zindagi Na Milegi Dobara"]
   },
   {
     "anchor": "Your Name.",
-    "ground_truth": [
-      { "title": "Weathering with You", "relevance": 2 },
-      { "title": "A Silent Voice", "relevance": 2 },
-      { "title": "The Garden of Words", "relevance": 2 },
-      { "title": "5 Centimeters per Second", "relevance": 1.5 },
-      { "title": "Suzume", "relevance": 1.5 }
-    ]
+    "ground_truth": ["Weathering with You", "A Silent Voice", "The Garden of Words", "5 Centimeters per Second", "Suzume"]
   },
   {
     "anchor": "The Shawshank Redemption",
-    "ground_truth": [
-      { "title": "The Green Mile", "relevance": 2 },
-      { "title": "Escape from Alcatraz", "relevance": 2 },
-      { "title": "Cool Hand Luke", "relevance": 2 },
-      { "title": "A Prophet", "relevance": 1.5 },
-      { "title": "The Count of Monte Cristo", "relevance": 1.5 }
-    ]
+    "ground_truth": ["The Green Mile", "Escape from Alcatraz", "Cool Hand Luke", "A Prophet", "The Count of Monte Cristo"]
   },
   {
     "anchor": "City of God",
-    "ground_truth": [
-      { "title": "Elite Squad", "relevance": 2 },
-      { "title": "Carandiru", "relevance": 2 },
-      { "title": "Pixote", "relevance": 2 },
-      { "title": "Central Station", "relevance": 1.5 },
-      { "title": "The Motorcycle Diaries", "relevance": 1.5 }
-    ]
+    "ground_truth": ["Elite Squad", "Carandiru", "Pixote", "Central Station", "The Motorcycle Diaries"]
   },
   {
     "anchor": "The Matrix",
+    "ground_truth": ["The Matrix Reloaded", "The Matrix Revolutions", "Blade Runner", "Ghost in the Shell", "Dark City"]
+  },
+  {
+    "anchor": "Nannaku Prematho",
+    "ground_truth": ["1: Nenokkadine", "Animal", "Mahaan", "Aravinda Sametha Veera Raghava", "Agneepath"]
+  },
+  {
+    "anchor": "Mahanati",
+    "ground_truth": ["Sita Ramam", "Jersey", "The Dirty Picture", "NTR: Kathanayakudu", "Rangasthalam"]
+  },
+  {
+    "anchor": "Animal",
+    "ground_truth": ["Arjun Reddy", "Kabir Singh", "Gangs of Wasseypur", "Rocky Handsome", "Raman Raghav 2.0"]
+  },
+  {
+    "anchor": "mother!",
+    "ground_truth": ["Rosemary's Baby", "Hereditary", "Black Swan", "Midsommar", "The Lighthouse"]
+  },
+  {
+    "anchor": "Trainspotting",
+    "ground_truth": ["Requiem for a Dream", "The Basketball Diaries", "Enter the Void", "Fear and Loathing in Las Vegas", "Christiane F."]
+  },
+  {
+    "anchor": "I Saw the Devil",
+    "ground_truth": ["The Chaser", "Oldboy", "Memories of Murder", "Sympathy for Mr. Vengeance", "Bedevilled"]
+  },
+  {
+    "anchor": "Inside Llewyn Davis",
+    "ground_truth": ["Whiplash", "Amadeus", "Sound of Metal", "The Pianist", "Once"]
+  },
+  {
+    "anchor": "Prisoners",
+    "ground_truth": ["Zodiac", "Se7en", "Gone Girl", "Mystic River", "Nightcrawler"]
+  },
+  {
+    "anchor": "Super Deluxe",
+    "ground_truth": ["Aaranya Kaandam", "Vada Chennai", "Kumbalangi Nights", "Jigarthanda", "Andhadhun"]
+  },
+  {
+    "anchor": "Tumbbad",
+    "ground_truth": ["Kantara", "Bramayugam", "Pari", "Bulbbul", "Virupaksha"]
+  },
+  {
+    "anchor": "Blade Runner 2049",
+    "ground_truth": ["Blade Runner", "Dune", "Arrival", "Ex Machina", "Ghost in the Shell"]
+  },
+  {
+    "anchor": "Perfect Blue",
+    "ground_truth": ["Paprika", "Black Swan", "Mulholland Drive", "Neon Genesis Evangelion: The End of Evangelion", "Serial Experiments Lain"]
+  },
+  {
+    "anchor": "Jersey",
+    "ground_truth": ["Nani's Gang Leader", "Majili", "Mallesham", "Chhichhore", "Bhaag Milkha Bhaag"]
+  },
+  {
+    "anchor": "Gangs of Wasseypur",
+    "ground_truth": ["Sacred Games", "Mirzapur", "Satya", "Company", "Subramaniapuram"]
+  },
+  {
+    "anchor": "Eega",
+    "ground_truth": ["Maryada Ramanna", "Magadheera", "Arundhati", "Enthiran", "Baahubali: The Beginning"]
+  },
+  {
+    "anchor": "The Thing",
+    "ground_truth": ["Alien", "Annihilation", "The Fly", "Invasion of the Body Snatchers", "Event Horizon"]
+  },
+  {
+    "anchor": "RRR",
+    "ground_truth": ["Baahubali 2: The Conclusion", "K.G.F: Chapter 1", "Salaar: Part 1 - Ceasefire", "Magadheera", "Pushpa: The Rise"]
+  },
+  {
+    "anchor": "Vikram Vedha",
+    "ground_truth": ["Kaithi", "Asuran", "Ratsasan", "Thani Oruvan", "Karnan"]
+  },
+  {
+    "anchor": "Ex Machina",
+    "ground_truth": ["Her", "Annihilation", "Moon", "Under the Skin", "Upgrade"]
+  },
+  {
+    "anchor": "The Machinist",
+    "ground_truth": ["Memento", "Fight Club", "Black Swan", "Enemy", "Insomnia"]
+  },
+  {
+    "anchor": "Portrait of a Lady on Fire",
+    "ground_truth": ["Call Me by Your Name", "Carol", "The Handmaiden", "In the Mood for Love", "Blue Is the Warmest Colour"]
+  },
+  {
+    "anchor": "Everything Everywhere All at Once",
+    "ground_truth": ["Spider-Man: Into the Spider-Verse", "The Matrix", "Scott Pilgrim vs. the World", "Swiss Army Man", "Kung Fu Hustle"]
+  },
+  {
+    "anchor": "Grave of the Fireflies",
+    "ground_truth": ["Barefoot Gen", "In This Corner of the World", "The Wind Rises", "Schindler's List", "Come and See"]
+  },
+  {
+    "anchor": "Goodfellas",
+    "ground_truth": ["Casino", "The Godfather", "The Irishman", "The Departed", "A Bronx Tale"]
+  },
+  {
+    "anchor": "Akira",
+    "ground_truth": ["Ghost in the Shell", "Cowboy Bebop: The Movie", "Neon Genesis Evangelion: The End of Evangelion", "Metropolis", "Psycho-Pass: The Movie"]
+  },
+  {
+    "anchor": "The Lighthouse",
+    "ground_truth": ["The Witch", "Eraserhead", "Persona", "Antichrist", "The Shining"]
+  },
+  {
+    "anchor": "Zodiac",
+    "ground_truth": ["Memories of Murder", "Mindhunter", "Se7en", "Prisoners", "The Silence of the Lambs"]
+  },
+  {
+    "anchor": "The Silence of the Lambs",
+    "ground_truth": ["Se7en", "Zodiac", "Red Dragon", "Prisoners", "Hannibal"]
+  },
+  {
+    "anchor": "Mulholland Drive",
+    "ground_truth": ["Blue Velvet", "Lost Highway", "Inland Empire", "Barton Fink", "Perfect Blue"]
+  },
+  {
+    "anchor": "Andhadhun",
+    "ground_truth": ["Drishyam", "Kahaani", "Badla", "Ratsasan", "Ludo"]
+  },
+  {
+    "anchor": "Stalker",
+    "ground_truth": ["Solaris", "Come and See", "The Seventh Seal", "Mirror", "Aguirre, the Wrath of God"]
+  },
+  {
+    "anchor": "Midsommar",
+    "ground_truth": ["Hereditary", "The Wicker Man", "The Witch", "Suspiria", "Rosemary's Baby"]
+  },
+  {
+    "anchor": "No Country for Old Men",
+    "ground_truth": ["There Will Be Blood", "Fargo", "Hell or High Water", "Sicario", "The Assassination of Jesse James by the Coward Robert Ford"]
+  },
+  {
+    "anchor": "Nocturnal Animals",
+    "ground_truth": ["Gone Girl", "Prisoners", "The Girl with the Dragon Tattoo", "Nightcrawler", "The Skin I Live In"]
+  },
+  {
+    "anchor": "Nightcrawler",
+    "ground_truth": ["Drive", "Taxi Driver", "American Psycho", "Enemy", "The Machinist"]
+  },
+  {
+    "anchor": "The Dark Knight Rises",
     "ground_truth": [
-      { "title": "The Matrix Reloaded", "relevance": 2 },
-      { "title": "The Matrix Revolutions", "relevance": 2 },
-      { "title": "Blade Runner", "relevance": 2 },
-      { "title": "Ghost in the Shell", "relevance": 1.5 },
-      { "title": "Dark City", "relevance": 1.5 }
+      {"title": "Batman Begins", "relevance": 2},
+      {"title": "The Dark Knight", "relevance": 2},
+      {"title": "Joker", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Harry Potter and the Sorcerer's Stone",
+    "ground_truth": [
+      {"title": "Harry Potter and the Chamber of Secrets", "relevance": 2},
+      {"title": "Harry Potter and the Prisoner of Azkaban", "relevance": 2},
+      {"title": "Harry Potter and the Goblet of Fire", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "The Lord of the Rings: The Two Towers",
+    "ground_truth": [
+      {"title": "The Lord of the Rings: The Fellowship of the Ring", "relevance": 2},
+      {"title": "The Lord of the Rings: The Return of the King", "relevance": 2},
+      {"title": "The Hobbit: An Unexpected Journey", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Avengers: Infinity War",
+    "ground_truth": [
+      {"title": "Avengers: Endgame", "relevance": 2},
+      {"title": "Captain America: Civil War", "relevance": 2},
+      {"title": "Thor: Ragnarok", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Toy Story 2",
+    "ground_truth": [
+      {"title": "Toy Story", "relevance": 2},
+      {"title": "Toy Story 3", "relevance": 2},
+      {"title": "Toy Story 4", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "John Wick: Chapter 2",
+    "ground_truth": [
+      {"title": "John Wick", "relevance": 2},
+      {"title": "John Wick: Chapter 3 - Parabellum", "relevance": 2},
+      {"title": "John Wick: Chapter 4", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Mission: Impossible – Fallout",
+    "ground_truth": [
+      {"title": "Mission: Impossible - Rogue Nation", "relevance": 2},
+      {"title": "Mission: Impossible - Ghost Protocol", "relevance": 2},
+      {"title": "Mission: Impossible III", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "The Godfather Part II",
+    "ground_truth": [
+      {"title": "The Godfather", "relevance": 2},
+      {"title": "The Godfather Part III", "relevance": 2},
+      {"title": "Goodfellas", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Aliens",
+    "ground_truth": [
+      {"title": "Alien", "relevance": 2},
+      {"title": "Alien 3", "relevance": 2},
+      {"title": "Alien: Covenant", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Indiana Jones and the Temple of Doom",
+    "ground_truth": [
+      {"title": "Raiders of the Lost Ark", "relevance": 2},
+      {"title": "Indiana Jones and the Last Crusade", "relevance": 2},
+      {"title": "Indiana Jones and the Kingdom of the Crystal Skull", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "The Matrix Reloaded",
+    "ground_truth": [
+      {"title": "The Matrix", "relevance": 2},
+      {"title": "The Matrix Revolutions", "relevance": 2},
+      {"title": "The Matrix Resurrections", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Finding Dory",
+    "ground_truth": [
+      {"title": "Finding Nemo", "relevance": 2},
+      {"title": "The Little Mermaid", "relevance": 2},
+      {"title": "Moana", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Jurassic World",
+    "ground_truth": [
+      {"title": "Jurassic Park", "relevance": 2},
+      {"title": "The Lost World: Jurassic Park", "relevance": 2},
+      {"title": "Jurassic World: Fallen Kingdom", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Spider-Man: Far From Home",
+    "ground_truth": [
+      {"title": "Spider-Man: Homecoming", "relevance": 2},
+      {"title": "Spider-Man: No Way Home", "relevance": 2},
+      {"title": "Doctor Strange in the Multiverse of Madness", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Pirates of the Caribbean: Dead Man's Chest",
+    "ground_truth": [
+      {"title": "Pirates of the Caribbean: The Curse of the Black Pearl", "relevance": 2},
+      {"title": "Pirates of the Caribbean: At World's End", "relevance": 2},
+      {"title": "Pirates of the Caribbean: On Stranger Tides", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Rocky II",
+    "ground_truth": [
+      {"title": "Rocky", "relevance": 2},
+      {"title": "Rocky III", "relevance": 2},
+      {"title": "Creed", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Terminator 2: Judgment Day",
+    "ground_truth": [
+      {"title": "The Terminator", "relevance": 2},
+      {"title": "Terminator 3: Rise of the Machines", "relevance": 2},
+      {"title": "Terminator Genisys", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "X2",
+    "ground_truth": [
+      {"title": "X-Men", "relevance": 2},
+      {"title": "X-Men: The Last Stand", "relevance": 2},
+      {"title": "X-Men: Days of Future Past", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "How to Train Your Dragon 2",
+    "ground_truth": [
+      {"title": "How to Train Your Dragon", "relevance": 2},
+      {"title": "How to Train Your Dragon: The Hidden World", "relevance": 2},
+      {"title": "Kung Fu Panda", "relevance": 2}
+    ]
+  },
+  {
+    "anchor": "Fast & Furious 6",
+    "ground_truth": [
+      {"title": "Fast Five", "relevance": 2},
+      {"title": "Furious 7", "relevance": 2},
+      {"title": "The Fast and the Furious", "relevance": 2}
     ]
   }
 ]

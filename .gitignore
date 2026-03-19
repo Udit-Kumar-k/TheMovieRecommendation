@@ -5,3 +5,10 @@ __pycache__/
 *.index
 *.csv
 .env
+
+# Benchmark outputs & reports
+reports/
+tmdb_cache.json
+anchors_only_*.json
+bench_*_2*.txt
+bench_*_2*.json

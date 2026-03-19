@@ -695,9 +695,11 @@ input:checked+.toggle-slider:before {
 
 .detail-info {
     flex: 1;
+    min-width: 0; /* critical: prevents flex child overflowing parent */
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: hidden;
 }
 
 #detailTitle {
@@ -754,6 +756,8 @@ input:checked+.toggle-slider:before {
     font-size: 1.05rem;
     line-height: 1.6;
     color: #444;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Extra Info Section */
@@ -917,3 +921,137 @@ input:checked+.toggle-slider:before {
         text-align: center;
     }
 }
+
+/* ── Genre Chips ──────────────────────────────────────────────────────────── */
+.detail-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.genre-chip {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+  transition: background 0.2s;
+}
+
+.genre-chip:hover {
+  background: #e0e0e0;
+}
+
+/* ── Original Title ───────────────────────────────────────────────────────── */
+.original-title {
+  font-size: 0.95rem;
+  color: #888;
+  font-style: italic;
+  margin-top: -12px;
+}
+
+/* ── Crew Grid ────────────────────────────────────────────────────────────── */
+.detail-crew h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.3rem;
+  color: rgb(46, 46, 46);
+  margin-bottom: 12px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+  display: inline-block;
+}
+
+.crew-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+}
+
+
+.crew-cell {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.crew-role {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b30000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.crew-name {
+  font-size: 0.92rem;
+  color: #333;
+  font-weight: 500;
+}
+
+/* ── Extra Info Grid (Details section) ────────────────────────────────────── */
+.detail-extra-info h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.3rem;
+  color: rgb(46, 46, 46);
+  margin-bottom: 12px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+  display: inline-block;
+}
+
+.extra-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.extra-info-cell {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.extra-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.extra-value {
+  font-size: 0.92rem;
+  color: #333;
+  font-weight: 500;
+}
+
+/* ── Homepage Link ────────────────────────────────────────────────────────── */
+.homepage-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.homepage-link:hover {
+  background: #f0f0f0;
+  border-color: #aaa;
+}

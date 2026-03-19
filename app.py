@@ -10,21 +10,43 @@ app = Flask(__name__)
 import os
 import requests
 from dotenv import load_dotenv
+from huggingface_hub import hf_hub_download
 
-env_path = os.path.join(os.path.dirname(__file__), '.env')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+env_path = os.path.join(BASE_DIR, '.env')
 load_dotenv(env_path)
 print(f"Loaded .env from {env_path}")
 TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 print(f"Global API Key is: {'*'*5 + TMDB_API_KEY[-4:] if TMDB_API_KEY else 'None'}")
 
-USE_RECOMMENDATION = True # 🔁 Set to True only if you have FAISS files
+HF_INDEX_DATASET = os.getenv('HF_INDEX_DATASET', 'your-username/movie-rec-data')
+
+USE_RECOMMENDATION = True
 
 if USE_RECOMMENDATION:
-    MODEL_PATH = os.getenv('MODEL_PATH', None)  # e.g. 'models/mpnet' or 'models/minilm'
-    if MODEL_PATH:
-        print(f"[INFO] Loading model from: {MODEL_PATH}")
-    else:
-        print(f"[INFO] Loading model from root directory (default)")
+    MODEL_PATH = os.getenv('MODEL_PATH', 'models/minilm')
+
+    index_files = [
+        os.path.join('models', 'minilm', 'faiss.index'),
+        os.path.join('models', 'minilm', 'index_data.pkl'),
+    ]
+
+    for rel_path in index_files:
+        local_path = os.path.join(BASE_DIR, rel_path)
+        if not os.path.exists(local_path):
+            try:
+                print(f"[INFO] Downloading {rel_path} from Hugging Face dataset {HF_INDEX_DATASET}...")
+                hf_hub_download(
+                    repo_id=HF_INDEX_DATASET,
+                    filename=rel_path,
+                    local_dir=BASE_DIR,
+                    repo_type="dataset",
+                )
+            except Exception as e:
+                print(f"[WARN] Failed to download {rel_path} from Hugging Face: {e}")
+
+    print(f"[INFO] Loading model from: {MODEL_PATH}")
     df, title_to_index, index = get_data(model_path=MODEL_PATH)
 else:
     df = get_basic_data()
@@ -193,11 +215,14 @@ def smart_recommend():
                 genre_jaccard = 0.0
                 
             # Compute new soft-boosted similarity score
-            # User Constraints: 0.85 * cosine_sim + 0.15 * genre_jaccard
-            final_sim = (0.85 * cosine_sim) + (0.15 * genre_jaccard)
+            # 75% cosine similarity + 25% genre Jaccard penalty
+            final_sim = (0.75 * cosine_sim) + (0.25 * genre_jaccard)
             
             # Additional heuristic scoring for 'quality'
             import math
+            vote_cnt = float(movie.get('vote_count') if pd.notna(movie.get('vote_count')) else 0)
+            if vote_cnt < 5:
+                continue  # skip movies with fewer than 5 votes
             pop_score = math.log1p(pop) / 10.0 # scales popularity down
             vote_score = vote / 10.0
             
@@ -217,7 +242,7 @@ def smart_recommend():
         # Sort the HUGE pool first by the user's specific preference before truncating
         if sort_mode == 'quality':
             # Normalize vote to 0-1 (same scale as similarity) so the weights actually work
-            candidate_movies.sort(key=lambda x: ((x['vote'] / 10.0) * 0.65) + (x['similarity_val'] * 0.35), reverse=True)
+            candidate_movies.sort(key=lambda x: (x['similarity_val'] * 0.70) + ((x['vote'] / 10.0) * 0.30), reverse=True)
         else: # 'similarity' default
             # Give massive weight to pure mathematical similarity
             candidate_movies.sort(key=lambda x: x['similarity_val'], reverse=True)

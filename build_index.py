@@ -71,10 +71,10 @@ current_year = datetime.now().year
 # Convert release_date to datetime to extract year safely
 df['release_year'] = pd.to_datetime(df['release_date'], errors='coerce').dt.year
 
-# Converter strings to ints safely, then keep only >= 2 votes
+# Converter strings to ints safely, then keep only >= 5 votes
 # (Kaggle dataset has some NaNs or floats here)
 df['vote_count'] = pd.to_numeric(df['vote_count'], errors='coerce').fillna(0)
-df = df[df['vote_count'] > 1]
+df = df[df['vote_count'] >= 5]
 df = df[df['vote_average'] < 10]
 
 # Keep a movie IF:

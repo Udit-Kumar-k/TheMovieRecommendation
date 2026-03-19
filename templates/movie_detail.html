@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ movie.title }} - MovieRec</title>
+  <meta name="description" content="{{ movie.overview[:160] if movie.overview else 'Movie details and recommendations.' }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <script>
@@ -26,7 +27,7 @@
   </div>
 
   <div id="movieDetailContainer" class="movie-detail-container" style="display:none;">
-    <!-- Backdrop will be heavily blurred behind content -->
+    <!-- Backdrop -->
     <div class="detail-backdrop" id="detailBackdrop"></div>
 
     <div class="detail-content">
@@ -36,11 +37,13 @@
 
       <div class="detail-info">
         <h1 id="detailTitle">{{ movie.title }}</h1>
+
         <div class="detail-meta">
           <span id="detailYear" class="meta-badge">{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
-          <span class="meta-badge accent-badge">★ {{ movie.vote_average | round(1) if movie.vote_average else 'N/A'
-            }}</span>
+          <span class="meta-badge accent-badge">★ {{ movie.vote_average | round(1) if movie.vote_average else 'N/A' }}</span>
           <span id="detailRuntime" class="meta-badge">{{ movie.runtime if movie.runtime else 'N/A' }} min</span>
+          <span id="detailVoteCount" class="meta-badge" style="display:none;"></span>
+          <span id="detailStatus" class="meta-badge" style="display:none;"></span>
         </div>
 
         <div class="detail-genres" id="detailGenres">
@@ -52,20 +55,46 @@
           <p id="synopsisText">{{ movie.overview if movie.overview else 'No synopsis available.' }}</p>
         </div>
 
-        <div class="detail-extra-info" id="extraInfoContainer" style="display:none;">
-          <!-- Populated by JS -->
+        <!-- Tagline -->
+        <div id="taglineContainer" style="display:none;">
+          <div class="tagline-text" id="taglineText"></div>
         </div>
 
+        <!-- Crew Section -->
+        <div class="detail-crew" id="crewContainer" style="display:none;">
+          <h3>Crew</h3>
+          <div class="crew-grid" id="crewGrid"></div>
+        </div>
+
+        <!-- Cast -->
         <div class="detail-cast" id="castContainer" style="display:none;">
           <h3>Top Cast</h3>
           <div class="cast-list" id="castList"></div>
         </div>
 
+        <!-- Production & Details -->
+        <div class="detail-extra-info" id="extraInfoContainer" style="display:none;">
+          <h3>Details</h3>
+          <div id="extraInfoGrid" class="extra-info-grid"></div>
+        </div>
+
+        <!-- Keywords -->
+        <div id="keywordsContainer" style="display:none;">
+          <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;color:rgb(46,46,46);margin-bottom:8px;border-bottom:2px solid #eee;padding-bottom:5px;display:inline-block;">Keywords</h3>
+          <div class="keywords-container" id="keywordsList"></div>
+        </div>
+
+        <!-- Trailer -->
         <div class="detail-trailer" id="trailerContainer" style="display:none;">
           <h3>Trailer</h3>
           <div class="video-wrapper">
             <iframe id="trailerFrame" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
           </div>
+        </div>
+
+        <!-- Homepage link -->
+        <div id="homepageContainer" style="display:none; margin-top: 10px;">
+          <a id="homepageLink" href="#" target="_blank" rel="noopener" class="homepage-link">🌐 Official Website</a>
         </div>
       </div>
     </div>
@@ -79,28 +108,27 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Step 1: Query TMDB for the exact movie ID directly
       if (MOVIE_ID) {
         fetchMovieDetails(MOVIE_ID);
       } else {
         showBasicDetails();
       }
 
-      // Step 2: Fetch the full rich details from TMDB Movie API
       function fetchMovieDetails(id) {
-        const detailUrl = `https://api.themoviedb.org/3/movie/${id}?append_to_response=videos,credits,keywords&api_key=${window.TMDB_API_KEY}`;
+        const detailUrl = `https://api.themoviedb.org/3/movie/${id}?append_to_response=videos,credits,keywords,release_dates&api_key=${window.TMDB_API_KEY}`;
         fetch(detailUrl)
           .then(res => res.json())
           .then(data => {
             document.getElementById('detailLoading').style.display = 'none';
             document.getElementById('movieDetailContainer').style.display = 'block';
 
-            // Backdrop
+            // ── Backdrop ────────────────────────────────────────────────────
             if (data.backdrop_path) {
-              document.getElementById('detailBackdrop').style.backgroundImage = `url('https://image.tmdb.org/t/p/original${data.backdrop_path}')`;
+              document.getElementById('detailBackdrop').style.backgroundImage =
+                `url('https://image.tmdb.org/t/p/original${data.backdrop_path}')`;
             }
 
-            // TMDB Adult Safety check
+            // ── Poster ──────────────────────────────────────────────────────
             if (data.adult === true) {
               document.getElementById('posterImg').src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
               document.getElementById('posterImg').style.backgroundColor = '#2c2c2c';
@@ -108,68 +136,110 @@
               document.getElementById('posterImg').src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
             }
 
-            // Sync with actual TMDB data instead of local DB to ensure no masking leaks
-            if (data.overview) {
-              document.getElementById('synopsisText').textContent = data.overview;
+            // ── Title & original title ──────────────────────────────────────
+            const titleEl = document.getElementById('detailTitle');
+            titleEl.textContent = data.title || MOVIE_TITLE;
+            if (data.original_title && data.original_title !== data.title) {
+              const origSpan = document.createElement('div');
+              origSpan.className = 'original-title';
+              origSpan.textContent = `Original: ${data.original_title}`;
+              titleEl.insertAdjacentElement('afterend', origSpan);
             }
+
+            // ── Meta badges ─────────────────────────────────────────────────
             if (data.runtime) {
               document.getElementById('detailRuntime').textContent = `${data.runtime} min`;
             }
-
-            // Extra Info (Tagline, Budget, Revenue, Director)
-            const extraInfoContainer = document.getElementById('extraInfoContainer');
-            let extraHTML = '';
-
-            if (data.tagline) {
-              extraHTML += `<div class="tagline-text">${data.tagline}</div>`;
-            }
-            if (data.credits && data.credits.crew) {
-              const director = data.credits.crew.find(c => c.job === 'Director');
-              if (director) {
-                extraHTML += `<div class="extra-info-row"><strong>Director:</strong> ${director.name}</div>`;
-              }
-            }
-            if (data.budget && data.budget > 0) {
-              extraHTML += `<div class="extra-info-row"><strong>Budget:</strong> $${data.budget.toLocaleString()}</div>`;
-            }
-            if (data.revenue && data.revenue > 0) {
-              extraHTML += `<div class="extra-info-row"><strong>Revenue:</strong> $${data.revenue.toLocaleString()}</div>`;
+            if (data.vote_count) {
+              const vc = document.getElementById('detailVoteCount');
+              vc.textContent = `${data.vote_count.toLocaleString()} votes`;
+              vc.style.display = '';
             }
             if (data.status) {
-              extraHTML += `<div class="extra-info-row"><strong>Status:</strong> ${data.status}</div>`;
+              const st = document.getElementById('detailStatus');
+              st.textContent = data.status;
+              st.style.display = '';
             }
-            if (data.adult !== undefined) {
-              const ratingText = data.adult ? 'Explicit (18+)' : 'General';
-              const color = data.adult ? '#b30000' : '#444';
-              extraHTML += `<div class="extra-info-row"><strong>Content Rating:</strong> <span style="color: ${color}; font-weight: 600;">${ratingText}</span></div>`;
+            // Full release date (instead of just year)
+            if (data.release_date) {
+              const dateFormatted = new Date(data.release_date).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+              document.getElementById('detailYear').textContent = dateFormatted;
             }
 
-            // Keywords
-            const keywordsArray = data.keywords?.keywords || data.keywords?.results || [];
-            if (keywordsArray.length > 0) {
-              extraHTML += `<div class="extra-info-row" style="margin-top: 15px;"><strong>Keywords:</strong><div class="keywords-container">`;
-              // Show up to 15 keywords
-              keywordsArray.slice(0, 15).forEach(kw => {
-                extraHTML += `<span class="keyword-badge">${kw.name}</span>`;
+            // ── Genres ──────────────────────────────────────────────────────
+            if (data.genres && data.genres.length > 0) {
+              const genreEl = document.getElementById('detailGenres');
+              genreEl.innerHTML = '';
+              data.genres.forEach(g => {
+                const badge = document.createElement('span');
+                badge.className = 'genre-chip';
+                badge.textContent = g.name;
+                genreEl.appendChild(badge);
               });
-              extraHTML += `</div></div>`;
             }
 
-            if (extraHTML !== '') {
-              extraInfoContainer.innerHTML = extraHTML;
-              extraInfoContainer.style.display = 'block';
+            // ── Overview / Synopsis ─────────────────────────────────────────
+            if (data.overview) {
+              document.getElementById('synopsisText').textContent = data.overview;
             }
 
-            // Cast
+            // ── Tagline ─────────────────────────────────────────────────────
+            if (data.tagline) {
+              document.getElementById('taglineText').textContent = `"${data.tagline}"`;
+              document.getElementById('taglineContainer').style.display = 'block';
+            }
+
+            // ── Crew ────────────────────────────────────────────────────────
+            if (data.credits && data.credits.crew) {
+              const crew = data.credits.crew;
+              const crewRoles = [
+                { job: 'Director',             label: 'Director' },
+                { job: 'Screenplay',           label: 'Writer' },
+                { job: 'Writer',               label: 'Writer' },
+                { job: 'Story',                label: 'Story' },
+                { job: 'Director of Photography', label: 'Cinematographer' },
+                { job: 'Original Music Composer', label: 'Composer' },
+                { job: 'Producer',             label: 'Producer' },
+              ];
+
+              // Collect unique people per display label
+              const collectedCrew = {};
+              crewRoles.forEach(({ job, label }) => {
+                const matches = crew.filter(c => c.job === job).map(c => c.name);
+                if (matches.length) {
+                  if (!collectedCrew[label]) collectedCrew[label] = new Set();
+                  matches.forEach(n => collectedCrew[label].add(n));
+                }
+              });
+
+              const crewGrid = document.getElementById('crewGrid');
+              crewGrid.innerHTML = '';
+              Object.entries(collectedCrew).forEach(([label, names]) => {
+                const cell = document.createElement('div');
+                cell.className = 'crew-cell';
+                cell.innerHTML = `<span class="crew-role">${label}</span><span class="crew-name">${[...names].join(', ')}</span>`;
+                crewGrid.appendChild(cell);
+              });
+
+              if (crewGrid.children.length > 0) {
+                document.getElementById('crewContainer').style.display = 'block';
+              }
+            }
+
+            // ── Cast (top 10) ───────────────────────────────────────────────
             if (data.credits && data.credits.cast && data.credits.cast.length > 0) {
-              const topCast = data.credits.cast.slice(0, 5);
+              const topCast = data.credits.cast.slice(0, 10);
               const castList = document.getElementById('castList');
+              castList.innerHTML = '';
               topCast.forEach(actor => {
                 const actorDiv = document.createElement('div');
                 actorDiv.className = 'actor-card';
 
                 const img = document.createElement('img');
-                img.src = actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : '/static/icons/fallback.svg';
+                img.src = actor.profile_path
+                  ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
+                  : '/static/icons/fallback.svg';
+                img.alt = actor.name;
 
                 const name = document.createElement('div');
                 name.className = 'actor-name';
@@ -177,7 +247,7 @@
 
                 const character = document.createElement('div');
                 character.className = 'actor-character';
-                character.textContent = actor.character;
+                character.textContent = actor.character || '';
 
                 actorDiv.appendChild(img);
                 actorDiv.appendChild(name);
@@ -187,13 +257,85 @@
               document.getElementById('castContainer').style.display = 'block';
             }
 
-            // Trailer
+            // ── Extra Details (production info) ─────────────────────────────
+            const extraGrid = document.getElementById('extraInfoGrid');
+            extraGrid.innerHTML = '';
+            const detailRows = [];
+
+            if (data.budget && data.budget > 0) {
+              detailRows.push({ label: 'Budget', value: `$${data.budget.toLocaleString()}` });
+            }
+            if (data.revenue && data.revenue > 0) {
+              detailRows.push({ label: 'Box Office', value: `$${data.revenue.toLocaleString()}` });
+            }
+            if (data.adult !== undefined) {
+              const ratingText = data.adult ? 'Explicit (18+)' : 'General';
+              const color = data.adult ? '#b30000' : '#555';
+              detailRows.push({ label: 'Rating', value: ratingText, color });
+            }
+            if (data.production_companies && data.production_companies.length > 0) {
+              detailRows.push({
+                label: 'Production',
+                value: data.production_companies.slice(0, 4).map(c => c.name).join(' · ')
+              });
+            }
+            if (data.production_countries && data.production_countries.length > 0) {
+              detailRows.push({
+                label: 'Country',
+                value: data.production_countries.map(c => c.name).join(', ')
+              });
+            }
+            if (data.spoken_languages && data.spoken_languages.length > 0) {
+              detailRows.push({
+                label: 'Languages',
+                value: data.spoken_languages.map(l => l.english_name || l.name).join(', ')
+              });
+            }
+            if (data.popularity) {
+              detailRows.push({ label: 'Popularity Score', value: data.popularity.toFixed(1) });
+            }
+
+            detailRows.forEach(row => {
+              const cell = document.createElement('div');
+              cell.className = 'extra-info-cell';
+              cell.innerHTML = `<span class="extra-label">${row.label}</span>
+                <span class="extra-value"${row.color ? ` style="color:${row.color};font-weight:600;"` : ''}>${row.value}</span>`;
+              extraGrid.appendChild(cell);
+            });
+
+            if (extraGrid.children.length > 0) {
+              document.getElementById('extraInfoContainer').style.display = 'block';
+            }
+
+            // ── Keywords ────────────────────────────────────────────────────
+            const keywordsArray = data.keywords?.keywords || data.keywords?.results || [];
+            if (keywordsArray.length > 0) {
+              const kwList = document.getElementById('keywordsList');
+              kwList.innerHTML = '';
+              keywordsArray.slice(0, 20).forEach(kw => {
+                const badge = document.createElement('span');
+                badge.className = 'keyword-badge';
+                badge.textContent = kw.name;
+                kwList.appendChild(badge);
+              });
+              document.getElementById('keywordsContainer').style.display = 'block';
+            }
+
+            // ── Trailer ─────────────────────────────────────────────────────
             if (data.videos && data.videos.results) {
               const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
               if (trailer) {
-                document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${trailer.key}`;
+                document.getElementById('trailerFrame').src =
+                  `https://www.youtube.com/embed/${trailer.key}`;
                 document.getElementById('trailerContainer').style.display = 'block';
               }
+            }
+
+            // ── Homepage ────────────────────────────────────────────────────
+            if (data.homepage) {
+              const link = document.getElementById('homepageLink');
+              link.href = data.homepage;
+              document.getElementById('homepageContainer').style.display = 'block';
             }
           })
           .catch(() => showBasicDetails());
@@ -202,7 +344,6 @@
       function showBasicDetails() {
         document.getElementById('detailLoading').style.display = 'none';
         document.getElementById('movieDetailContainer').style.display = 'block';
-        // Leave the jinja template fallbacks visible
       }
     });
   </script>

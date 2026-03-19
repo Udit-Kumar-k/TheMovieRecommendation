@@ -16,6 +16,7 @@ import json
 import os
 import pickle
 import re
+import sys
 import unicodedata
 
 import faiss
@@ -25,6 +26,15 @@ import pandas as pd
 from data_loader import get_data
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Ensure Windows terminals can print Unicode (emojis, accents)
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 
 # ------- Helpers ------- #
@@ -69,10 +79,14 @@ def ndcg_at_k(relevances, k: int) -> float:
 
 
 # ------- Load Golden Dataset ------- #
-with open(os.path.join(BASE_DIR, "golden_dataset.json"), "r", encoding="utf-8") as f:
+golden_path = os.getenv("GOLDEN_DATASET_PATH", os.path.join(BASE_DIR, "golden_dataset.json"))
+if not os.path.isabs(golden_path):
+    golden_path = os.path.join(BASE_DIR, golden_path)
+
+with open(golden_path, "r", encoding="utf-8") as f:
     golden_raw = json.load(f)
 
-print(f"📋 Loaded {len(golden_raw)} anchor movies from golden_dataset.json\n")
+print(f"📋 Loaded {len(golden_raw)} anchor movies from {os.path.basename(golden_path)}\n")
 
 # Normalize golden dataset into a richer internal format:
 # Each entry becomes:
@@ -128,7 +142,7 @@ for entry in golden_raw:
     )
 
 # ------- Config ------- #
-RECALL_K_VALUES = [10, 50]  # Check both Top 10 and Top 50
+RECALL_K_VALUES = [5, 10]  # Recall@5 (tight) and Recall@10 (loose) — dataset has 5 GT items per anchor
 
 # ------- Define Models ------- #
 model_configs = [
@@ -242,7 +256,7 @@ for model_name, model_path in model_configs:
 
             vote_avg = float(movie.get("vote_average", 0)) if pd.notna(movie.get("vote_average")) else 0
             vote_cnt = float(movie.get("vote_count", 0)) if pd.notna(movie.get("vote_count")) else 0
-            if vote_avg >= 10 or vote_avg == 0 or vote_cnt <= 1:
+            if vote_avg >= 10 or vote_avg == 0 or vote_cnt < 5:
                 continue
 
             pop = float(movie.get("popularity", 0)) if pd.notna(movie.get("popularity")) else 0
