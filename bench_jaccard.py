@@ -5,7 +5,7 @@ actually improves domain relevance in recommendations.
 
 Runs the same 10 anchor movies through MiniLM:
   Test A: 0% Jaccard Boost (raw FAISS only)
-  Test B: 15% Jaccard Boost (your current production formula)
+  Test B: 25% Jaccard Boost (your current production formula)
 
 Measures Genre Alignment Rate: % of Top 10 results sharing ≥1 genre with the anchor.
 """
@@ -71,7 +71,7 @@ def get_top_10_raw(anchor_idx: int):
     return results
 
 
-def get_top_10_jaccard(anchor_idx: int, jaccard_weight: float = 0.15):
+def get_top_10_jaccard(anchor_idx: int, jaccard_weight: float = 0.25):
     """Get top 10 results with Jaccard genre boost applied."""
     anchor_movie = df.iloc[anchor_idx]
     anchor_genres = parse_genres(anchor_movie.get("genres", ""))
@@ -116,7 +116,7 @@ def load_golden_dataset(path: str):
         return json.load(f)
 
 
-def run_jaccard_benchmark(golden, jaccard_weight: float = 0.15, verbose: bool = False):
+def run_jaccard_benchmark(golden, jaccard_weight: float = 0.25, verbose: bool = False):
     print(f"\n{'='*70}")
     print("  JACCARD ABLATION STUDY")
     print(f"{'='*70}\n")
@@ -206,7 +206,7 @@ def main():
     parser.add_argument(
         "--jaccard-weight",
         type=float,
-        default=0.15,
+        default=0.25,
         help="Jaccard boost weight (0.0-1.0) to apply for the boosted ranking.",
     )
     parser.add_argument(

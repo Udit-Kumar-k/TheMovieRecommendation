@@ -16,6 +16,12 @@ if not API_KEY:
     print("Error: TMDB_API_KEY not found in .env files.")
     exit(1)
 
+# Allow overriding the TMDB API host (some regions block api.themoviedb.org).
+# Examples:
+#   TMDB_API_BASE=https://api.tmdb.org/3
+#   TMDB_API_BASE=https://api.themoviedb.org/3
+TMDB_API_BASE = os.getenv("TMDB_API_BASE", "https://api.tmdb.org/3").rstrip("/")
+
 # Configure super robust session
 session = requests.Session()
 retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
@@ -23,7 +29,7 @@ session.mount('https://', HTTPAdapter(max_retries=retries))
 
 print("🚀 Fetching Movie Genre Mapping from TMDB...")
 try:
-    genre_res = session.get(f"https://api.tmdb.org/3/genre/movie/list?api_key={API_KEY}&language=en-US", timeout=30)
+    genre_res = session.get(f"{TMDB_API_BASE}/genre/movie/list?api_key={API_KEY}&language=en-US", timeout=30)
     genre_map = {g['id']: g['name'] for g in genre_res.json().get('genres', [])}
 except Exception as e:
     print(f"Failed to fetch genres: {e}")
@@ -35,7 +41,7 @@ def get_recent_movies(max_pages=500, start_date="2023-01-01"):
     
     for page in tqdm(range(1, max_pages + 1)):
         # Sort by popularity to get the most relevant upcoming/recent movies worldwide
-        url = f"https://api.tmdb.org/3/discover/movie?api_key={API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte={start_date}&page={page}"
+        url = f"{TMDB_API_BASE}/discover/movie?api_key={API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte={start_date}&page={page}"
         try:
             res = session.get(url, timeout=30)
             if res.status_code != 200:
@@ -95,7 +101,7 @@ def main():
     
     # --- Apply robust DB filters to the TMDB data before saving ---
     df_tmdb['vote_count'] = pd.to_numeric(df_tmdb['vote_count'], errors='coerce').fillna(0)
-    df_tmdb = df_tmdb[df_tmdb['vote_count'] > 1]
+    df_tmdb = df_tmdb[df_tmdb['vote_count'] >= 5]
     df_tmdb = df_tmdb[df_tmdb['vote_average'] < 10]
     df_tmdb = df_tmdb[df_tmdb['popularity'] > 1.75]
     df_tmdb['genres'] = df_tmdb['genres'].fillna('')

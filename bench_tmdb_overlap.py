@@ -47,8 +47,13 @@ if not TMDB_API_KEY:
     print("❌  TMDB_API_KEY not found in .env — cannot run TMDB overlap benchmark.")
     sys.exit(1)
 
-TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
-TMDB_RECS_URL   = "https://api.themoviedb.org/3/movie/{id}/recommendations"
+# Allow overriding the TMDB API host (some regions block api.themoviedb.org).
+# Examples:
+#   TMDB_API_BASE=https://api.tmdb.org/3
+#   TMDB_API_BASE=https://api.themoviedb.org/3
+TMDB_API_BASE = os.getenv("TMDB_API_BASE", "https://api.tmdb.org/3").rstrip("/")
+TMDB_SEARCH_URL = f"{TMDB_API_BASE}/search/movie"
+TMDB_RECS_URL   = f"{TMDB_API_BASE}/movie/{{id}}/recommendations"
 RATE_LIMIT_SLEEP = 0.25   # seconds between TMDB API calls
 TOP_K = 10
 
@@ -64,19 +69,59 @@ def normalize_title(title: str) -> str:
     return text.strip()
 
 
-def tmdb_search(title: str) -> int | None:
-    """Resolve a movie title to its TMDB ID using the search endpoint."""
-    params = {"api_key": TMDB_API_KEY, "query": title, "language": "en-US", "page": 1}
-    try:
-        resp = requests.get(TMDB_SEARCH_URL, params=params, timeout=10)
-        resp.raise_for_status()
-        results = resp.json().get("results", [])
-        if not results:
+def tmdb_search(title: str, year: int = None) -> int | None:
+    """
+    Resolve a movie title to its TMDB ID.
+    - If year is provided, try a year-scoped search first.
+    - Validate the result by comparing normalized titles before accepting.
+    - Falls back to unscoped search if year-scoped returns nothing.
+    - Returns None (and refuses to guess) if no confident match is found.
+    """
+    norm_query = normalize_title(title)
+
+    def _search(params: dict) -> int | None:
+        try:
+            resp = requests.get(TMDB_SEARCH_URL, params=params, timeout=10)
+            resp.raise_for_status()
+            results = resp.json().get("results", [])
+        except Exception as e:
+            print(f"     [WARN] TMDB search failed for '{title}': {e}")
             return None
-        return results[0]["id"]
-    except Exception as e:
-        print(f"     [WARN] TMDB search failed for '{title}': {e}")
+
+        # Check top 3 results for a normalized title match
+        for r in results[:3]:
+            if normalize_title(r.get("title", "")) == norm_query:
+                return r["id"]
         return None
+
+    # Pass 1: year-scoped (most reliable for ambiguous titles)
+    if year:
+        params = {
+            "api_key": TMDB_API_KEY,
+            "query": title,
+            "language": "en-US",
+            "page": 1,
+            "primary_release_year": year,
+        }
+        result = _search(params)
+        if result is not None:
+            return result
+
+    # Pass 2: unscoped fallback (for titles where year metadata is slightly off)
+    params = {
+        "api_key": TMDB_API_KEY,
+        "query": title,
+        "language": "en-US",
+        "page": 1,
+    }
+    result = _search(params)
+    if result is not None:
+        return result
+
+    # Refuse to guess — returning None causes the anchor to be logged as skipped
+    # rather than silently corrupting metrics with a wrong-movie ID.
+    print(f"     [WARN] No confident TMDB match found for '{title}' (year={year}). Skipping.")
+    return None
 
 
 def tmdb_recommendations(tmdb_id: int) -> list[str]:
@@ -216,11 +261,13 @@ for entry in golden_raw:
         skipped.append(anchor_title)
         continue
 
-    # 2. Resolve TMDB ID via search API
+    # 2. Resolve TMDB ID via search API (with year hint if available)
     time.sleep(RATE_LIMIT_SLEEP)
-    tmdb_id = tmdb_search(anchor_title)
+    anchor_year = entry.get("anchor_year") if isinstance(entry, dict) else None
+    tmdb_id = tmdb_search(anchor_title, year=anchor_year)
     if tmdb_id is None:
-        print(f"  ⚠️  '{anchor_title}' — TMDB search returned no results, skipping.")
+        year_str = f" ({anchor_year})" if anchor_year else ""
+        print(f"  ⚠️  '{anchor_title}'{year_str} — no confident TMDB match found, skipping.")
         skipped.append(anchor_title)
         continue
 

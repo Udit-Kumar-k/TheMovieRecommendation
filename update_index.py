@@ -51,7 +51,7 @@ df_new_full['genres'] = df_new_full['genres'].fillna('')
 df_new_full = df_new_full[~df_new_full['genres'].str.contains('TV Movie|Documentary', case=False, na=False)]
 
 df_new_full['vote_count'] = pd.to_numeric(df_new_full['vote_count'], errors='coerce').fillna(0)
-df_new_full = df_new_full[df_new_full['vote_count'] > 1]
+df_new_full = df_new_full[df_new_full['vote_count'] >= 5]
 df_new_full = df_new_full[df_new_full['vote_average'] < 10]
 
 # Filter out older movies with NO ratings while keeping upcoming releases

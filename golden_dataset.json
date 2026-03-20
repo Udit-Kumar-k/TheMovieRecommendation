@@ -1,362 +1,1602 @@
 [
   {
     "anchor": "Inception",
-    "ground_truth": ["Interstellar", "Shutter Island", "Memento", "The Prestige", "Tenet"]
+    "ground_truth": [
+      "Interstellar",
+      "Shutter Island",
+      "Memento",
+      "The Prestige",
+      "Tenet"
+    ],
+    "anchor_year": 2010
   },
   {
     "anchor": "The Dark Knight",
-    "ground_truth": ["Batman Begins", "The Dark Knight Rises", "Joker", "Se7en", "Heat"]
+    "ground_truth": [
+      "Batman Begins",
+      "The Dark Knight Rises",
+      "Joker",
+      "Se7en",
+      "Heat"
+    ],
+    "anchor_year": 2008
   },
   {
     "anchor": "Parasite",
-    "ground_truth": ["Burning", "Oldboy", "Memories of Murder", "Shoplifters", "Snowpiercer"]
+    "ground_truth": [
+      "Burning",
+      "Oldboy",
+      "Memories of Murder",
+      "Shoplifters",
+      "Snowpiercer"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Spirited Away",
-    "ground_truth": ["Howl's Moving Castle", "My Neighbor Totoro", "Princess Mononoke", "Ponyo", "Kiki's Delivery Service"]
+    "ground_truth": [
+      "Howl's Moving Castle",
+      "My Neighbor Totoro",
+      "Princess Mononoke",
+      "Ponyo",
+      "Kiki's Delivery Service"
+    ],
+    "anchor_year": 2001
   },
   {
     "anchor": "Pulp Fiction",
-    "ground_truth": ["Reservoir Dogs", "Kill Bill: Volume 1", "Snatch", "Lock, Stock and Two Smoking Barrels", "Fight Club"]
+    "ground_truth": [
+      "Reservoir Dogs",
+      "Kill Bill: Volume 1",
+      "Snatch",
+      "Lock, Stock and Two Smoking Barrels",
+      "Fight Club"
+    ],
+    "anchor_year": 1994
   },
   {
     "anchor": "Gone Girl",
-    "ground_truth": ["The Girl with the Dragon Tattoo", "Prisoners", "Nocturnal Animals", "A Simple Favor", "The Invisible Man"]
+    "ground_truth": [
+      "The Girl with the Dragon Tattoo",
+      "Prisoners",
+      "Nocturnal Animals",
+      "A Simple Favor",
+      "The Invisible Man"
+    ],
+    "anchor_year": 2014
   },
   {
     "anchor": "Pan's Labyrinth",
-    "ground_truth": ["The Shape of Water", "Crimson Peak", "The Devil's Backbone", "The Orphanage", "A Monster Calls"]
+    "ground_truth": [
+      "The Shape of Water",
+      "Crimson Peak",
+      "The Devil's Backbone",
+      "The Orphanage",
+      "A Monster Calls"
+    ],
+    "anchor_year": 2006
   },
   {
     "anchor": "Get Out",
-    "ground_truth": ["Us", "The Stepford Wives", "Midsommar", "The Invitation", "Sorry to Bother You"]
+    "ground_truth": [
+      "Us",
+      "The Stepford Wives",
+      "Midsommar",
+      "The Invitation",
+      "Sorry to Bother You"
+    ],
+    "anchor_year": 2017
   },
   {
     "anchor": "Mad Max: Fury Road",
-    "ground_truth": ["Mad Max 2", "Furiosa: A Mad Max Saga", "Dredd", "Snowpiercer", "Doomsday"]
+    "ground_truth": [
+      "Mad Max 2",
+      "Furiosa: A Mad Max Saga",
+      "Dredd",
+      "Snowpiercer",
+      "Doomsday"
+    ],
+    "anchor_year": 2015
   },
   {
     "anchor": "Enemy",
-    "ground_truth": ["The Double", "Nightcrawler", "Prisoners", "Mulholland Drive", "The Machinist"]
+    "ground_truth": [
+      "The Double",
+      "Nightcrawler",
+      "Prisoners",
+      "Mulholland Drive",
+      "The Machinist"
+    ],
+    "anchor_year": 2013
   },
   {
     "anchor": "3 Idiots",
-    "ground_truth": ["PK", "Taare Zameen Par", "Dangal", "Munna Bhai M.B.B.S.", "Zindagi Na Milegi Dobara"]
+    "ground_truth": [
+      "PK",
+      "Taare Zameen Par",
+      "Dangal",
+      "Munna Bhai M.B.B.S.",
+      "Zindagi Na Milegi Dobara"
+    ],
+    "anchor_year": 2009
   },
   {
     "anchor": "Your Name.",
-    "ground_truth": ["Weathering with You", "A Silent Voice", "The Garden of Words", "5 Centimeters per Second", "Suzume"]
+    "ground_truth": [
+      "Weathering with You",
+      "A Silent Voice",
+      "The Garden of Words",
+      "5 Centimeters per Second",
+      "Suzume"
+    ],
+    "anchor_year": 2016
   },
   {
     "anchor": "The Shawshank Redemption",
-    "ground_truth": ["The Green Mile", "Escape from Alcatraz", "Cool Hand Luke", "A Prophet", "The Count of Monte Cristo"]
+    "ground_truth": [
+      "The Green Mile",
+      "Escape from Alcatraz",
+      "Cool Hand Luke",
+      "A Prophet",
+      "The Count of Monte Cristo"
+    ],
+    "anchor_year": 1994
   },
   {
     "anchor": "City of God",
-    "ground_truth": ["Elite Squad", "Carandiru", "Pixote", "Central Station", "The Motorcycle Diaries"]
+    "ground_truth": [
+      "Elite Squad",
+      "Carandiru",
+      "Pixote",
+      "Central Station",
+      "The Motorcycle Diaries"
+    ],
+    "anchor_year": 2002
   },
   {
     "anchor": "The Matrix",
-    "ground_truth": ["The Matrix Reloaded", "The Matrix Revolutions", "Blade Runner", "Ghost in the Shell", "Dark City"]
+    "ground_truth": [
+      "The Matrix Reloaded",
+      "The Matrix Revolutions",
+      "Blade Runner",
+      "Ghost in the Shell",
+      "Dark City"
+    ],
+    "anchor_year": 1999
   },
   {
     "anchor": "Nannaku Prematho",
-    "ground_truth": ["1: Nenokkadine", "Animal", "Mahaan", "Aravinda Sametha Veera Raghava", "Agneepath"]
+    "ground_truth": [
+      "1: Nenokkadine",
+      "Animal",
+      "Mahaan",
+      "Aravinda Sametha Veera Raghava",
+      "Agneepath"
+    ],
+    "anchor_year": 2016
   },
   {
     "anchor": "Mahanati",
-    "ground_truth": ["Sita Ramam", "Jersey", "The Dirty Picture", "NTR: Kathanayakudu", "Rangasthalam"]
+    "ground_truth": [
+      "Sita Ramam",
+      "Jersey",
+      "The Dirty Picture",
+      "NTR: Kathanayakudu",
+      "Rangasthalam"
+    ],
+    "anchor_year": 2018
   },
   {
     "anchor": "Animal",
-    "ground_truth": ["Arjun Reddy", "Kabir Singh", "Gangs of Wasseypur", "Rocky Handsome", "Raman Raghav 2.0"]
+    "ground_truth": [
+      "Arjun Reddy",
+      "Kabir Singh",
+      "Gangs of Wasseypur",
+      "Rocky Handsome",
+      "Raman Raghav 2.0"
+    ],
+    "anchor_year": 2023
   },
   {
     "anchor": "mother!",
-    "ground_truth": ["Rosemary's Baby", "Hereditary", "Black Swan", "Midsommar", "The Lighthouse"]
+    "ground_truth": [
+      "Rosemary's Baby",
+      "Hereditary",
+      "Black Swan",
+      "Midsommar",
+      "The Lighthouse"
+    ],
+    "anchor_year": 2017
   },
   {
     "anchor": "Trainspotting",
-    "ground_truth": ["Requiem for a Dream", "The Basketball Diaries", "Enter the Void", "Fear and Loathing in Las Vegas", "Christiane F."]
+    "ground_truth": [
+      "Requiem for a Dream",
+      "The Basketball Diaries",
+      "Enter the Void",
+      "Fear and Loathing in Las Vegas",
+      "Christiane F."
+    ],
+    "anchor_year": 1996
   },
   {
     "anchor": "I Saw the Devil",
-    "ground_truth": ["The Chaser", "Oldboy", "Memories of Murder", "Sympathy for Mr. Vengeance", "Bedevilled"]
+    "ground_truth": [
+      "The Chaser",
+      "Oldboy",
+      "Memories of Murder",
+      "Sympathy for Mr. Vengeance",
+      "Bedevilled"
+    ],
+    "anchor_year": 2010
   },
   {
     "anchor": "Inside Llewyn Davis",
-    "ground_truth": ["Whiplash", "Amadeus", "Sound of Metal", "The Pianist", "Once"]
+    "ground_truth": [
+      "Whiplash",
+      "Amadeus",
+      "Sound of Metal",
+      "The Pianist",
+      "Once"
+    ],
+    "anchor_year": 2013
   },
   {
     "anchor": "Prisoners",
-    "ground_truth": ["Zodiac", "Se7en", "Gone Girl", "Mystic River", "Nightcrawler"]
+    "ground_truth": [
+      "Zodiac",
+      "Se7en",
+      "Gone Girl",
+      "Mystic River",
+      "Nightcrawler"
+    ],
+    "anchor_year": 2013
   },
   {
     "anchor": "Super Deluxe",
-    "ground_truth": ["Aaranya Kaandam", "Vada Chennai", "Kumbalangi Nights", "Jigarthanda", "Andhadhun"]
+    "ground_truth": [
+      "Aaranya Kaandam",
+      "Vada Chennai",
+      "Kumbalangi Nights",
+      "Jigarthanda",
+      "Andhadhun"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Tumbbad",
-    "ground_truth": ["Kantara", "Bramayugam", "Pari", "Bulbbul", "Virupaksha"]
+    "ground_truth": [
+      "Kantara",
+      "Bramayugam",
+      "Pari",
+      "Bulbbul",
+      "Virupaksha"
+    ],
+    "anchor_year": 2018
   },
   {
     "anchor": "Blade Runner 2049",
-    "ground_truth": ["Blade Runner", "Dune", "Arrival", "Ex Machina", "Ghost in the Shell"]
+    "ground_truth": [
+      "Blade Runner",
+      "Dune",
+      "Arrival",
+      "Ex Machina",
+      "Ghost in the Shell"
+    ],
+    "anchor_year": 2017
   },
   {
     "anchor": "Perfect Blue",
-    "ground_truth": ["Paprika", "Black Swan", "Mulholland Drive", "Neon Genesis Evangelion: The End of Evangelion", "Serial Experiments Lain"]
+    "ground_truth": [
+      "Paprika",
+      "Black Swan",
+      "Mulholland Drive",
+      "Neon Genesis Evangelion: The End of Evangelion",
+      "Serial Experiments Lain"
+    ],
+    "anchor_year": 1997
   },
   {
     "anchor": "Jersey",
-    "ground_truth": ["Nani's Gang Leader", "Majili", "Mallesham", "Chhichhore", "Bhaag Milkha Bhaag"]
+    "ground_truth": [
+      "Maharshi",
+      "Majili",
+      "Mallesham",
+      "Chhichhore",
+      "Bhaag Milkha Bhaag"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Gangs of Wasseypur",
-    "ground_truth": ["Sacred Games", "Mirzapur", "Satya", "Company", "Subramaniapuram"]
+    "ground_truth": [
+      "Satya",
+      "Company",
+      "Subramaniapuram",
+      "Angamaly Diaries",
+      "Vikram Vedha"
+    ],
+    "anchor_year": 2012
   },
   {
     "anchor": "Eega",
-    "ground_truth": ["Maryada Ramanna", "Magadheera", "Arundhati", "Enthiran", "Baahubali: The Beginning"]
+    "ground_truth": [
+      "Maryada Ramanna",
+      "Magadheera",
+      "Arundhati",
+      "Enthiran",
+      "Baahubali: The Beginning"
+    ],
+    "anchor_year": 2012
   },
   {
     "anchor": "The Thing",
-    "ground_truth": ["Alien", "Annihilation", "The Fly", "Invasion of the Body Snatchers", "Event Horizon"]
+    "ground_truth": [
+      "Alien",
+      "Annihilation",
+      "The Fly",
+      "Invasion of the Body Snatchers",
+      "Event Horizon"
+    ],
+    "anchor_year": 1982
   },
   {
     "anchor": "RRR",
-    "ground_truth": ["Baahubali 2: The Conclusion", "K.G.F: Chapter 1", "Salaar: Part 1 - Ceasefire", "Magadheera", "Pushpa: The Rise"]
+    "ground_truth": [
+      "Baahubali 2: The Conclusion",
+      "KGF: Chapter 1",
+      "Salaar: Part 1 - Ceasefire",
+      "Magadheera",
+      "Pushpa: The Rise"
+    ],
+    "anchor_year": 2022
   },
   {
     "anchor": "Vikram Vedha",
-    "ground_truth": ["Kaithi", "Asuran", "Ratsasan", "Thani Oruvan", "Karnan"]
+    "ground_truth": [
+      "Kaithi",
+      "Asuran",
+      "Ratsasan",
+      "Thani Oruvan",
+      "Karnan"
+    ],
+    "anchor_year": 2017
   },
   {
     "anchor": "Ex Machina",
-    "ground_truth": ["Her", "Annihilation", "Moon", "Under the Skin", "Upgrade"]
+    "ground_truth": [
+      "Her",
+      "Annihilation",
+      "Moon",
+      "Under the Skin",
+      "Upgrade"
+    ],
+    "anchor_year": 2014
   },
   {
     "anchor": "The Machinist",
-    "ground_truth": ["Memento", "Fight Club", "Black Swan", "Enemy", "Insomnia"]
+    "ground_truth": [
+      "Memento",
+      "Fight Club",
+      "Black Swan",
+      "Enemy",
+      "Insomnia"
+    ],
+    "anchor_year": 2004
   },
   {
     "anchor": "Portrait of a Lady on Fire",
-    "ground_truth": ["Call Me by Your Name", "Carol", "The Handmaiden", "In the Mood for Love", "Blue Is the Warmest Colour"]
+    "ground_truth": [
+      "Call Me by Your Name",
+      "Carol",
+      "The Handmaiden",
+      "In the Mood for Love",
+      "Blue Is the Warmest Colour"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Everything Everywhere All at Once",
-    "ground_truth": ["Spider-Man: Into the Spider-Verse", "The Matrix", "Scott Pilgrim vs. the World", "Swiss Army Man", "Kung Fu Hustle"]
+    "ground_truth": [
+      "Spider-Man: Into the Spider-Verse",
+      "The Matrix",
+      "Scott Pilgrim vs. the World",
+      "Swiss Army Man",
+      "Kung Fu Hustle"
+    ],
+    "anchor_year": 2022
   },
   {
     "anchor": "Grave of the Fireflies",
-    "ground_truth": ["Barefoot Gen", "In This Corner of the World", "The Wind Rises", "Schindler's List", "Come and See"]
+    "ground_truth": [
+      "Barefoot Gen",
+      "In This Corner of the World",
+      "The Wind Rises",
+      "Schindler's List",
+      "Come and See"
+    ],
+    "anchor_year": 1988
   },
   {
     "anchor": "Goodfellas",
-    "ground_truth": ["Casino", "The Godfather", "The Irishman", "The Departed", "A Bronx Tale"]
+    "ground_truth": [
+      "Casino",
+      "The Godfather",
+      "The Irishman",
+      "The Departed",
+      "A Bronx Tale"
+    ],
+    "anchor_year": 1990
   },
   {
     "anchor": "Akira",
-    "ground_truth": ["Ghost in the Shell", "Cowboy Bebop: The Movie", "Neon Genesis Evangelion: The End of Evangelion", "Metropolis", "Psycho-Pass: The Movie"]
+    "ground_truth": [
+      "Ghost in the Shell",
+      "Cowboy Bebop: The Movie",
+      "Neon Genesis Evangelion: The End of Evangelion",
+      "Metropolis",
+      "Psycho-Pass: The Movie"
+    ],
+    "anchor_year": 1988
   },
   {
     "anchor": "The Lighthouse",
-    "ground_truth": ["The Witch", "Eraserhead", "Persona", "Antichrist", "The Shining"]
+    "ground_truth": [
+      "The Witch",
+      "Eraserhead",
+      "Persona",
+      "Antichrist",
+      "The Shining"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Zodiac",
-    "ground_truth": ["Memories of Murder", "Mindhunter", "Se7en", "Prisoners", "The Silence of the Lambs"]
+    "ground_truth": [
+      "Memories of Murder",
+      "Se7en",
+      "Prisoners",
+      "The Silence of the Lambs",
+      "Mindhunter"
+    ],
+    "anchor_year": 2007
   },
   {
     "anchor": "The Silence of the Lambs",
-    "ground_truth": ["Se7en", "Zodiac", "Red Dragon", "Prisoners", "Hannibal"]
+    "ground_truth": [
+      "Se7en",
+      "Zodiac",
+      "Red Dragon",
+      "Prisoners",
+      "Hannibal"
+    ],
+    "anchor_year": 1991
   },
   {
     "anchor": "Mulholland Drive",
-    "ground_truth": ["Blue Velvet", "Lost Highway", "Inland Empire", "Barton Fink", "Perfect Blue"]
+    "ground_truth": [
+      "Blue Velvet",
+      "Lost Highway",
+      "Inland Empire",
+      "Barton Fink",
+      "Perfect Blue"
+    ],
+    "anchor_year": 2001
   },
   {
     "anchor": "Andhadhun",
-    "ground_truth": ["Drishyam", "Kahaani", "Badla", "Ratsasan", "Ludo"]
+    "ground_truth": [
+      "Drishyam",
+      "Kahaani",
+      "Badla",
+      "Ratsasan",
+      "Ludo"
+    ],
+    "anchor_year": 2018
   },
   {
     "anchor": "Stalker",
-    "ground_truth": ["Solaris", "Come and See", "The Seventh Seal", "Mirror", "Aguirre, the Wrath of God"]
+    "ground_truth": [
+      "Solaris",
+      "Come and See",
+      "The Seventh Seal",
+      "Mirror",
+      "Aguirre, the Wrath of God"
+    ],
+    "anchor_year": 1979
   },
   {
     "anchor": "Midsommar",
-    "ground_truth": ["Hereditary", "The Wicker Man", "The Witch", "Suspiria", "Rosemary's Baby"]
+    "ground_truth": [
+      "Hereditary",
+      "The Wicker Man",
+      "The Witch",
+      "Suspiria",
+      "Rosemary's Baby"
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "No Country for Old Men",
-    "ground_truth": ["There Will Be Blood", "Fargo", "Hell or High Water", "Sicario", "The Assassination of Jesse James by the Coward Robert Ford"]
+    "ground_truth": [
+      "There Will Be Blood",
+      "Fargo",
+      "Hell or High Water",
+      "Sicario",
+      "The Assassination of Jesse James by the Coward Robert Ford"
+    ],
+    "anchor_year": 2007
   },
   {
     "anchor": "Nocturnal Animals",
-    "ground_truth": ["Gone Girl", "Prisoners", "The Girl with the Dragon Tattoo", "Nightcrawler", "The Skin I Live In"]
+    "ground_truth": [
+      "Gone Girl",
+      "Prisoners",
+      "The Girl with the Dragon Tattoo",
+      "Nightcrawler",
+      "The Skin I Live In"
+    ],
+    "anchor_year": 2016
   },
   {
     "anchor": "Nightcrawler",
-    "ground_truth": ["Drive", "Taxi Driver", "American Psycho", "Enemy", "The Machinist"]
+    "ground_truth": [
+      "Drive",
+      "Taxi Driver",
+      "American Psycho",
+      "Enemy",
+      "The Machinist"
+    ],
+    "anchor_year": 2014
+  },
+  {
+    "anchor": "Masaan",
+    "ground_truth": [
+      {
+        "title": "Court",
+        "relevance": 2
+      },
+      {
+        "title": "Titli",
+        "relevance": 2
+      },
+      {
+        "title": "Aligarh",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Student of the Year",
+      "Ae Dil Hai Mushkil"
+    ],
+    "notes": "Indie Hindi film about grief, caste, forbidden love on Varanasi ghats. Negatives share Bollywood/romance genre tags but are mainstream commercial films with no thematic depth.",
+    "anchor_year": 2015
+  },
+  {
+    "anchor": "96",
+    "ground_truth": [
+      {
+        "title": "Alaipayuthey",
+        "relevance": 2
+      },
+      {
+        "title": "Kadhal",
+        "relevance": 2
+      },
+      {
+        "title": "OK Kanmani",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Enthiran",
+      "Baahubali: The Beginning"
+    ],
+    "notes": "Tamil film built entirely on pure nostalgia and quiet longing. Negatives share the same lead actor (Vijay Sethupathi/AR Rahman collaborations) or industry, but are mass-entertainer blockbusters.",
+    "anchor_year": 2018
+  },
+  {
+    "anchor": "Karnan",
+    "ground_truth": [
+      {
+        "title": "Pariyerum Perumal",
+        "relevance": 2
+      },
+      {
+        "title": "Asuran",
+        "relevance": 2
+      },
+      {
+        "title": "Jai Bhim",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Vikram",
+      "Master"
+    ],
+    "notes": "Tamil Dalit-revolt film with mythological layering. Negatives share the lead actor Dhanush or Tamil action genre tags but are pure mass entertainers with no caste/social critique.",
+    "anchor_year": 2021
+  },
+  {
+    "anchor": "Kantara",
+    "ground_truth": [
+      {
+        "title": "Jallikattu",
+        "relevance": 2
+      },
+      {
+        "title": "Tumbbad",
+        "relevance": 2
+      },
+      {
+        "title": "Irul",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "KGF: Chapter 2",
+      "Pushpa: The Rise"
+    ],
+    "notes": "Kannada folk-deity film about tribal identity and land. Negatives share the South Indian action/mass label and regional industry but are commercial revenge fantasies with no spiritual/folklore dimension.",
+    "anchor_year": 2022
+  },
+  {
+    "anchor": "Sairat",
+    "ground_truth": [
+      {
+        "title": "Pariyerum Perumal",
+        "relevance": 2
+      },
+      {
+        "title": "Court",
+        "relevance": 2
+      },
+      {
+        "title": "Masaan",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Kabir Singh",
+      "Student of the Year"
+    ],
+    "notes": "Marathi cross-caste love tragedy leading to honor killing. Kabir Singh is the hardest negative: same forbidden-romance surface but glorifies toxic masculinity. A shallow model treating them as equivalent is exactly the failure mode being tested.",
+    "anchor_year": 2016
+  },
+  {
+    "anchor": "Taare Zameen Par",
+    "ground_truth": [
+      {
+        "title": "Black",
+        "relevance": 2
+      },
+      {
+        "title": "Hichki",
+        "relevance": 2
+      },
+      {
+        "title": "English Vinglish",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Student of the Year",
+      "Kuch Kuch Hota Hai"
+    ],
+    "notes": "Hindi film about dyslexia, childhood interiority and art therapy. Negatives share school/youth Bollywood genre tags but are romantic entertainers with no emotional depth around learning or disability.",
+    "anchor_year": 2007
+  },
+  {
+    "anchor": "Kumbalangi Nights",
+    "ground_truth": [
+      {
+        "title": "Sudani from Nigeria",
+        "relevance": 2
+      },
+      {
+        "title": "Angamaly Diaries",
+        "relevance": 2
+      },
+      {
+        "title": "The Great Indian Kitchen",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Drishyam",
+      "Pulimurugan"
+    ],
+    "notes": "Malayalam new-wave film about masculine identity and dysfunctional brotherhood. Negatives are also Malayalam films — Drishyam is a family thriller, Pulimurugan is a mass action film — demonstrating the regional-language genre-tag trap.",
+    "anchor_year": 2019
+  },
+  {
+    "anchor": "Jallikattu",
+    "ground_truth": [
+      {
+        "title": "Angamaly Diaries",
+        "relevance": 2
+      },
+      {
+        "title": "The Great Indian Kitchen",
+        "relevance": 2
+      },
+      {
+        "title": "Sudani from Nigeria",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Predator",
+      "The Running Man"
+    ],
+    "notes": "Malayalam film about collective human regression triggered by a bull on the loose — a Golding-esque descent. Negatives match on 'hunt/chase' keywords but are entirely different in thematic register and culture.",
+    "anchor_year": 2019
+  },
+  {
+    "anchor": "Sarpatta Parambarai",
+    "ground_truth": [
+      {
+        "title": "Karnan",
+        "relevance": 2
+      },
+      {
+        "title": "Asuran",
+        "relevance": 2
+      },
+      {
+        "title": "Vada Chennai",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Creed",
+      "Southpaw"
+    ],
+    "notes": "Tamil boxing film set in 1970s Madras, about labour unions, caste, and community identity. Negatives share the boxing genre tag but are American personal-redemption narratives with no social-historical dimension.",
+    "anchor_year": 2021
+  },
+  {
+    "anchor": "Drishyam",
+    "ground_truth": [
+      {
+        "title": "Memories",
+        "relevance": 2
+      },
+      {
+        "title": "Mumbai Police",
+        "relevance": 2
+      },
+      {
+        "title": "Anjaam Pathiraa",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "The Dark Knight",
+      "Fast Five"
+    ],
+    "notes": "Malayalam cat-and-mouse thriller about a father concealing an accidental killing to protect his family. All GTs are Malayalam procedurals with moral ambiguity. Negatives match on 'crime/thriller' but are an American superhero film and a Hollywood heist film.",
+    "anchor_year": 2013
+  },
+  {
+    "anchor": "Kahaani",
+    "ground_truth": [
+      {
+        "title": "Badla",
+        "relevance": 2
+      },
+      {
+        "title": "Talaash",
+        "relevance": 2
+      },
+      {
+        "title": "Detective Byomkesh Bakshy!",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Mission: Impossible - Fallout",
+      "Salt"
+    ],
+    "notes": "Bengali-language female-led mystery set in Kolkata Durga Puja. GTs are Hindi slow-burn mysteries with strong identity-reveal structures. Negatives match 'female protagonist thriller' but are high-octane spy-action films with no mystery or place-rooted atmosphere.",
+    "anchor_year": 2012
+  },
+  {
+    "anchor": "Shoplifters",
+    "ground_truth": [
+      {
+        "title": "Nobody Knows",
+        "relevance": 2
+      },
+      {
+        "title": "Like Father Like Son",
+        "relevance": 2
+      },
+      {
+        "title": "Still Walking",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Ocean's Eleven",
+      "The Italian Job"
+    ],
+    "notes": "Koreeda's film about a found-family of Tokyo's poor held together by petty theft and love. Negatives share 'theft/stealing' keywords but are American heist comedies with no connection to poverty, parenthood, or social safety nets.",
+    "anchor_year": 2018
+  },
+  {
+    "anchor": "Burning",
+    "ground_truth": [
+      {
+        "title": "Poetry",
+        "relevance": 2
+      },
+      {
+        "title": "A Bittersweet Life",
+        "relevance": 2
+      },
+      {
+        "title": "The Wailing",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Backdraft",
+      "Firestarter"
+    ],
+    "notes": "Lee Chang-dong's slow Faulkner-influenced study of class envy and ambiguity. Negatives match literally on 'fire/burning' keywords but are an American firefighter thriller and a supernatural horror film.",
+    "anchor_year": 2018
+  },
+  {
+    "anchor": "A Separation",
+    "ground_truth": [
+      {
+        "title": "The Salesman",
+        "relevance": 2
+      },
+      {
+        "title": "About Elly",
+        "relevance": 2
+      },
+      {
+        "title": "Force Majeure",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Taken",
+      "The Parent Trap"
+    ],
+    "notes": "Farhadi's moral-maze about divorce, class, and religious duty in Tehran. Negatives match 'family separation' keywords — Taken is an action thriller about abduction, The Parent Trap a children's comedy. Tests whether the model understands moral realism vs action/comedy genre.",
+    "anchor_year": 2011
+  },
+  {
+    "anchor": "Son of Saul",
+    "ground_truth": [
+      {
+        "title": "The Zone of Interest",
+        "relevance": 2
+      },
+      {
+        "title": "Schindler's List",
+        "relevance": 2
+      },
+      {
+        "title": "Ida",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Saving Private Ryan",
+      "Dunkirk"
+    ],
+    "notes": "Hungarian Sonderkommando film shot in tight POV, about burial rites amid industrialised murder. Negatives share 'WWII' genre tag but are combat-action survival films. Tests the difference between WWII-as-heroism vs WWII-as-systemic-horror.",
+    "anchor_year": 2015
+  },
+  {
+    "anchor": "Toni Erdmann",
+    "ground_truth": [
+      {
+        "title": "Force Majeure",
+        "relevance": 2
+      },
+      {
+        "title": "The Square",
+        "relevance": 2
+      },
+      {
+        "title": "The Worst Person in the World",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Mrs. Doubtfire",
+      "Big Daddy"
+    ],
+    "notes": "German dark comedy about a father's performative interventions in his alienated daughter's corporate life. Negatives match 'parent in disguise/comedy' but are American crowd-pleasers with no critique of capitalist performance or masculine guilt.",
+    "anchor_year": 2016
+  },
+  {
+    "anchor": "Wild Tales",
+    "ground_truth": [
+      {
+        "title": "Three Billboards Outside Ebbing Missouri",
+        "relevance": 2
+      },
+      {
+        "title": "I Don't Feel at Home in This World Anymore",
+        "relevance": 2
+      },
+      {
+        "title": "The Square",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Sin City",
+      "Grown Ups"
+    ],
+    "notes": "Argentine dark-comedy anthology about revenge and social rage. Negatives share 'anthology/dark stories' tags — Sin City is a noir graphic-novel adaptation, Grown Ups is a mainstream ensemble comedy. Tests anthology-type vs thematic-rage retrieval.",
+    "anchor_year": 2014
+  },
+  {
+    "anchor": "The Hunt",
+    "ground_truth": [
+      {
+        "title": "Doubt",
+        "relevance": 2
+      },
+      {
+        "title": "Mystic River",
+        "relevance": 2
+      },
+      {
+        "title": "Compliance",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Predators",
+      "The Maze Runner"
+    ],
+    "notes": "Danish film (Mads Mikkelsen) about a community destroying an innocent man over a false accusation. Negatives match 'hunt' keyword — Predators and Maze Runner are sci-fi/action survival films with no connection to mob mentality or institutional failure.",
+    "anchor_year": 2012
+  },
+  {
+    "anchor": "Force Majeure",
+    "ground_truth": [
+      {
+        "title": "Toni Erdmann",
+        "relevance": 2
+      },
+      {
+        "title": "A Separation",
+        "relevance": 2
+      },
+      {
+        "title": "Blue Valentine",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "The Day After Tomorrow",
+      "Frozen"
+    ],
+    "notes": "Swedish film where a controlled avalanche triggers a marriage crisis around male cowardice. Negatives match 'avalanche/snow/disaster' keywords but are a Hollywood disaster blockbuster and a Disney animated musical — no overlap in psychological or marital realism.",
+    "anchor_year": 2014
+  },
+  {
+    "anchor": "Capernaum",
+    "ground_truth": [
+      {
+        "title": "Beasts of the Southern Wild",
+        "relevance": 2
+      },
+      {
+        "title": "The Florida Project",
+        "relevance": 2
+      },
+      {
+        "title": "Lion",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Home Alone",
+      "Matilda"
+    ],
+    "notes": "Lebanese film in which a 12-year-old sues his parents for giving him life, amid refugee slums. Negatives match 'child unsupervised by parents' but are a slapstick Christmas comedy and a whimsical Roald Dahl adaptation — polar opposites in tonal register.",
+    "anchor_year": 2018
+  },
+  {
+    "anchor": "Poetry",
+    "ground_truth": [
+      {
+        "title": "Still Alice",
+        "relevance": 2
+      },
+      {
+        "title": "Secret Sunshine",
+        "relevance": 2
+      },
+      {
+        "title": "Amour",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Dead Poets Society",
+      "Finding Forrester"
+    ],
+    "notes": "Lee Chang-dong's film about an elderly woman with Alzheimer's, complicity in sexual violence, and finding beauty in guilt. Negatives match 'poetry/writing/language' keywords but are feel-good teacher/mentorship films with none of the moral weight.",
+    "anchor_year": 2010
+  },
+  {
+    "anchor": "Synecdoche, New York",
+    "ground_truth": [
+      {
+        "title": "Anomalisa",
+        "relevance": 2
+      },
+      {
+        "title": "Being John Malkovich",
+        "relevance": 2
+      },
+      {
+        "title": "I'm Thinking of Ending Things",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "La La Land",
+      "The Greatest Showman"
+    ],
+    "notes": "Kaufman's existential labyrinth about an artist replicating life inside a warehouse. Negatives match 'theatre/performance/New York' but are upbeat musical celebration-of-art films — the opposite of Synecdoche's existential dread and recursive despair.",
+    "anchor_year": 2008
+  },
+  {
+    "anchor": "The Tree of Life",
+    "ground_truth": [
+      {
+        "title": "Badlands",
+        "relevance": 2
+      },
+      {
+        "title": "Days of Heaven",
+        "relevance": 2
+      },
+      {
+        "title": "A Ghost Story",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Jurassic Park",
+      "Avatar"
+    ],
+    "notes": "Malick's meditation on childhood memory, grace, nature, and cosmic time. Negatives match 'dinosaurs/ancient life' (Jurassic Park) or 'cosmic nature/spiritual visual spectacle' (Avatar) but are a genre adventure and a sci-fi blockbuster — no interior or philosophical dimension.",
+    "anchor_year": 2011
+  },
+  {
+    "anchor": "First Reformed",
+    "ground_truth": [
+      {
+        "title": "Silence",
+        "relevance": 2
+      },
+      {
+        "title": "Calvary",
+        "relevance": 2
+      },
+      {
+        "title": "The Master",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "An Inconvenient Truth",
+      "The Day After Tomorrow"
+    ],
+    "notes": "Schrader's film about a minister whose faith is shattered by environmental grief, leading to radical despair. Negatives match 'environmental crisis' keywords but are a documentary and a blockbuster disaster film — neither engages with spiritual crisis or religious psychology.",
+    "anchor_year": 2017
+  },
+  {
+    "anchor": "Annihilation",
+    "ground_truth": [
+      {
+        "title": "Under the Skin",
+        "relevance": 2
+      },
+      {
+        "title": "Arrival",
+        "relevance": 2
+      },
+      {
+        "title": "Coherence",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Alien",
+      "Predator"
+    ],
+    "notes": "Garland's film about self-destruction, grief, and biological uncanny through a female lens. GTs are sci-fi films with feminine subjectivity and philosophical dread. Negatives match 'sci-fi creature/alien horror' but are masculine-coded survival-action films.",
+    "anchor_year": 2018
+  },
+  {
+    "anchor": "Her",
+    "ground_truth": [
+      {
+        "title": "Eternal Sunshine of the Spotless Mind",
+        "relevance": 2
+      },
+      {
+        "title": "Lost in Translation",
+        "relevance": 2
+      },
+      {
+        "title": "The Double",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Transformers",
+      "I, Robot"
+    ],
+    "notes": "Jonze's film about loneliness, intimacy, and modern disconnection via an OS relationship. Negatives match 'AI/robot' genre tags but are action blockbusters with no emotional interiority. Tests AI-as-philosophical vs AI-as-action-threat.",
+    "anchor_year": 2013
+  },
+  {
+    "anchor": "Whiplash",
+    "ground_truth": [
+      {
+        "title": "Black Swan",
+        "relevance": 2
+      },
+      {
+        "title": "Foxcatcher",
+        "relevance": 2
+      },
+      {
+        "title": "The Wrestler",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "La La Land",
+      "Bohemian Rhapsody"
+    ],
+    "notes": "Chazelle's film about abusive perfectionism and identity destruction through jazz drumming. GTs all share the obsession-and-sacrifice-of-self arc. Negatives share 'jazz/music' tags or same director but are celebratory, feel-good narratives about artistic triumph.",
+    "anchor_year": 2014
+  },
+  {
+    "anchor": "Melancholia",
+    "ground_truth": [
+      {
+        "title": "Take Shelter",
+        "relevance": 2
+      },
+      {
+        "title": "A Ghost Story",
+        "relevance": 2
+      },
+      {
+        "title": "Antichrist",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Armageddon",
+      "Deep Impact"
+    ],
+    "notes": "Trier's film using a planet collision as a metaphor for clinical depression and existential acceptance. Negatives match 'asteroid/end of world' but are American action-survival blockbusters driven by heroism rather than surrender and grief.",
+    "anchor_year": 2011
+  },
+  {
+    "anchor": "Drive",
+    "ground_truth": [
+      {
+        "title": "Only God Forgives",
+        "relevance": 2
+      },
+      {
+        "title": "Collateral",
+        "relevance": 2
+      },
+      {
+        "title": "Thief",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "The Fast and the Furious",
+      "Need for Speed"
+    ],
+    "notes": "Refn's neo-noir about a silent, violence-capable driver who protects a woman and child. GTs share the night-city noir atmosphere and lone-operator anti-hero. Negatives match 'cars/driving/racing' but are adrenaline franchise films with no interiority or visual stylization.",
+    "anchor_year": 2011
+  },
+  {
+    "anchor": "Mommy",
+    "ground_truth": [
+      {
+        "title": "Beautiful Boy",
+        "relevance": 2
+      },
+      {
+        "title": "I Killed My Mother",
+        "relevance": 2
+      },
+      {
+        "title": "Ordinary People",
+        "relevance": 2
+      }
+    ],
+    "negative_titles": [
+      "Juno",
+      "Mean Girls"
+    ],
+    "notes": "Xavier Dolan's Canadian film about a single mother's exhausting love for a volatile troubled teen, shot in a 1:1 aspect ratio. Negatives match 'teen/coming-of-age/mother' tags but are bright comedies with none of the psychological violence or intimacy of Dolan's register.",
+    "anchor_year": 2014
   },
   {
     "anchor": "The Dark Knight Rises",
     "ground_truth": [
-      {"title": "Batman Begins", "relevance": 2},
-      {"title": "The Dark Knight", "relevance": 2},
-      {"title": "Joker", "relevance": 2}
-    ]
+      {
+        "title": "Batman Begins",
+        "relevance": 2
+      },
+      {
+        "title": "The Dark Knight",
+        "relevance": 2
+      },
+      {
+        "title": "Joker",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2012
   },
   {
     "anchor": "Harry Potter and the Sorcerer's Stone",
     "ground_truth": [
-      {"title": "Harry Potter and the Chamber of Secrets", "relevance": 2},
-      {"title": "Harry Potter and the Prisoner of Azkaban", "relevance": 2},
-      {"title": "Harry Potter and the Goblet of Fire", "relevance": 2}
-    ]
+      {
+        "title": "Harry Potter and the Chamber of Secrets",
+        "relevance": 2
+      },
+      {
+        "title": "Harry Potter and the Prisoner of Azkaban",
+        "relevance": 2
+      },
+      {
+        "title": "Harry Potter and the Goblet of Fire",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2001
   },
   {
     "anchor": "The Lord of the Rings: The Two Towers",
     "ground_truth": [
-      {"title": "The Lord of the Rings: The Fellowship of the Ring", "relevance": 2},
-      {"title": "The Lord of the Rings: The Return of the King", "relevance": 2},
-      {"title": "The Hobbit: An Unexpected Journey", "relevance": 2}
-    ]
+      {
+        "title": "The Lord of the Rings: The Fellowship of the Ring",
+        "relevance": 2
+      },
+      {
+        "title": "The Lord of the Rings: The Return of the King",
+        "relevance": 2
+      },
+      {
+        "title": "The Hobbit: An Unexpected Journey",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2002
   },
   {
     "anchor": "Avengers: Infinity War",
     "ground_truth": [
-      {"title": "Avengers: Endgame", "relevance": 2},
-      {"title": "Captain America: Civil War", "relevance": 2},
-      {"title": "Thor: Ragnarok", "relevance": 2}
-    ]
+      {
+        "title": "Avengers: Endgame",
+        "relevance": 2
+      },
+      {
+        "title": "Captain America: Civil War",
+        "relevance": 2
+      },
+      {
+        "title": "Thor: Ragnarok",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2018
   },
   {
     "anchor": "Toy Story 2",
     "ground_truth": [
-      {"title": "Toy Story", "relevance": 2},
-      {"title": "Toy Story 3", "relevance": 2},
-      {"title": "Toy Story 4", "relevance": 2}
-    ]
+      {
+        "title": "Toy Story",
+        "relevance": 2
+      },
+      {
+        "title": "Toy Story 3",
+        "relevance": 2
+      },
+      {
+        "title": "Toy Story 4",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1999
   },
   {
     "anchor": "John Wick: Chapter 2",
     "ground_truth": [
-      {"title": "John Wick", "relevance": 2},
-      {"title": "John Wick: Chapter 3 - Parabellum", "relevance": 2},
-      {"title": "John Wick: Chapter 4", "relevance": 2}
-    ]
+      {
+        "title": "John Wick",
+        "relevance": 2
+      },
+      {
+        "title": "John Wick: Chapter 3 - Parabellum",
+        "relevance": 2
+      },
+      {
+        "title": "John Wick: Chapter 4",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2017
   },
   {
     "anchor": "Mission: Impossible – Fallout",
     "ground_truth": [
-      {"title": "Mission: Impossible - Rogue Nation", "relevance": 2},
-      {"title": "Mission: Impossible - Ghost Protocol", "relevance": 2},
-      {"title": "Mission: Impossible III", "relevance": 2}
-    ]
+      {
+        "title": "Mission: Impossible - Rogue Nation",
+        "relevance": 2
+      },
+      {
+        "title": "Mission: Impossible - Ghost Protocol",
+        "relevance": 2
+      },
+      {
+        "title": "Mission: Impossible III",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2018
   },
   {
     "anchor": "The Godfather Part II",
     "ground_truth": [
-      {"title": "The Godfather", "relevance": 2},
-      {"title": "The Godfather Part III", "relevance": 2},
-      {"title": "Goodfellas", "relevance": 2}
-    ]
+      {
+        "title": "The Godfather",
+        "relevance": 2
+      },
+      {
+        "title": "The Godfather Part III",
+        "relevance": 2
+      },
+      {
+        "title": "Goodfellas",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1974
   },
   {
     "anchor": "Aliens",
     "ground_truth": [
-      {"title": "Alien", "relevance": 2},
-      {"title": "Alien 3", "relevance": 2},
-      {"title": "Alien: Covenant", "relevance": 2}
-    ]
+      {
+        "title": "Alien",
+        "relevance": 2
+      },
+      {
+        "title": "Alien 3",
+        "relevance": 2
+      },
+      {
+        "title": "Alien: Covenant",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1986
   },
   {
     "anchor": "Indiana Jones and the Temple of Doom",
     "ground_truth": [
-      {"title": "Raiders of the Lost Ark", "relevance": 2},
-      {"title": "Indiana Jones and the Last Crusade", "relevance": 2},
-      {"title": "Indiana Jones and the Kingdom of the Crystal Skull", "relevance": 2}
-    ]
+      {
+        "title": "Raiders of the Lost Ark",
+        "relevance": 2
+      },
+      {
+        "title": "Indiana Jones and the Last Crusade",
+        "relevance": 2
+      },
+      {
+        "title": "Indiana Jones and the Kingdom of the Crystal Skull",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1984
   },
   {
     "anchor": "The Matrix Reloaded",
     "ground_truth": [
-      {"title": "The Matrix", "relevance": 2},
-      {"title": "The Matrix Revolutions", "relevance": 2},
-      {"title": "The Matrix Resurrections", "relevance": 2}
-    ]
+      {
+        "title": "The Matrix",
+        "relevance": 2
+      },
+      {
+        "title": "The Matrix Revolutions",
+        "relevance": 2
+      },
+      {
+        "title": "The Matrix Resurrections",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2003
   },
   {
     "anchor": "Finding Dory",
     "ground_truth": [
-      {"title": "Finding Nemo", "relevance": 2},
-      {"title": "The Little Mermaid", "relevance": 2},
-      {"title": "Moana", "relevance": 2}
-    ]
+      {
+        "title": "Finding Nemo",
+        "relevance": 2
+      },
+      {
+        "title": "The Little Mermaid",
+        "relevance": 2
+      },
+      {
+        "title": "Moana",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2016
   },
   {
     "anchor": "Jurassic World",
     "ground_truth": [
-      {"title": "Jurassic Park", "relevance": 2},
-      {"title": "The Lost World: Jurassic Park", "relevance": 2},
-      {"title": "Jurassic World: Fallen Kingdom", "relevance": 2}
-    ]
+      {
+        "title": "Jurassic Park",
+        "relevance": 2
+      },
+      {
+        "title": "The Lost World: Jurassic Park",
+        "relevance": 2
+      },
+      {
+        "title": "Jurassic World: Fallen Kingdom",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2015
   },
   {
     "anchor": "Spider-Man: Far From Home",
     "ground_truth": [
-      {"title": "Spider-Man: Homecoming", "relevance": 2},
-      {"title": "Spider-Man: No Way Home", "relevance": 2},
-      {"title": "Doctor Strange in the Multiverse of Madness", "relevance": 2}
-    ]
+      {
+        "title": "Spider-Man: Homecoming",
+        "relevance": 2
+      },
+      {
+        "title": "Spider-Man: No Way Home",
+        "relevance": 2
+      },
+      {
+        "title": "Doctor Strange in the Multiverse of Madness",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2019
   },
   {
     "anchor": "Pirates of the Caribbean: Dead Man's Chest",
     "ground_truth": [
-      {"title": "Pirates of the Caribbean: The Curse of the Black Pearl", "relevance": 2},
-      {"title": "Pirates of the Caribbean: At World's End", "relevance": 2},
-      {"title": "Pirates of the Caribbean: On Stranger Tides", "relevance": 2}
-    ]
+      {
+        "title": "Pirates of the Caribbean: The Curse of the Black Pearl",
+        "relevance": 2
+      },
+      {
+        "title": "Pirates of the Caribbean: At World's End",
+        "relevance": 2
+      },
+      {
+        "title": "Pirates of the Caribbean: On Stranger Tides",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2006
   },
   {
     "anchor": "Rocky II",
     "ground_truth": [
-      {"title": "Rocky", "relevance": 2},
-      {"title": "Rocky III", "relevance": 2},
-      {"title": "Creed", "relevance": 2}
-    ]
+      {
+        "title": "Rocky",
+        "relevance": 2
+      },
+      {
+        "title": "Rocky III",
+        "relevance": 2
+      },
+      {
+        "title": "Creed",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1979
   },
   {
     "anchor": "Terminator 2: Judgment Day",
     "ground_truth": [
-      {"title": "The Terminator", "relevance": 2},
-      {"title": "Terminator 3: Rise of the Machines", "relevance": 2},
-      {"title": "Terminator Genisys", "relevance": 2}
-    ]
+      {
+        "title": "The Terminator",
+        "relevance": 2
+      },
+      {
+        "title": "Terminator 3: Rise of the Machines",
+        "relevance": 2
+      },
+      {
+        "title": "Terminator Genisys",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 1991
   },
   {
     "anchor": "X2",
     "ground_truth": [
-      {"title": "X-Men", "relevance": 2},
-      {"title": "X-Men: The Last Stand", "relevance": 2},
-      {"title": "X-Men: Days of Future Past", "relevance": 2}
-    ]
+      {
+        "title": "X-Men",
+        "relevance": 2
+      },
+      {
+        "title": "X-Men: The Last Stand",
+        "relevance": 2
+      },
+      {
+        "title": "X-Men: Days of Future Past",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2003
   },
   {
     "anchor": "How to Train Your Dragon 2",
     "ground_truth": [
-      {"title": "How to Train Your Dragon", "relevance": 2},
-      {"title": "How to Train Your Dragon: The Hidden World", "relevance": 2},
-      {"title": "Kung Fu Panda", "relevance": 2}
-    ]
+      {
+        "title": "How to Train Your Dragon",
+        "relevance": 2
+      },
+      {
+        "title": "How to Train Your Dragon: The Hidden World",
+        "relevance": 2
+      },
+      {
+        "title": "Kung Fu Panda",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2014
   },
   {
     "anchor": "Fast & Furious 6",
     "ground_truth": [
-      {"title": "Fast Five", "relevance": 2},
-      {"title": "Furious 7", "relevance": 2},
-      {"title": "The Fast and the Furious", "relevance": 2}
-    ]
+      {
+        "title": "Fast Five",
+        "relevance": 2
+      },
+      {
+        "title": "Furious 7",
+        "relevance": 2
+      },
+      {
+        "title": "The Fast and the Furious",
+        "relevance": 2
+      }
+    ],
+    "anchor_year": 2013
   }
 ]
