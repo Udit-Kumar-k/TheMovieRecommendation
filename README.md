@@ -9,6 +9,8 @@ app_port: 7860
 ---
 # 🎬 MovieRec — Semantic Movie Recommendation Engine
 
+**[Live Demo on Hugging Face Spaces](https://uditkumar-moviesindex.hf.space/)**
+
 > *Find your next obsession. Not because it's popular — because it actually matches what you love.*
 
 ---
