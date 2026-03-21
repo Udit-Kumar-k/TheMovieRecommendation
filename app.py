@@ -127,7 +127,8 @@ def enrich_tmdb_results():
 def home():
     load_dotenv()
     api_key = os.getenv('TMDB_API_KEY')
-    return render_template('index.html', tmdb_api_key=api_key)
+    api_base = os.getenv('TMDB_API_BASE', 'https://api.tmdb.org/3')
+    return render_template('index.html', tmdb_api_key=api_key, tmdb_api_base=api_base)
 
 @app.route('/smart_recommend', methods=['GET'])
 def smart_recommend():

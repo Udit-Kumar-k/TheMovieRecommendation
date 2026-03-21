@@ -121,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetId = movie.id || movie.tmdb_id;
       if (targetId) {
         const apiKey = window.TMDB_API_KEY || '';
-        fetch(`https://api.tmdb.org/3/movie/${targetId}?api_key=${apiKey}`)
+        const apiBase = window.TMDB_API_BASE || 'https://api.tmdb.org/3';
+        fetch(`${apiBase}/movie/${targetId}?api_key=${apiKey}`)
           .then(res => res.json())
           .then(data => {
             // Live TMDB Adult overriding
@@ -246,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function fetchTMDBRecommendations(id, title) {
     const apiKey = window.TMDB_API_KEY || '';
-    const url = `https://api.tmdb.org/3/movie/${id}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
+    const apiBase = window.TMDB_API_BASE || 'https://api.tmdb.org/3';
+    const url = `${apiBase}/movie/${id}/recommendations?api_key=${apiKey}&language=en-US&page=1`;
     return fetch(url)
       .then(res => {
         if (!res.ok) {
@@ -452,7 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const apiKey = window.TMDB_API_KEY || '';
-    const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(searchQuery)}${yearParam}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
+    const apiBase = window.TMDB_API_BASE || 'https://api.tmdb.org/3';
+    const url = `${apiBase}/search/movie?query=${encodeURIComponent(searchQuery)}${yearParam}&include_adult=true&language=en-US&page=1&api_key=${apiKey}`;
 
     fetch(url, { headers: { 'accept': 'application/json' } })
       .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch from TMDB"))
