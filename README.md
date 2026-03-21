@@ -27,7 +27,7 @@ Built on **FAISS vector search** + **sentence transformers**, with a clean Flask
 
 Each movie is encoded as a high-dimensional semantic vector from its genres, keywords, and overview. When you search for a movie, the engine performs approximate nearest-neighbor lookup in a 90,000-movie FAISS index — returning films that are genuinely similar in theme, tone, and narrative structure.
 
-On top of raw cosine similarity, a **25% Genre Jaccard boost** nudges results toward domain-relevant matches. This was validated in ablation testing: the boost moves genre alignment from ~96% → **98.8%** without sacrificing semantic diversity.
+On top of raw cosine similarity, a **25% Genre Jaccard boost** nudges results toward domain-relevant matches. This was validated in ablation testing: the boost moves genre alignment from ~92.1% → **98.7%** without sacrificing semantic diversity.
 
 ```
 User query
@@ -72,12 +72,12 @@ Results (top 50, rendered as poster grid with live TMDB metadata)
 
 Benchmarked on a hand-curated golden dataset of 100 anchor movies (20 franchise pairs, 20 cross-genre semantic pairs, 25 hard cases, 35 Bollywood/regional films).
 
-| Model | Recall@5 | Recall@10 | nDCG@10 | MRR@10 | Latency |
-|---|---|---|---|---|---|
-| **MiniLM** *(production)* | 14.7% | 17.9% | 0.235 | 0.225 | **1.72 ms** |
-| MPNet | 15.8% | 18.7% | 0.247 | 0.230 | 10.56 ms |
+| Model | Recall@5 | Recall@10 | nDCG@5 | nDCG@10 | MRR@5 | MRR@10 | TMDB Overlap@10 | Latency |
+|---|---|---|---|---|---|---|---|---|
+| **MiniLM** *(production)* | 16.3% | 20.0% | **0.277** | **0.279** | **0.262** | **0.266** | 1.12 | **1.64 ms** |
+| MPNet | 16.4% | 20.5% | 0.253 | 0.277 | 0.238 | 0.251 | 1.12 | 10.38 ms |
 
-MPNet beats MiniLM by ~8% on Recall@5 — but at a **514% latency penalty** (6×  slower). MiniLM was selected for production: comparable semantic accuracy, real-time serving performance.
+The models are nearly identical on Recall — MPNet edges ahead by just 0.8pp on Recall@5 and 2.7pp on Recall@10. But MiniLM actually **beats MPNet on ranking quality**: higher nDCG@5 (0.277 vs 0.253) and MRR@5 (0.262 vs 0.238), meaning it surfaces relevant results higher up the list. At a **533% latency penalty** (~6.3× slower) for MPNet, the choice is clear: MiniLM wins on both speed and ranking quality.
 
 > Recall numbers look modest by design. The evaluation deliberately targets **hard semantic pairs** — not obvious franchise sequels or genre clones. A system that finds *Burning* for *Parasite* and *Force Majeure* for *A Separation* is doing real work.
 
