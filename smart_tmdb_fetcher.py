@@ -107,11 +107,6 @@ def main():
     df_tmdb['genres'] = df_tmdb['genres'].fillna('')
     df_tmdb = df_tmdb[~df_tmdb['genres'].str.contains('TV Movie|Documentary', case=False, na=False)]
     
-    # Load bulk Kaggle CSV for the historical long-tail
-    kaggle_path = get_dataset_path()
-    print(f"\n📂 Loading old Kaggle dataset from {kaggle_path} to merge...")
-    df_kaggle = pd.read_csv(kaggle_path)
-    
     print("🔄 Merging datasets... prioritizing the pristine 100% accurate TMDB API Data for recent movies...")
     df_kaggle.set_index('id', inplace=True)
     df_tmdb.set_index('id', inplace=True)
