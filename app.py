@@ -360,4 +360,5 @@ def movie_detail(movie_id):
     return render_template('movie_detail.html', movie=movie, tmdb_api_key=api_key, error=False)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Bind to 0.0.0.0 and port 7860 for Hugging Face Spaces
+    app.run(host="0.0.0.0", port=7860, debug=False)
