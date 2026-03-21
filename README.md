@@ -1,3 +1,12 @@
+---
+title: MoviesIndex
+emoji: 🎥
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+app_port: 7860
+---
 # Movie Recommendation System
 
 A semantic movie recommendation engine using FAISS and sentence transformers.
