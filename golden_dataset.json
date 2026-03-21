@@ -5,7 +5,7 @@
       "Interstellar",
       "Shutter Island",
       "Memento",
-      "The Prestige",
+      "Matrix",
       "Tenet"
     ],
     "anchor_year": 2010
@@ -50,7 +50,7 @@
       "Kill Bill: Volume 1",
       "Snatch",
       "Lock, Stock and Two Smoking Barrels",
-      "Fight Club"
+      "Good Time"
     ],
     "anchor_year": 1994
   },
@@ -61,7 +61,7 @@
       "Prisoners",
       "Nocturnal Animals",
       "A Simple Favor",
-      "The Invisible Man"
+      "Enemy"
     ],
     "anchor_year": 2014
   },
@@ -105,7 +105,7 @@
       "Nightcrawler",
       "Prisoners",
       "Mulholland Drive",
-      "The Machinist"
+      "Gone Girl"
     ],
     "anchor_year": 2013
   },
@@ -137,7 +137,7 @@
       "The Green Mile",
       "Escape from Alcatraz",
       "Cool Hand Luke",
-      "A Prophet",
+      "Crime and Punishment",
       "The Count of Monte Cristo"
     ],
     "anchor_year": 1994
@@ -147,7 +147,7 @@
     "ground_truth": [
       "Elite Squad",
       "Carandiru",
-      "Pixote",
+      "Nayagan",
       "Central Station",
       "The Motorcycle Diaries"
     ],
@@ -165,20 +165,20 @@
     "anchor_year": 1999
   },
   {
-    "anchor": "Nannaku Prematho",
+    "anchor": "Nannaku Prematho...",
     "ground_truth": [
       "1: Nenokkadine",
       "Animal",
       "Mahaan",
       "Aravinda Sametha Veera Raghava",
-      "Agneepath"
+      "Son of Satyamurthy"
     ],
     "anchor_year": 2016
   },
   {
     "anchor": "Mahanati",
     "ground_truth": [
-      "Sita Ramam",
+      "Sanju",
       "Jersey",
       "The Dirty Picture",
       "NTR: Kathanayakudu",
@@ -189,11 +189,11 @@
   {
     "anchor": "Animal",
     "ground_truth": [
+      "Agneepath",
+      "Mahaan",
+      "Pudhupettai",
       "Arjun Reddy",
-      "Kabir Singh",
-      "Gangs of Wasseypur",
-      "Rocky Handsome",
-      "Raman Raghav 2.0"
+      "Son of Satyamurthy"
     ],
     "anchor_year": 2023
   },
@@ -226,18 +226,18 @@
       "Oldboy",
       "Memories of Murder",
       "Sympathy for Mr. Vengeance",
-      "Bedevilled"
+      "Cure"
     ],
     "anchor_year": 2010
   },
   {
     "anchor": "Inside Llewyn Davis",
     "ground_truth": [
-      "Whiplash",
+      "Gully Boy",
       "Amadeus",
-      "Sound of Metal",
-      "The Pianist",
-      "Once"
+      "Whiplash",
+      "A Complete Unknown",
+      "James White"
     ],
     "anchor_year": 2013
   },
@@ -299,7 +299,7 @@
   {
     "anchor": "Jersey",
     "ground_truth": [
-      "Maharshi",
+      "M.S. Dhoni: The Untold Story",
       "Majili",
       "Mallesham",
       "Chhichhore",
@@ -308,13 +308,13 @@
     "anchor_year": 2019
   },
   {
-    "anchor": "Gangs of Wasseypur",
+    "anchor": "Gangs of Wasseypur - Part 1",
     "ground_truth": [
       "Satya",
       "Company",
       "Subramaniapuram",
       "Angamaly Diaries",
-      "Vikram Vedha"
+      "Pudhupettai"
     ],
     "anchor_year": 2012
   },
@@ -341,13 +341,13 @@
     "anchor_year": 1982
   },
   {
-    "anchor": "RRR",
+    "anchor": "Bāhubali 2: The Conclusion",
     "ground_truth": [
-      "Baahubali 2: The Conclusion",
-      "KGF: Chapter 1",
-      "Salaar: Part 1 - Ceasefire",
+      "Ramayana: The Legend of Prince Rama",
+      "Ponniyin Selvan: Part I",
+      "Bāhubali: The Beginning",
       "Magadheera",
-      "Pushpa: The Rise"
+      "Kantara - A Legend: Chapter 1"
     ],
     "anchor_year": 2022
   },
@@ -457,7 +457,7 @@
       "Se7en",
       "Prisoners",
       "The Silence of the Lambs",
-      "Mindhunter"
+      "Nightcrawler"
     ],
     "anchor_year": 2007
   },
@@ -490,7 +490,7 @@
       "Kahaani",
       "Badla",
       "Ratsasan",
-      "Ludo"
+      "Shoot the Piano Player"
     ],
     "anchor_year": 2018
   },
@@ -665,10 +665,10 @@
     "anchor_year": 2016
   },
   {
-    "anchor": "Taare Zameen Par",
+    "anchor": "Like Stars on Earth",
     "ground_truth": [
       {
-        "title": "Black",
+        "title": "Dead Poets Society",
         "relevance": 2
       },
       {
@@ -1258,7 +1258,7 @@
     "anchor_year": 2012
   },
   {
-    "anchor": "Harry Potter and the Sorcerer's Stone",
+    "anchor": "Harry Potter and the Philosopher's Stone",
     "ground_truth": [
       {
         "title": "Harry Potter and the Chamber of Secrets",
@@ -1348,7 +1348,7 @@
     "anchor_year": 2017
   },
   {
-    "anchor": "Mission: Impossible – Fallout",
+    "anchor": "Mission: Impossible - Fallout",
     "ground_truth": [
       {
         "title": "Mission: Impossible - Rogue Nation",

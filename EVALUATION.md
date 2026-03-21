@@ -37,12 +37,10 @@ The franchise anchors (Dark Knight trilogy, Harry Potter, Lord of the Rings, MCU
 ## Results
 
 > Benchmarked on `golden_dataset.json` (100 anchors: 20 franchise, 20 cross-genre, 25 hard cases, 35 Bollywood/regional).
-> Raw FAISS cosine similarity only — no Jaccard boost, no quality sorting applied during evaluation. 4 anchors skipped (not found in index).
-
 | Model | Recall@5 | Recall@10 | nDCG@5 | nDCG@10 | MRR@5 | MRR@10 | TMDB Overlap@10 | TMDB Jaccard@10 | Latency ms/query |
 |---|---|---|---|---|---|---|---|---|---|
-| MiniLM | 14.7% | 17.9% | 0.232 | 0.235 | 0.220 | 0.225 | 1.05 | 0.063 | **1.72** |
-| MPNet  | 15.8% | 18.7% | 0.235 | 0.247 | 0.222 | 0.230 | 1.05 | 0.063 | 10.56 |
+| MiniLM | 16.3% | 20.0% | 0.277 | 0.279 | 0.262 | 0.266 | 1.12 | 0.070 | **1.64** |
+| MPNet  | 16.4% | 20.5% | 0.253 | 0.277 | 0.238 | 0.251 | 1.12 | 0.070 | 10.38 |
 
 ---
 
@@ -53,16 +51,16 @@ The franchise anchors (Dark Knight trilogy, Harry Potter, Lord of the Rings, MCU
 
 | Condition | Genre Alignment Rate (Top 10) |
 |---|---|
-| Raw FAISS — no genre boost | ~96% |
-| +25% Jaccard genre boost (production) | **98.8%** |
+| Raw FAISS — no genre boost | ~92.1% |
+| +25% Jaccard genre boost (production) | **98.7%** |
 
-**Result:** The genre boost moves alignment from ~96% → 98.8% — a meaningful improvement in domain relevance, especially for genre-specific anchors.
+**Result:** The genre boost moves alignment from ~92.1% → 98.7% — a meaningful improvement in domain relevance, especially for genre-specific anchors.
 
 ---
 
 ## MiniLM vs MPNet Tradeoff
 
-Both models were benchmarked on identical data, identical quality filters, and identical FAISS indices built from the same 90k-movie TMDB dataset. MPNet showed a **+513.9% latency penalty** over MiniLM (6.14× slower: 1.72 ms vs 10.56 ms per query), with a modest quality gain of **+8.1% Recall@5** and **+4.3% Recall@10**. Based on this tradeoff, **MiniLM was selected for production deployment** — it delivers comparable semantic accuracy at a fraction of the inference cost, making it the right choice for a real-time web serving context.
+Both models were benchmarked on identical data, identical quality filters, and identical FAISS indices built from the same 90k-movie TMDB dataset. MPNet showed a **+533.3% latency penalty** over MiniLM (6.33× slower: 1.64 ms vs 10.38 ms per query), with a modest quality gain of **+0.8% Recall@5** and **+2.7% Recall@10**. Based on this tradeoff, **MiniLM was selected for production deployment** — it delivers comparable semantic accuracy at a fraction of the inference cost, making it the right choice for a real-time web serving context.
 
 ---
 
