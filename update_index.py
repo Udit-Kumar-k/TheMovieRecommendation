@@ -11,8 +11,8 @@ from data_utils import get_dataset_path
 torch.set_num_threads(2)
 
 # ---------------- Configuration ---------------- #
-INDEX_FILE = 'faiss.index'
-DATA_FILE = 'index_data.pkl'
+INDEX_FILE = 'models/minilm/faiss.index'
+DATA_FILE = 'models/minilm/index_data.pkl'
 
 if os.path.exists('healed_tmdb_dataset.csv'):
     csv_file = 'healed_tmdb_dataset.csv'

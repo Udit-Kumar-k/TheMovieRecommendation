@@ -20,7 +20,7 @@ print(f"Loaded .env from {env_path}")
 TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 print(f"Global API Key is: {'*'*5 + TMDB_API_KEY[-4:] if TMDB_API_KEY else 'None'}")
 
-HF_INDEX_DATASET = os.getenv('HF_INDEX_DATASET', 'your-username/movie-rec-data')
+HF_INDEX_DATASET = os.getenv('HF_INDEX_DATASET', 'uditkumar/movie-rec-data')
 
 USE_RECOMMENDATION = True
 

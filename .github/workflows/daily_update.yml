@@ -37,7 +37,7 @@ jobs:
           from huggingface_hub import HfApi
 
           api = HfApi()
-          repo_id = "your-username/movie-rec-data"  # TODO: set to your actual HF dataset ID
+          repo_id = "uditkumar/movie-rec-data"  # HF dataset ID
           token = "${HF_TOKEN}"
 
           for path in ["models/minilm/faiss.index", "models/minilm/index_data.pkl"]:
