@@ -9,7 +9,9 @@ on:
 jobs:
   update-index:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,18 +36,38 @@ jobs:
       - name: Update FAISS Index
         run: python update_index.py
         
-      - name: Commit and push changes back to GitHub
+      - name: Commit and push to main
         run: |
+          set -e
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add -f healed_tmdb_dataset.csv models/minilm/index_data.pkl models/minilm/faiss.index
-          # Only commit if there are changes
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: Auto-updated TMDB dataset and FAISS index"
-          git push
-          
-      - name: Push updated code to Hugging Face Spaces
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: Auto-updated TMDB dataset and FAISS index"
+          git push origin main
+
+      # Lean Space deploy: one orphan commit with app + index only (no CSV, benches, golden_dataset, etc.).
+      # Force-pushing replaces HF history each time — drops old LFS blobs and avoids the 1 GB cap.
+      - name: Push lean deploy to Hugging Face Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add huggingface https://uditkumar:$HF_TOKEN@huggingface.co/spaces/uditkumar/MoviesIndex
-          git push huggingface main --force
+          set -e
+          git remote remove huggingface 2>/dev/null || true
+          git remote add huggingface "https://uditkumar:${HF_TOKEN}@huggingface.co/spaces/uditkumar/MoviesIndex"
+          git branch -D hf-space-deploy 2>/dev/null || true
+          git checkout --orphan hf-space-deploy
+          git add -f Dockerfile requirements.txt README.md \
+            app.py data_loader.py data_utils.py \
+            .gitattributes \
+            templates static \
+            models/minilm/faiss.index models/minilm/index_data.pkl
+          if git diff --staged --quiet; then
+            echo "Nothing staged for HF deploy."
+            exit 1
+          fi
+          git commit -m "chore: lean Space deploy (app + MiniLM index, no CSV)"
+          git push huggingface hf-space-deploy:main --force
