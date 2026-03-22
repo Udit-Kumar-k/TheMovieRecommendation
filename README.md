@@ -9,11 +9,8 @@ app_port: 7860
 ---
 # 🎬 MovieRec — Semantic Movie Recommendation Engine
 
-**[Live Demo on Hugging Face Spaces](https://uditkumar-moviesindex.hf.space/)**
-
 > *Find your next obsession. Not because it's popular — because it actually matches what you love.*
 
----
 
 ## What Is This?
 
@@ -23,7 +20,6 @@ You search for *Parasite*. You get *Burning*, *Shoplifters*, *Memories of Murder
 
 Built on **FAISS vector search** + **sentence transformers**, with a clean Flask backend and a fully TMDB-integrated frontend.
 
----
 
 ## How It Works
 
@@ -53,11 +49,40 @@ Sort by: Similarity | Quality | Strict Genre Match
 Results (top 50, rendered as poster grid with live TMDB metadata)
 ```
 
----
+
+## Pool Mode — Taste Centroid Search
+
+Pool Mode lets you describe your taste as a *combination* of up to 5 movies rather than a single anchor. "Give me something between *Parasite* and *No Country for Old Men*" is a more precise query than either film alone.
+
+```
+User selects up to 5 movies
+    │
+    ▼
+Extract 384-dim vectors for each via index.reconstruct()
+    │
+    ▼
+Compute centroid: V_mean = (V_A + V_B + ... + V_N) / N
+    │
+    ▼
+L2-normalize centroid (required for IndexFlatIP cosine similarity)
+    │
+    ▼
+FAISS nearest-neighbor search on centroid vector
+    │
+    ▼
+Genre Jaccard re-ranking against combined genre footprint of all input films
+    │
+    ▼
+Quality filters + sort → top 50 results
+```
+
+The pool state persists in localStorage across sessions. Slots can be edited or removed individually. No new index or data is required — the endpoint reads vectors directly from the already-loaded FAISS index via `index.reconstruct()`.
+
 
 ## Features
 
 - **Semantic search** — understands thematic similarity, not just surface genre tags
+- **Pool Mode** — select up to 5 movies and find recommendations at the geometric centroid of their embedding vectors; describe your taste as a combination rather than a single anchor
 - **TMDB live integration** — real-time poster, rating, cast, trailer, and metadata on every card and detail page
 - **Genre Jaccard boost** — validated 2.8pp improvement in domain relevance
 - **Quality filters** — eliminates shorts, unrated obscurities, TV movies, documentaries
@@ -68,7 +93,6 @@ Results (top 50, rendered as poster grid with live TMDB metadata)
 - **Adult content handling** — 18+ badge instead of poster, carried through all surfaces
 - **Daily auto-update** — GitHub Actions workflow rebuilds the index nightly from TMDB's Discover API
 
----
 
 ## Performance
 
@@ -83,7 +107,6 @@ The models are nearly identical on Recall — MPNet edges ahead by just 0.8pp on
 
 > Recall numbers look modest by design. The evaluation deliberately targets **hard semantic pairs** — not obvious franchise sequels or genre clones. A system that finds *Burning* for *Parasite* and *Force Majeure* for *A Separation* is doing real work.
 
----
 
 ## Quick Start
 
@@ -105,7 +128,6 @@ python app.py
 
 Visit `http://localhost:5000` — search for any movie, click it, and watch the recommendations load.
 
----
 
 ## Keeping the Index Fresh
 
@@ -123,13 +145,12 @@ To enable:
 2. Set `repo_id` in the workflow to your Hugging Face dataset
 3. Set `HF_INDEX_DATASET` in your deployment environment
 
----
 
 ## Project Structure
 
 ```
 movierec/
-├── app.py                  # Flask app — all API endpoints
+├── app.py                  # Flask app — /smart_recommend, /recommend_multi, /enrich_tmdb_results, etc.
 ├── build_index.py          # Build FAISS index from scratch (MiniLM or MPNet)
 ├── update_index.py         # Incremental index update (new movies only)
 ├── smart_tmdb_fetcher.py   # TMDB Discover API fetcher + dataset merger
@@ -138,16 +159,16 @@ movierec/
 │
 ├── models/
 │   └── minilm/
-│       ├── faiss.index     # Vector index (not committed — download or build)
-│       └── index_data.pkl  # DataFrame + title→index map
+│       ├── faiss.index     # Vector index (Git LFS / download on cold start)
+│       └── index_data.pkl  # DataFrame + title→index map (Git LFS)
 │
 ├── static/
-│   ├── script.js           # Frontend logic (search, recommendations, TMDB live)
-│   ├── style.css           # All styles — index + detail page
+│   ├── script.js           # Frontend logic (Search mode, Pool mode, TMDB live)
+│   ├── style.css           # All styles — index, pool UI, modal, detail page
 │   └── icons/              # SVGs (search, fallback poster, 18+ badge)
 │
 ├── templates/
-│   ├── index.html          # Main search + results page
+│   ├── index.html          # Main page — Search/Pool toggle, modal, results grid
 │   └── movie_detail.html   # Full movie detail page
 │
 ├── bench_relevancy.py      # Ground-truth Recall/MRR/nDCG benchmark
@@ -160,14 +181,14 @@ movierec/
 ├── EVALUATION.md           # Full evaluation methodology and results
 │
 ├── .github/workflows/
-│   └── daily_update.yml    # Nightly FAISS index rebuild + HF upload
+│   ├── daily_update.yml    # Nightly FAISS index rebuild + HF dataset upload
+│   └── update_index.yml    # Weekly incremental index update + HF Spaces push
 │
-├── Dockerfile              # Container deployment
+├── Dockerfile              # Container deployment (Hugging Face Spaces / self-hosted)
 ├── requirements.txt
 └── auto_sync.bat           # One-click local update (Windows)
 ```
 
----
 
 ## Environment Variables
 
@@ -178,7 +199,6 @@ movierec/
 | `MODEL_PATH` | Optional | Override model directory (default: `models/minilm`) |
 | `TMDB_API_BASE` | Optional | Override TMDB API host (useful in regions that block `api.themoviedb.org`) |
 
----
 
 ## Evaluation
 
@@ -210,7 +230,6 @@ python bench_latency.py
 python get_metrics.py
 ```
 
----
 
 ## Docker
 
@@ -219,7 +238,6 @@ docker build -t movierec .
 docker run -p 5000:5000 -e TMDB_API_KEY=your_key movierec
 ```
 
----
 
 ## Known Limitations
 
@@ -228,7 +246,6 @@ docker run -p 5000:5000 -e TMDB_API_KEY=your_key movierec
 - Keyword and genre data quality varies in the source dataset; some older or non-English films have sparse metadata, which hurts semantic retrieval quality.
 - The 20 franchise anchor pairs in the golden dataset are intentional sanity checks and should be excluded from aggregate semantic metrics when reporting real-world performance.
 
----
 
 ## Tech Stack
 
@@ -236,14 +253,20 @@ docker run -p 5000:5000 -e TMDB_API_KEY=your_key movierec
 |---|---|
 | Embeddings | `sentence-transformers` (MiniLM-L6-v2) |
 | Vector search | `faiss-cpu` (IndexFlatIP — exact inner product) |
+| Pool Mode | Centroid of selected movie vectors, L2-normalized, queried against same FAISS index |
 | Backend | Flask |
 | Data | TMDB Discover API + Kaggle TMDB dataset (930k movies) |
 | Frontend | Vanilla JS + CSS — no framework |
 | Metadata | TMDB API v3 (live, client-side) |
-| Index hosting | Hugging Face Datasets |
-| CI/CD | GitHub Actions |
+| Index hosting | Hugging Face Datasets (downloaded on cold start) |
+| App hosting | Hugging Face Spaces (Docker) |
+| CI/CD | GitHub Actions — nightly index rebuild + weekly HF Spaces push |
 
----
+
+## Deployment
+
+The live demo runs on Hugging Face Spaces via Docker. The `update_index.yml` workflow pushes to Spaces automatically on a weekly schedule via `git push huggingface main --force`.
+
 
 ## License
 
