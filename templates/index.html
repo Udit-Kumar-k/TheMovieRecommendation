@@ -7,16 +7,36 @@
   <title>MovieRec</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=edit" />
 </head>
 
 <body>
   <div class="title" style="cursor: pointer;" onclick="window.location.href='/';">MovieRec</div>
-  <div class="searchBar">
+  
+  <div class="mode-toggle-container">
+    <div class="mode-toggle" id="appModeToggle">
+      <div class="toggle-option active" id="btnSearchMode">Search</div>
+      <div class="toggle-option" id="btnPoolMode">Pool</div>
+    </div>
+  </div>
+
+  <div class="searchBar" id="searchBarContainer">
     <input type="text" class="searchInput" placeholder="Can't find it? Try 'MovieName (Year)'" />
 
     <button class="okbtn">
       <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}"
         alt="search icon" /> </button>
+  </div>
+
+  <div id="poolContainer" class="pool-container hidden">
+    <div class="pool-slots" id="poolSlotsContainer">
+      <!-- Slots will be dynamically injected by JS -->
+    </div>
+    <button id="findMyMixBtn" class="find-my-mix-btn" disabled>
+      <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}" alt="search icon" />
+      Find My Mix
+    </button>
+    <div id="poolWarning" class="pool-warning hidden"></div>
   </div>
 
   <div id="sortControls" class="sort-controls hidden">
@@ -48,6 +68,29 @@
   <div id="loadingOverlay"
     style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:9999; align-items:center; justify-content:center;">
     <div class="spinner"></div>
+  </div>
+
+  <div id="selectionModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="modal-close" id="modalClose">&times;</span>
+      <h2>Select a Movie for the Pool</h2>
+      <div class="searchBar modal-search-bar" id="modalSearchBarContainer">
+        <input type="text" id="modalSearchInput" class="searchInput" placeholder="Search for a movie..." />
+        <button type="button" class="okbtn" id="modalSearchBtn" style="cursor: pointer; color: #333;" onclick="window.dispatchEvent(new CustomEvent('triggerModalSearch'))">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+      <div id="modalLoadingOverlay" style="display:none; justify-content:center; padding: 20px;">
+        <div class="spinner"></div>
+      </div>
+      
+      <div id="modalScrollWrapper" style="display: none; overflow-y: auto; overflow-x: hidden; max-height: 55vh; padding-right: 10px;">
+          <div id="modalResults" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;"></div>
+      </div>
+    </div>
   </div>
 
   <script>

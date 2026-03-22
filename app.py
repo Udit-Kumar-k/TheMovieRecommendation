@@ -360,6 +360,128 @@ def movie_detail(movie_id):
     api_key = os.getenv('TMDB_API_KEY')
     return render_template('movie_detail.html', movie=movie, tmdb_api_key=api_key, error=False)
 
+@app.route('/recommend_multi', methods=['POST'])
+def recommend_multi():
+    try:
+        data = request.json
+        movie_ids = data.get('ids', [])
+        num_results = int(data.get('limit', 50))
+        sort_mode = data.get('sort', 'similarity').strip().lower()
+        strict_genre = str(data.get('strict_genre', 'false')).strip().lower() == 'true'
+        
+        if not movie_ids or len(movie_ids) == 0:
+            return jsonify({"error": "No movie IDs provided."}), 400
+
+        import numpy as np
+        
+        vectors = []
+        combined_genres = set()
+        input_indices = set()
+
+        for mid in movie_ids:
+            idx = id_to_index.get(str(mid))
+            if idx is not None:
+                idx = int(idx)
+                input_indices.add(idx)
+                vectors.append(index.reconstruct(idx))
+                movie = df.iloc[idx]
+                g_raw = movie.get('genres', '')
+                if isinstance(g_raw, list):
+                    combined_genres.update(g.strip().lower() for g in g_raw if g and isinstance(g, str))
+                else:
+                    combined_genres.update(g.strip().lower() for g in str(g_raw).split(',') if g.strip())
+
+        if not vectors:
+            return jsonify({"error": "None of the selected movies exist in the index."}), 404
+
+        centroid = np.mean(vectors, axis=0)
+        centroid = centroid / np.linalg.norm(centroid)
+        centroid_reshaped = centroid.reshape(1, -1).astype('float32')
+
+        pool_size = num_results * 15
+        D, I = index.search(centroid_reshaped, pool_size)
+
+        candidate_movies = []
+        seen = set()
+
+        for score, i in zip(D[0], I[0]):
+            if i in input_indices or i >= len(df) or i in seen:
+                continue
+            movie = df.iloc[i]
+            if pd.notna(movie.get('runtime')) and float(movie.get('runtime', 0)) <= 40:
+                continue
+            seen.add(i)
+
+            vote = float(movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0)
+            pop = float(movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0)
+            cosine_sim = float(score)
+
+            cand_genres_raw = movie.get('genres', '')
+            if isinstance(cand_genres_raw, list):
+                cand_genres = set(g.strip().lower() for g in cand_genres_raw if g and isinstance(g, str))
+            else:
+                cand_genres_str = str(cand_genres_raw)
+                cand_genres = set(g.strip().lower() for g in cand_genres_str.split(',') if g.strip()) if cand_genres_str else set()
+
+            if combined_genres and cand_genres:
+                intersect = len(combined_genres.intersection(cand_genres))
+                union = len(combined_genres.union(cand_genres))
+                genre_jaccard = intersect / union if union > 0 else 0.0
+            else:
+                genre_jaccard = 0.0
+
+            if strict_genre:
+                # Require the candidate to share at least ONE genre with the combined pool's footprint
+                if genre_jaccard == 0:
+                    continue
+
+            final_sim = (0.75 * cosine_sim) + (0.25 * genre_jaccard)
+
+            import math
+            vote_cnt = float(movie.get('vote_count') if pd.notna(movie.get('vote_count')) else 0)
+            if vote_cnt < 5:
+                continue
+
+            pop_score = math.log1p(pop) / 10.0
+            vote_score = vote / 10.0
+            combined_score = (final_sim * 0.80) + (vote_score * 0.05) + (pop_score * 0.15)
+
+            candidate_movies.append({
+                'movie': movie,
+                'similarity_val': final_sim,
+                'combined_score': combined_score,
+                'vote': vote
+            })
+
+        if sort_mode == 'quality':
+            candidate_movies.sort(key=lambda x: (x['similarity_val'] * 0.70) + ((x['vote'] / 10.0) * 0.30), reverse=True)
+        else: # 'similarity' default
+            candidate_movies.sort(key=lambda x: x['similarity_val'], reverse=True)
+        top_candidates = candidate_movies[:num_results]
+
+        results = []
+        for item in top_candidates:
+            movie = item['movie']
+            sim_val = item['similarity_val']
+            poster = movie.get('poster_path', '')
+            results.append({
+                'id': str(movie.get('id', '')),
+                'title': movie.get('title') or '',
+                'overview': movie.get('overview') or '',
+                'vote_average': movie.get('vote_average') if pd.notna(movie.get('vote_average')) else 0.0,
+                'popularity': movie.get('popularity') if pd.notna(movie.get('popularity')) else 0.0,
+                'genres': movie.get('genres') or '',
+                'poster_path': '' if pd.isna(poster) else poster,
+                'similarity': f"{round(sim_val * 100, 2)}%",
+                'adult': str(movie.get('adult', 'FALSE')).upper()
+            })
+
+        return jsonify({"results": results, "count": len(results)})
+
+    except Exception as e:
+        print("[EXCEPTION] recommend_multi:", e)
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     # Bind to 0.0.0.0 and port 7860 for Hugging Face Spaces
     app.run(host="0.0.0.0", port=7860, debug=False)

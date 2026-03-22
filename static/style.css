@@ -471,7 +471,7 @@ input:checked+.toggle-slider:before {
 
 .hover-title {
     font-family: 'Poppins', sans-serif;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
     line-height: 1.2;
@@ -489,8 +489,8 @@ input:checked+.toggle-slider:before {
 }
 
 .hover-overview {
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 0.78rem;
+    line-height: 1.4;
     color: #ddd;
     margin: 0;
     display: -webkit-box;
@@ -1054,4 +1054,282 @@ input:checked+.toggle-slider:before {
 .homepage-link:hover {
   background: #f0f0f0;
   border-color: #aaa;
+}
+
+/* ── Pool Mode Styles ──────────────────────────────────────────────────────── */
+.mode-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto 20px auto;
+}
+
+.mode-toggle {
+    display: flex;
+    background: #e0e0e0;
+    border-radius: 30px;
+    padding: 4px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toggle-option {
+    padding: 8px 24px;
+    border-radius: 26px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+    transition: all 0.3s ease;
+}
+
+.toggle-option.active {
+    background: #fff;
+    color: #b30000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.pool-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+}
+
+.pool-slots {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.pool-slot {
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.slot-card {
+    width: 150px;
+    aspect-ratio: 2/3;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.slot-card.empty {
+    border: 2px dashed #bbb;
+    background: #f9f9f9;
+    box-shadow: none;
+}
+
+.slot-card.empty:hover {
+    border-color: #777;
+    background: #f0f0f0;
+}
+
+.slot-card.empty .add-icon {
+    font-size: 3rem;
+    color: #ccc;
+    font-weight: 300;
+    pointer-events: none;
+}
+
+.slot-card.empty:hover .add-icon {
+    color: #888;
+}
+
+.slot-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.slot-title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
+    color: #fff;
+    padding: 20px 10px 10px 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.slot-actions {
+    display: flex;
+    gap: 15px;
+    height: 30px;
+    align-items: center;
+}
+
+.slot-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0;
+    color: #666;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slot-action-btn:hover {
+    color: #b30000;
+    transform: scale(1.1);
+}
+
+.find-my-mix-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #b30000;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 30px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(179,0,0,0.3);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.find-my-mix-btn img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+.find-my-mix-btn:hover:not(:disabled) {
+    background: #900000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(179,0,0,0.4);
+}
+
+.find-my-mix-btn:disabled {
+    background: #ccc;
+    color: #777;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.find-my-mix-btn:disabled img {
+    filter: none;
+    opacity: 0.6;
+}
+
+.pool-warning {
+    color: #b30000;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.pool-hint {
+    color: #777;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: -15px;
+}
+
+/* ── Modal Styles ──────────────────────────────────────────────────────────── */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    display: none !important;
+    opacity: 0;
+}
+
+.modal-content {
+    background: #f0f2f5;
+    width: 90%;
+    max-width: 700px;
+    height: 80vh;
+    border-radius: 20px;
+    position: relative;
+    padding: 30px;
+    padding-top: 50px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 2.5rem;
+    color: #555;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: #b30000;
+}
+
+.modal-content h2 {
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.modal-search-bar {
+    width: 60%;
+    margin-bottom: 20px;
+}
+
+
+
+.movie-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.movie-card.disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
