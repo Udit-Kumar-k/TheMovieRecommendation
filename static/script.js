@@ -1,9 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Global state for Pool Mode
+  let poolModeActive = false;
+  let moviePool = JSON.parse(localStorage.getItem('moviePool'));
+  if (!Array.isArray(moviePool) || moviePool.length !== 5) {
+      moviePool = [null, null, null, null, null];
+  }
+  let activeModalSlotIndex = null;
+
   // Handle search button click
   const searchInput = document.querySelector('.searchInput');
   const searchBtn = document.querySelector('.okbtn');
   const loadingOverlay = document.getElementById('loadingOverlay');
+
+  // Pool Mode Elements
+  const btnSearchMode = document.getElementById('btnSearchMode');
+  const btnPoolMode = document.getElementById('btnPoolMode');
+  const searchBarContainer = document.getElementById('searchBarContainer');
+  const poolContainer = document.getElementById('poolContainer');
+  const poolSlotsContainer = document.getElementById('poolSlotsContainer');
+  const findMyMixBtn = document.getElementById('findMyMixBtn');
+  const poolWarning = document.getElementById('poolWarning');
+
+  // Modal Elements
+  const selectionModal = document.getElementById('selectionModal');
+  const modalClose = document.getElementById('modalClose');
+  const modalSearchInput = document.getElementById('modalSearchInput');
+  const modalSearchBtn = document.getElementById('modalSearchBtn');
+  const modalResultsContainer = document.getElementById('modalResults');
+  const modalLoadingOverlay = document.getElementById('modalLoadingOverlay');
+
+  function updateModeUI() {
+    if (poolModeActive) {
+      if (btnPoolMode) btnPoolMode.classList.add('active');
+      if (btnSearchMode) btnSearchMode.classList.remove('active');
+      if (searchBarContainer) searchBarContainer.classList.add('hidden');
+      if (poolContainer) poolContainer.classList.remove('hidden');
+      renderPool();
+      const resultsContainer = document.getElementById('results');
+      if(resultsContainer && !window.location.search.includes('mode=pool')) resultsContainer.innerHTML = '';
+      const sortControls = document.getElementById('sortControls');
+      if (sortControls && window.location.search.includes('mode=pool')) {
+          sortControls.classList.remove('hidden');
+          const tmdbToggle = document.getElementById('tmdbApiToggle');
+          if(tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'none';
+      } else if(sortControls) {
+          sortControls.classList.add('hidden');
+      }
+    } else {
+      if (btnSearchMode) btnSearchMode.classList.add('active');
+      if (btnPoolMode) btnPoolMode.classList.remove('active');
+      if (poolContainer) poolContainer.classList.add('hidden');
+      if (searchBarContainer) searchBarContainer.classList.remove('hidden');
+      const sortControls = document.getElementById('sortControls');
+      if (sortControls && document.getElementById('results').innerHTML.trim() !== '') {
+          const tmdbToggle = document.getElementById('tmdbApiToggle');
+          if(tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'flex';
+      }
+    }
+  }
+
+  if (btnSearchMode) {
+    btnSearchMode.addEventListener('click', () => {
+      poolModeActive = false;
+      updateModeUI();
+    });
+  }
+
+  if (btnPoolMode) {
+    btnPoolMode.addEventListener('click', () => {
+      poolModeActive = true;
+      updateModeUI();
+    });
+  }
+
+  updateModeUI();
 
   function showLoadingForTwoSeconds() {
     if (loadingOverlay) {
@@ -29,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ensure we drop any recommendation parameters from the URL when doing a raw search!
     newUrl.searchParams.delete('recommend_id');
     newUrl.searchParams.delete('recommend_title');
+    newUrl.searchParams.delete('mode');
     window.history.pushState({ query: title }, '', newUrl);
 
     // Refactored out to avoid duplication with popstate logic
@@ -36,17 +108,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Helper function to render cards (used by both search results and recommendations)
-  function renderMovieCards(movies, isSearchResult = false) {
-    if (loadingOverlay) loadingOverlay.style.display = 'none'; // Dismiss overlay immediately on success
-    const resultsContainer = document.getElementById('results');
-    resultsContainer.innerHTML = '';
+  function renderMovieCards(movies, isSearchResult = false, targetContainer = null) {
+    const isModal = targetContainer === modalResultsContainer;
+    const container = targetContainer || document.getElementById('results');
+
+    if (isModal) {
+      document.getElementById('modalScrollWrapper').style.display = 'block';
+    }
+
+    if (!isModal && loadingOverlay) loadingOverlay.style.display = 'none'; // Dismiss overlay immediately on success
+    if (isModal && modalLoadingOverlay) modalLoadingOverlay.style.display = 'none';
+
+    container.innerHTML = '';
 
     const sortControls = document.getElementById('sortControls');
-    if (sortControls) {
+    if (sortControls && !isModal) {
       if (isSearchResult) {
         sortControls.classList.add('hidden');
       } else {
         sortControls.classList.remove('hidden');
+        const tmdbToggle = document.getElementById('tmdbApiToggle');
+        if (tmdbToggle) {
+          if (poolModeActive) {
+            tmdbToggle.parentElement.style.display = 'none';
+          } else {
+            tmdbToggle.parentElement.style.display = 'flex';
+          }
+        }
       }
     }
 
@@ -100,16 +188,22 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(overlay);
 
       // Similarity Badge (Only for recommendations, exclude the top exact match)
-      if (!isSearchResult && index !== 0 && movie.similarity) {
+      if (!isSearchResult && index !== 0 && movie.similarity && !poolModeActive) {
         const simBadge = document.createElement('div');
         simBadge.className = 'similarity-badge';
         // Ensure it has % sign
         simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
         card.appendChild(simBadge);
+      } else if (!isSearchResult && movie.similarity && poolModeActive) {
+        // In pool mode, show similarity on all returned cards!
+        const simBadge = document.createElement('div');
+        simBadge.className = 'similarity-badge';
+        simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
+        card.appendChild(simBadge);
       }
 
       // Add "Selected" badge to the highest match
-      if (!isSearchResult && index === 0) {
+      if (!isSearchResult && index === 0 && !poolModeActive) {
         card.classList.add('selected');
         const badge = document.createElement('div');
         badge.className = 'selected-badge';
@@ -153,30 +247,55 @@ document.addEventListener('DOMContentLoaded', () => {
           });
       }
 
+      if (isModal) {
+        const alreadySelected = moviePool.some(m => m && String(m.id) === String(targetId));
+        if (alreadySelected) {
+          card.classList.add('disabled');
+        }
+      }
+
       // Step 2: When a card is clicked...
       card.onclick = () => {
-        if (isSearchResult) {
+        if (card.classList.contains('disabled')) return;
+
+        if (isModal) {
+          moviePool[activeModalSlotIndex] = {
+            id: String(movie.id || movie.tmdb_id),
+            title: movie.title || movie.display_title || 'Unknown Title',
+            poster_path: movie.poster_path || ''
+          };
+          savePool();
+          closeModal();
+          
+          const mainRes = document.getElementById('results');
+          if (mainRes) mainRes.innerHTML = '';
+          const sc = document.getElementById('sortControls');
+          if (sc) sc.classList.add('hidden');
+          
+          renderPool();
+        } else if (isSearchResult) {
           // If we clicked a search result, trigger the recommendation engine and update the URL!
           const newUrl = new URL(window.location);
           newUrl.searchParams.set('recommend_id', movie.id);
           newUrl.searchParams.set('recommend_title', movie.title);
+          newUrl.searchParams.delete('mode');
           window.history.pushState({ recommend_id: movie.id, recommend_title: movie.title }, '', newUrl);
 
           searchInput.value = movie.title;
           fetchRecommendations(movie.title, movie.id, false); // false = don't show loading overlay if it interrupts scroll
         } else {
           // If we clicked a recommendation, go to its detail page using its UNIQUE ID, not title
-          let targetId = movie.id || movie.tmdb_id;
-          if (!targetId) {
+          let urlTargetId = movie.id || movie.tmdb_id;
+          if (!urlTargetId) {
             console.error("Missing movie ID in payload!", movie);
             alert("Error: Movie ID not found.");
             return;
           }
-          window.location.href = `/movie/${targetId}`;
+          window.location.href = `/movie/${urlTargetId}`;
         }
       };
 
-      resultsContainer.appendChild(card);
+      container.appendChild(card);
     });
   }
 
@@ -294,63 +413,131 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  function showSimilarMovies(query) {
-    loadingOverlay.style.display = 'none'; // Hide loading overlay
+  function showSimilarMovies(query, targetContainer = null) {
+    const isModal = targetContainer === modalResultsContainer;
+    const container = targetContainer || document.getElementById('results');
+
+    if (isModal) {
+      document.getElementById('modalScrollWrapper').style.display = 'block';
+    }
+
+    if (!isModal && loadingOverlay) loadingOverlay.style.display = 'none';
+    if (isModal && modalLoadingOverlay) modalLoadingOverlay.style.display = 'none';
 
     const sortControls = document.getElementById('sortControls');
-    if (sortControls) sortControls.classList.add('hidden');
+    if (sortControls && !isModal) sortControls.classList.add('hidden');
 
     fetch(`/find_similar_movies?q=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(data => {
-        const resultsContainer = document.getElementById('results');
-        resultsContainer.innerHTML = '';
+        container.innerHTML = '';
 
         if (data.length === 0) {
-          resultsContainer.innerHTML = `<div class="no-results"><p>No movies found similar to "${query}". Try a different search.</p></div>`;
+          container.innerHTML = `<div class="no-results" style="grid-column: 1 / -1;"><p>No movies found similar to "${query}". Try a different search.</p></div>`;
           return;
         }
 
-        // Show "Did you mean?" section
         const header = document.createElement('div');
         header.className = 'similar-movies-header';
+        header.style.gridColumn = '1 / -1';
         header.innerHTML = `<h2>Did you mean?</h2><p>We couldn't find an exact match. Here are similar movies:</p>`;
-        resultsContainer.appendChild(header);
+        container.appendChild(header);
+
+        const flexWrapper = document.createElement('div');
+        if (!isModal) {
+            flexWrapper.style.gridColumn = '1 / -1';
+            flexWrapper.style.display = 'flex';
+            flexWrapper.style.flexWrap = 'wrap';
+            flexWrapper.style.justifyContent = 'center';
+            flexWrapper.style.gap = '20px';
+        }
 
         data.forEach(movie => {
-          const card = document.createElement('div');
-          card.className = 'similar-movie-card';
+          let card;
+          if (isModal) {
+              card = document.createElement('div');
+              card.className = 'movie-card';
+              
+              const img = document.createElement('img');
+              img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
+              img.alt = movie.display_title;
+              img.onerror = function() {
+                  this.onerror = null;
+                  this.src = '/static/icons/fallback.svg';
+                  this.classList.add('fallback');
+              };
+              card.appendChild(img);
+              
+              const overlay = document.createElement('div');
+              overlay.className = 'hover-overlay';
+              const hoverContent = document.createElement('div');
+              hoverContent.className = 'hover-content';
+              
+              const hoverTitle = document.createElement('h3');
+              hoverTitle.className = 'hover-title';
+              hoverTitle.textContent = movie.display_title || 'Untitled Movie';
+              
+              const hoverRating = document.createElement('div');
+              hoverRating.className = 'hover-rating';
+              hoverRating.innerHTML = `<span class="tmdb-star">★</span> <span class="rating-value">--</span>`;
+              
+              const hoverOverview = document.createElement('p');
+              hoverOverview.className = 'hover-overview';
+              hoverOverview.textContent = 'Click to search for exact match.';
+              
+              hoverContent.appendChild(hoverTitle);
+              hoverContent.appendChild(hoverRating);
+              hoverContent.appendChild(hoverOverview);
+              overlay.appendChild(hoverContent);
+              card.appendChild(overlay);
 
-          const img = document.createElement('img');
-          img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
-          img.alt = movie.display_title;
-          img.onerror = function () {
-            this.src = '/static/icons/fallback.svg';
-          };
+          } else {
+              card = document.createElement('div');
+              card.className = 'similar-movie-card';
 
-          const info = document.createElement('div');
-          info.className = 'similar-movie-info';
-          info.innerHTML = `
-              <div class="similar-movie-title">${movie.display_title}</div>
-              <div class="similar-movie-year">${movie.year}</div>
-              <div class="similar-movie-score">Match: ${movie.similarity_score}%</div>
-            `;
+              const img = document.createElement('img');
+              img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
+              img.alt = movie.display_title;
+              img.onerror = function () {
+                this.src = '/static/icons/fallback.svg';
+              };
 
-          card.appendChild(img);
-          card.appendChild(info);
+              const info = document.createElement('div');
+              info.className = 'similar-movie-info';
+              info.innerHTML = `
+                  <div class="similar-movie-title">${movie.display_title}</div>
+                  <div class="similar-movie-year">${movie.year}</div>
+                  <div class="similar-movie-score">Match: ${movie.similarity_score}%</div>
+                `;
 
-          // Make card clickable to select this movie
+              card.appendChild(img);
+              card.appendChild(info);
+          }
+
           card.addEventListener('click', () => {
-            searchInput.value = movie.display_title;
-            performSearch();
+             if (isModal) {
+                modalSearchInput.value = movie.display_title;
+                performModalSearch();
+             } else {
+                searchInput.value = movie.display_title;
+                performSearch();
+             }
           });
 
-          resultsContainer.appendChild(card);
+          if (isModal) {
+              container.appendChild(card);
+          } else {
+              flexWrapper.appendChild(card);
+          }
         });
+        
+        if (!isModal) {
+            container.appendChild(flexWrapper);
+        }
       })
       .catch(err => {
         console.error("Error fetching similar movies:", err);
-        resultsContainer.innerHTML = `<div class="no-results"><p>Error finding similar movies. Please try again.</p></div>`;
+        container.innerHTML = `<div class="no-results" style="grid-column: 1 / -1;"><p>Error finding similar movies. Please try again.</p></div>`;
       });
   }
 
@@ -358,6 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const sortToggle = document.getElementById('qualitySortToggle');
   if (sortToggle) {
     sortToggle.addEventListener('change', () => {
+      if (poolModeActive) {
+         performPoolRecommendation();
+         return;
+      }
       const params = new URLSearchParams(window.location.search);
       const recId = params.get('recommend_id');
       const recTitle = params.get('recommend_title');
@@ -371,6 +562,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const strictGenreToggle = document.getElementById('strictGenreToggle');
   if (strictGenreToggle) {
     strictGenreToggle.addEventListener('change', () => {
+      if (poolModeActive) {
+         performPoolRecommendation();
+         return;
+      }
       const params = new URLSearchParams(window.location.search);
       const recId = params.get('recommend_id');
       const recTitle = params.get('recommend_title');
@@ -384,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tmdbApiToggle = document.getElementById('tmdbApiToggle');
   if (tmdbApiToggle) {
     tmdbApiToggle.addEventListener('change', () => {
+      if (poolModeActive) return; // N/A
       const params = new URLSearchParams(window.location.search);
       const recId = params.get('recommend_id');
       const recTitle = params.get('recommend_title');
@@ -410,19 +606,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = params.get('q');
     const recId = params.get('recommend_id');
     const recTitle = params.get('recommend_title');
+    const mode = params.get('mode');
 
-    if (recId && recTitle) {
-      searchInput.value = recTitle;
-      fetchRecommendations(recTitle, recId, true);
-    } else if (query) {
-      searchInput.value = query;
-      // Re-run the search without pushing a new history state
-      fetchAndRender(query);
+    if (mode === 'pool') {
+        poolModeActive = true;
+        updateModeUI();
+        const validIds = moviePool.filter(m => m !== null).map(m => m.id);
+        if (validIds.length >= 2) performPoolRecommendation(false);
     } else {
-      // If we went back to the home page (no ?q=), clear results
-      searchInput.value = '';
-      document.getElementById('results').innerHTML = '';
-      document.getElementById('loadingOverlay').style.display = 'none';
+        if (poolModeActive) {
+            poolModeActive = false;
+            updateModeUI();
+        }
+        if (recId && recTitle) {
+          searchInput.value = recTitle;
+          fetchRecommendations(recTitle, recId, true);
+        } else if (query) {
+          searchInput.value = query;
+          // Re-run the search without pushing a new history state
+          fetchAndRender(query);
+        } else {
+          // If we went back to the home page (no ?q=), clear results
+          searchInput.value = '';
+          document.getElementById('results').innerHTML = '';
+          document.getElementById('loadingOverlay').style.display = 'none';
+          const sortControls = document.getElementById('sortControls');
+          if (sortControls) sortControls.classList.add('hidden');
+        }
     }
   });
 
@@ -431,8 +641,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialQuery = initialParams.get('q');
   const initialRecId = initialParams.get('recommend_id');
   const initialRecTitle = initialParams.get('recommend_title');
+  const initialMode = initialParams.get('mode');
 
-  if (initialRecId && initialRecTitle) {
+  if (initialMode === 'pool') {
+      poolModeActive = true;
+      updateModeUI();
+      const validIds = moviePool.filter(m => m !== null).map(m => m.id);
+      if (validIds.length >= 2) performPoolRecommendation(false);
+  } else if (initialRecId && initialRecTitle) {
     searchInput.value = initialRecTitle;
     fetchRecommendations(initialRecTitle, initialRecId, true);
   } else if (initialQuery) {
@@ -441,8 +657,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Refactored fetch logic to allow reusable calls without pushing state
-  function fetchAndRender(title) {
-    showLoadingForTwoSeconds();
+  function fetchAndRender(title, targetContainer = null) {
+    const isModal = targetContainer === modalResultsContainer;
+    const container = targetContainer || document.getElementById('results');
+
+    if (!isModal) {
+        showLoadingForTwoSeconds();
+    } else {
+        if (modalLoadingOverlay) modalLoadingOverlay.style.display = 'flex';
+    }
 
     // Parse (Year) if present in the search query
     let searchQuery = title.trim();
@@ -469,18 +692,209 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(enrichedData => {
               if (enrichedData.results && enrichedData.results.length > 0) {
-                renderMovieCards(enrichedData.results, true);
+                renderMovieCards(enrichedData.results, true, container);
               } else {
-                showSimilarMovies(searchQuery);
+                showSimilarMovies(searchQuery, container);
               }
             });
         } else {
-          showSimilarMovies(searchQuery);
+          showSimilarMovies(searchQuery, container);
         }
       })
       .catch(err => {
         console.error("Fetch error:", err);
-        alert("Network or Server error. Try again later.");
+        if(!isModal) alert("Network or Server error. Try again later.");
+        if(isModal && modalLoadingOverlay) modalLoadingOverlay.style.display = 'none';
+      });
+  }
+
+  /* Pool Mode Logic Additions */
+
+  function savePool() {
+      localStorage.setItem('moviePool', JSON.stringify(moviePool));
+  }
+
+  function renderPool() {
+      if (!poolSlotsContainer) return;
+      poolSlotsContainer.innerHTML = '';
+      let filledCount = 0;
+
+      moviePool.forEach((movie, index) => {
+          const slotWrapper = document.createElement('div');
+          slotWrapper.className = 'pool-slot';
+
+          const slotCard = document.createElement('div');
+          slotCard.className = `slot-card ${movie ? 'filled' : 'empty'}`;
+
+          if (!movie) {
+              slotCard.innerHTML = `<div class="add-icon">+</div>`;
+              slotCard.onclick = () => openModal(index);
+              slotWrapper.appendChild(slotCard);
+          } else {
+              filledCount++;
+
+              let img = document.createElement('img');
+              img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
+              img.onerror = function() {
+                  this.onerror = null;
+                  this.src = '/static/icons/fallback.svg';
+              };
+              slotCard.appendChild(img);
+
+              const titleOverlay = document.createElement('div');
+              titleOverlay.className = 'slot-title-overlay';
+              titleOverlay.textContent = movie.title;
+              slotCard.appendChild(titleOverlay);
+              
+              slotCard.onclick = () => openModal(index, movie.title);
+
+              slotWrapper.appendChild(slotCard);
+
+              const actions = document.createElement('div');
+              actions.className = 'slot-actions';
+
+              const editBtn = document.createElement('button');
+              editBtn.className = 'slot-action-btn';
+              editBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.2rem;">edit</span>';
+              editBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  openModal(index, movie.title);
+              };
+
+              const removeBtn = document.createElement('button');
+              removeBtn.className = 'slot-action-btn';
+              removeBtn.innerHTML = '✕';
+              removeBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  moviePool[index] = null;
+                  savePool();
+                  document.getElementById('results').innerHTML = ''; // Clear results if shown
+                  const sortControls = document.getElementById('sortControls');
+                  if (sortControls) sortControls.classList.add('hidden');
+                  renderPool();
+              };
+
+              actions.appendChild(editBtn);
+              actions.appendChild(removeBtn);
+              slotWrapper.appendChild(actions);
+          }
+          poolSlotsContainer.appendChild(slotWrapper);
+      });
+
+      if (filledCount >= 2) {
+          findMyMixBtn.disabled = false;
+          poolWarning.classList.add('hidden');
+      } else {
+          findMyMixBtn.disabled = true;
+          if (filledCount === 1) {
+              poolWarning.textContent = "Select at least 2 movies.";
+              poolWarning.classList.remove('hidden');
+              poolWarning.classList.add('pool-hint');
+          } else {
+              poolWarning.classList.add('hidden');
+          }
+      }
+  }
+
+  function openModal(index, defaultTitle = '') {
+      activeModalSlotIndex = index;
+      selectionModal.classList.remove('hidden');
+      modalResultsContainer.innerHTML = '';
+      document.getElementById('modalScrollWrapper').style.display = 'none';
+      modalSearchInput.value = defaultTitle;
+      if (defaultTitle) {
+          performModalSearch();
+      } else {
+          setTimeout(() => modalSearchInput.focus(), 100);
+      }
+  }
+
+  function closeModal() {
+      selectionModal.classList.add('hidden');
+      activeModalSlotIndex = null;
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  if (selectionModal) {
+      selectionModal.addEventListener('click', (e) => {
+          if (e.target === selectionModal) closeModal();
+      });
+  }
+
+  function performModalSearch() {
+      const title = modalSearchInput.value.trim();
+      if (!title) return;
+      if (modalLoadingOverlay) modalLoadingOverlay.style.display = 'flex';
+      fetchAndRender(title, modalResultsContainer);
+  }
+
+  if (modalSearchBtn) modalSearchBtn.addEventListener('click', performModalSearch);
+  window.addEventListener('triggerModalSearch', performModalSearch);
+  if (modalSearchInput) {
+      modalSearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+              e.preventDefault();
+              performModalSearch();
+          }
+      });
+      modalSearchInput.addEventListener('input', () => {
+          if (modalSearchInput.value.trim() === '') {
+              modalResultsContainer.innerHTML = '';
+              document.getElementById('modalScrollWrapper').style.display = 'none';
+          }
+      });
+  }
+
+  if (findMyMixBtn) {
+      findMyMixBtn.addEventListener('click', () => performPoolRecommendation(true));
+  }
+
+  function performPoolRecommendation(pushState = true) {
+      const validIds = moviePool.filter(m => m !== null).map(m => m.id);
+      if (validIds.length < 2) return;
+
+      if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+      if (pushState) {
+          const newUrl = new URL(window.location);
+          newUrl.searchParams.set('mode', 'pool');
+          newUrl.searchParams.delete('q');
+          newUrl.searchParams.delete('recommend_id');
+          newUrl.searchParams.delete('recommend_title');
+          window.history.pushState({ mode: 'pool' }, '', newUrl);
+      }
+
+      // Read current sorts (they work in pool mode too per instructions)
+      const sortToggle = document.getElementById('qualitySortToggle');
+      const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
+      const strictGenreToggle = document.getElementById('strictGenreToggle');
+      const strictGenre = (strictGenreToggle && strictGenreToggle.checked) ? 'true' : 'false';
+
+      fetch('/recommend_multi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: validIds, limit: 50, sort: sortMode, strict_genre: strictGenre })
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          if (data.error) {
+              poolWarning.textContent = "Error: " + data.error;
+              poolWarning.classList.remove('hidden');
+              poolWarning.classList.remove('pool-hint');
+              if (data.error.includes("were excluded")) {
+                 setTimeout(() => { poolWarning.classList.add('hidden'); }, 5000);
+              }
+          } else if (data.results) {
+              renderMovieCards(data.results, false, null);
+          }
+      })
+      .catch(err => {
+          console.error("Pool fetch error:", err);
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          poolWarning.textContent = "Network error while finding mix. Try again.";
+          poolWarning.classList.remove('hidden');
+          poolWarning.classList.remove('pool-hint');
       });
   }
 
