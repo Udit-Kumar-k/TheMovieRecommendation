@@ -60,6 +60,7 @@ jobs:
           git remote add huggingface "https://uditkumar:${HF_TOKEN}@huggingface.co/spaces/uditkumar/MoviesIndex"
           git branch -D hf-space-deploy 2>/dev/null || true
           git checkout --orphan hf-space-deploy
+          git rm -rf --cached . > /dev/null 2>&1
           git add -f Dockerfile requirements.txt README.md \
             app.py data_loader.py data_utils.py \
             .gitattributes \
