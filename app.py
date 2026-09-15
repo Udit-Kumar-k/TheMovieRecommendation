@@ -36,8 +36,9 @@ watchlist_col = None
 
 if MONGO_URI:
     try:
+        import certifi
         from pymongo import MongoClient
-        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(), serverSelectionTimeoutMS=5000)
         mongo_client.server_info()  # Force connection test
         db = mongo_client.get_database('movierec')
         users_col = db.users
@@ -73,8 +74,9 @@ def debug_mongo():
             'message': 'MONGO_URI environment variable is not set in Hugging Face Space settings.'
         }), 200
     try:
+        import certifi
         from pymongo import MongoClient
-        test_client = MongoClient(uri, serverSelectionTimeoutMS=4000)
+        test_client = MongoClient(uri, tlsCAFile=certifi.where(), serverSelectionTimeoutMS=5000)
         info = test_client.server_info()
         return jsonify({
             'status': 'connected',

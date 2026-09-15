@@ -11,3 +11,4 @@ pymongo[srv]
 flask-bcrypt
 flask-jwt-extended
 google-auth
+certifi
