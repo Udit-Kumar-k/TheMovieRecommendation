@@ -57,11 +57,36 @@ def mongo_required(f):
     """Decorator that returns 503 if MongoDB is not available."""
     from functools import wraps
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        if db is None:
+    def decorated(*args, **kwargs):
+        if db is None or users_col is None:
             return jsonify({'error': 'Auth/Watchlist service unavailable. MongoDB not configured.'}), 503
         return f(*args, **kwargs)
-    return wrapper
+    return decorated
+
+
+@app.route('/debug/mongo')
+def debug_mongo():
+    uri = os.getenv('MONGO_URI')
+    if not uri:
+        return jsonify({
+            'status': 'missing_uri',
+            'message': 'MONGO_URI environment variable is not set in Hugging Face Space settings.'
+        }), 200
+    try:
+        from pymongo import MongoClient
+        test_client = MongoClient(uri, serverSelectionTimeoutMS=4000)
+        info = test_client.server_info()
+        return jsonify({
+            'status': 'connected',
+            'message': 'MongoDB Atlas connected successfully!',
+            'version': info.get('version')
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'connection_failed',
+            'error_type': type(e).__name__,
+            'error_details': str(e)
+        }), 200
 
 
 USE_RECOMMENDATION = True
