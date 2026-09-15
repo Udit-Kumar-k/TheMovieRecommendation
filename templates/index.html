@@ -117,30 +117,19 @@
   <div id="authModal" class="modal hidden">
     <div class="modal-content auth-modal-content">
       <span class="modal-close" onclick="document.getElementById('authModal').classList.add('hidden')">&times;</span>
-      <h2 id="authModalTitle">Welcome to MovieRec</h2>
+      <div class="auth-modal-header">
+        <h2 id="authModalTitle">Sign in to MovieRec</h2>
+        <p class="auth-modal-subtitle">Save movies to your personal watchlist and sync across devices.</p>
+      </div>
 
       <!-- Google Sign In Option -->
       <div id="googleSignInWrapper" class="google-signin-wrapper">
         <div id="googleSignInDiv"></div>
         <div id="googleConfigHint" class="google-config-hint" style="display:none;">
-          <span>💡 Google Sign-In requires <code>GOOGLE_CLIENT_ID</code> in <code>.env</code></span>
+          <span>💡 Google Sign-In requires <code>GOOGLE_CLIENT_ID</code> in environment variables.</span>
         </div>
       </div>
-
-      <div class="auth-divider">
-        <span>or continue with email</span>
-      </div>
-
-      <div class="auth-toggle">
-        <div class="auth-toggle-option active" id="authTabLogin">Login</div>
-        <div class="auth-toggle-option" id="authTabRegister">Register</div>
-      </div>
-      <form id="authForm" class="auth-form" onsubmit="return false;">
-        <input type="email" id="authEmail" class="auth-input" placeholder="Email" required autocomplete="email" />
-        <input type="password" id="authPassword" class="auth-input" placeholder="Password" required autocomplete="current-password" />
-        <div id="authError" class="auth-error"></div>
-        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Login</button>
-      </form>
+      <div id="authError" class="auth-error"></div>
     </div>
   </div>
 

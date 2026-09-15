@@ -526,58 +526,7 @@ def recommend_multi():
         print("[EXCEPTION] recommend_multi:", e)
         return jsonify({"error": str(e)}), 500
 
-# ── Auth Endpoints ────────────────────────────────────────────────────────────
-
-@app.route('/auth/register', methods=['POST'])
-@mongo_required
-def auth_register():
-    data = request.json or {}
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '').strip()
-
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required.'}), 400
-    if len(password) < 6:
-        return jsonify({'error': 'Password must be at least 6 characters.'}), 400
-
-    pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    try:
-        result = users_col.insert_one({
-            'email': email,
-            'password_hash': pw_hash,
-            'created_at': datetime.datetime.utcnow()
-        })
-        token = create_access_token(identity=str(result.inserted_id))
-        return jsonify({'token': token, 'email': email}), 201
-    except Exception as e:
-        if 'duplicate key' in str(e).lower() or 'E11000' in str(e):
-            return jsonify({'error': 'An account with this email already exists.'}), 409
-        print(f'[ERROR] Registration failed: {e}')
-        return jsonify({'error': 'Registration failed.'}), 500
-
-
-@app.route('/auth/login', methods=['POST'])
-@mongo_required
-def auth_login():
-    data = request.json or {}
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '').strip()
-
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required.'}), 400
-
-    user = users_col.find_one({'email': email})
-    if not user or not bcrypt.check_password_hash(user['password_hash'], password):
-        return jsonify({'error': 'Invalid email or password.'}), 401
-
-    token = create_access_token(identity=str(user['_id']))
-    return jsonify({
-        'token': token,
-        'email': user['email'],
-        'name': user.get('name', ''),
-        'picture': user.get('picture', '')
-    })
+# ── Auth Endpoints (Google OAuth 2.0 Only) ────────────────────────────────────
 
 
 @app.route('/auth/google', methods=['POST'])
