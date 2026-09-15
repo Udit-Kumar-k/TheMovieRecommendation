@@ -1,5 +1,295 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // ── Auth + Watchlist State ──────────────────────────────────────────────────
+  const getToken = () => localStorage.getItem('movierec_jwt');
+  const getEmail = () => localStorage.getItem('movierec_email');
+  const getName = () => localStorage.getItem('movierec_name');
+  const getPicture = () => localStorage.getItem('movierec_picture');
+  const authHeaders = () => ({ 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' });
+
+  let watchlistMovieIds = new Set();
+  let isAuthMode = 'login'; // 'login' or 'register'
+  let watchlistModeActive = false;
+
+  // Load watchlist IDs if logged in
+  function loadWatchlistIds() {
+    const token = getToken();
+    if (!token) { watchlistMovieIds.clear(); return Promise.resolve(); }
+    return fetch('/watchlist/ids', { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => { watchlistMovieIds = new Set((data.ids || []).map(String)); })
+      .catch(() => { watchlistMovieIds.clear(); });
+  }
+
+  function updateAuthUI() {
+    const loggedOutNav = document.getElementById('loggedOutNav');
+    const loggedInNav = document.getElementById('loggedInNav');
+    const navUserEmail = document.getElementById('navUserEmail');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+    const btnWatchlistMode = document.getElementById('btnWatchlistMode');
+
+    if (getToken()) {
+      if (loggedOutNav) loggedOutNav.style.display = 'none';
+      if (loggedInNav) loggedInNav.style.display = 'flex';
+      const displayName = getName() || getEmail() || '';
+      if (navUserEmail) navUserEmail.textContent = displayName;
+      if (navUserAvatar) {
+        const pic = getPicture();
+        if (pic) {
+          navUserAvatar.src = pic;
+          navUserAvatar.style.display = 'block';
+        } else {
+          navUserAvatar.style.display = 'none';
+        }
+      }
+      if (btnWatchlistMode) btnWatchlistMode.style.display = '';
+    } else {
+      if (loggedOutNav) loggedOutNav.style.display = '';
+      if (loggedInNav) loggedInNav.style.display = 'none';
+      if (navUserAvatar) navUserAvatar.style.display = 'none';
+      if (btnWatchlistMode) btnWatchlistMode.style.display = 'none';
+      // If watchlist mode was active, switch back to search
+      if (watchlistModeActive) {
+        watchlistModeActive = false;
+        poolModeActive = false;
+      }
+    }
+  }
+
+  // ── Google Identity Services (GIS) ──────────────────────────────────────────
+  async function handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+    const authError = document.getElementById('authError');
+    if (authError) authError.textContent = '';
+
+    try {
+      const res = await fetch('/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (authError) authError.textContent = data.error || 'Google sign-in failed.';
+        return;
+      }
+
+      localStorage.setItem('movierec_jwt', data.token);
+      if (data.email) localStorage.setItem('movierec_email', data.email);
+      if (data.name) localStorage.setItem('movierec_name', data.name);
+      if (data.picture) localStorage.setItem('movierec_picture', data.picture);
+
+      const authModal = document.getElementById('authModal');
+      if (authModal) authModal.classList.add('hidden');
+
+      await loadWatchlistIds();
+      updateAuthUI();
+      updateModeUI();
+      refreshBookmarkIcons();
+    } catch (err) {
+      console.error('Google Sign-In Error:', err);
+      if (authError) authError.textContent = 'Google sign-in network error.';
+    }
+  }
+
+  function initGoogleSignIn() {
+    const googleClient = window.GOOGLE_CLIENT_ID;
+    const googleBtnDiv = document.getElementById('googleSignInDiv');
+    const googleConfigHint = document.getElementById('googleConfigHint');
+
+    if (!googleClient) {
+      if (googleConfigHint) googleConfigHint.style.display = 'block';
+      if (googleBtnDiv) googleBtnDiv.style.display = 'none';
+      return;
+    }
+
+    if (googleConfigHint) googleConfigHint.style.display = 'none';
+    if (googleBtnDiv) googleBtnDiv.style.display = 'block';
+
+    let attempts = 0;
+    const renderGIS = () => {
+      attempts++;
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClient,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true
+          });
+          window.google.accounts.id.renderButton(
+            googleBtnDiv,
+            {
+              theme: 'outline',
+              size: 'large',
+              type: 'standard',
+              text: 'continue_with',
+              shape: 'pill',
+              logo_alignment: 'left',
+              width: 280
+            }
+          );
+        } catch (e) {
+          console.warn('Could not render Google Sign-In button:', e);
+        }
+      } else if (attempts < 20) {
+        setTimeout(renderGIS, 150);
+      }
+    };
+    renderGIS();
+  }
+
+  // Auth Modal Handlers
+  const authTabLogin = document.getElementById('authTabLogin');
+  const authTabRegister = document.getElementById('authTabRegister');
+  const authSubmitBtn = document.getElementById('authSubmitBtn');
+  const authModalTitle = document.getElementById('authModalTitle');
+  const authError = document.getElementById('authError');
+  const authForm = document.getElementById('authForm');
+  const authModal = document.getElementById('authModal');
+
+  if (authTabLogin) authTabLogin.addEventListener('click', () => {
+    isAuthMode = 'login';
+    authTabLogin.classList.add('active'); authTabRegister.classList.remove('active');
+    authSubmitBtn.textContent = 'Login'; authModalTitle.textContent = 'Login';
+    if (authError) authError.textContent = '';
+  });
+  if (authTabRegister) authTabRegister.addEventListener('click', () => {
+    isAuthMode = 'register';
+    authTabRegister.classList.add('active'); authTabLogin.classList.remove('active');
+    authSubmitBtn.textContent = 'Register'; authModalTitle.textContent = 'Register';
+    if (authError) authError.textContent = '';
+  });
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) authModal.classList.add('hidden');
+    });
+  }
+
+  if (authForm) authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (authError) authError.textContent = '';
+    authSubmitBtn.disabled = true;
+    authSubmitBtn.textContent = 'Please wait...';
+    const url = isAuthMode === 'register' ? '/auth/register' : '/auth/login';
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (authError) authError.textContent = data.error || 'Something went wrong.';
+        authSubmitBtn.disabled = false;
+        authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
+        return;
+      }
+      localStorage.setItem('movierec_jwt', data.token);
+      localStorage.setItem('movierec_email', data.email);
+      if (data.name) localStorage.setItem('movierec_name', data.name);
+      if (data.picture) localStorage.setItem('movierec_picture', data.picture);
+      authModal.classList.add('hidden');
+      authSubmitBtn.disabled = false;
+      authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
+      await loadWatchlistIds();
+      updateAuthUI();
+      updateModeUI();
+      // Re-render any existing results to show bookmark icons
+      refreshBookmarkIcons();
+    } catch (err) {
+      if (authError) authError.textContent = 'Network error. Try again.';
+      authSubmitBtn.disabled = false;
+      authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
+    }
+  });
+
+  // Logout
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) btnLogout.addEventListener('click', () => {
+    localStorage.removeItem('movierec_jwt');
+    localStorage.removeItem('movierec_email');
+    localStorage.removeItem('movierec_name');
+    localStorage.removeItem('movierec_picture');
+    watchlistMovieIds.clear();
+    updateAuthUI();
+    updateModeUI();
+    refreshBookmarkIcons();
+  });
+
+  function refreshBookmarkIcons() {
+    document.querySelectorAll('.watchlist-btn').forEach(btn => {
+      const mid = btn.dataset.movieId;
+      if (!getToken()) {
+        btn.style.display = 'none';
+      } else {
+        btn.style.display = '';
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = watchlistMovieIds.has(mid) ? 'bookmark' : 'bookmark_border';
+        btn.classList.toggle('watchlist-active', watchlistMovieIds.has(mid));
+      }
+    });
+  }
+
+  async function toggleWatchlist(movieId, movieTitle, posterPath, btn) {
+    if (!getToken()) {
+      if (authModal) authModal.classList.remove('hidden');
+      return;
+    }
+    const mid = String(movieId);
+    if (watchlistMovieIds.has(mid)) {
+      await fetch(`/watchlist/${mid}`, { method: 'DELETE', headers: authHeaders() });
+      watchlistMovieIds.delete(mid);
+    } else {
+      await fetch('/watchlist', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ movie_id: mid, movie_title: movieTitle, poster_path: posterPath })
+      });
+      watchlistMovieIds.add(mid);
+    }
+    refreshBookmarkIcons();
+  }
+
+  // Watchlist View
+  function renderWatchlistView() {
+    const container = document.getElementById('results');
+    const sortControls = document.getElementById('sortControls');
+    if (sortControls) sortControls.classList.add('hidden');
+
+    if (!getToken()) {
+      container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><p>Please login to see your watchlist.</p></div>';
+      return;
+    }
+
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:2rem;"><div class="spinner"></div></div>';
+
+    fetch('/watchlist', { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        const items = data.watchlist || [];
+        if (items.length === 0) {
+          container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><h2>Your watchlist is empty</h2><p>Search for movies and click the bookmark icon to add them here.</p></div>';
+          return;
+        }
+        // Convert watchlist items to the format renderMovieCards expects
+        const movies = items.map(item => ({
+          id: item.movie_id,
+          title: item.movie_title,
+          poster_path: item.poster_path,
+          overview: '',
+          similarity: '',
+          adult: 'FALSE'
+        }));
+        renderMovieCards(movies, true); // isSearchResult=true so no similarity badge
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><p>Failed to load watchlist. Try again.</p></div>';
+      });
+  }
+
   // Global state for Pool Mode
   let poolModeActive = false;
   let moviePool = JSON.parse(localStorage.getItem('moviePool'));
@@ -31,9 +321,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalLoadingOverlay = document.getElementById('modalLoadingOverlay');
 
   function updateModeUI() {
-    if (poolModeActive) {
+    const btnSearchMode = document.getElementById('btnSearchMode');
+    const btnPoolMode = document.getElementById('btnPoolMode');
+    const btnWatchlistMode = document.getElementById('btnWatchlistMode');
+
+    if (watchlistModeActive) {
+      if (btnWatchlistMode) btnWatchlistMode.classList.add('active');
+      if (btnSearchMode) btnSearchMode.classList.remove('active');
+      if (btnPoolMode) btnPoolMode.classList.remove('active');
+      if (searchBarContainer) searchBarContainer.classList.add('hidden');
+      if (poolContainer) poolContainer.classList.add('hidden');
+      const sortControls = document.getElementById('sortControls');
+      if (sortControls) sortControls.classList.add('hidden');
+      renderWatchlistView();
+    } else if (poolModeActive) {
       if (btnPoolMode) btnPoolMode.classList.add('active');
       if (btnSearchMode) btnSearchMode.classList.remove('active');
+      if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
       if (searchBarContainer) searchBarContainer.classList.add('hidden');
       if (poolContainer) poolContainer.classList.remove('hidden');
       renderPool();
@@ -50,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (btnSearchMode) btnSearchMode.classList.add('active');
       if (btnPoolMode) btnPoolMode.classList.remove('active');
+      if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
       if (poolContainer) poolContainer.classList.add('hidden');
       if (searchBarContainer) searchBarContainer.classList.remove('hidden');
       const sortControls = document.getElementById('sortControls');
@@ -63,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnSearchMode) {
     btnSearchMode.addEventListener('click', () => {
       poolModeActive = false;
+      watchlistModeActive = false;
       updateModeUI();
     });
   }
@@ -70,11 +376,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnPoolMode) {
     btnPoolMode.addEventListener('click', () => {
       poolModeActive = true;
+      watchlistModeActive = false;
       updateModeUI();
     });
   }
 
-  updateModeUI();
+  const btnWatchlistMode = document.getElementById('btnWatchlistMode');
+  if (btnWatchlistMode) {
+    btnWatchlistMode.addEventListener('click', () => {
+      watchlistModeActive = true;
+      poolModeActive = false;
+      updateModeUI();
+    });
+  }
+
+  // Init auth state and load watchlist IDs
+  loadWatchlistIds().then(() => {
+    updateAuthUI();
+    updateModeUI();
+    initGoogleSignIn();
+  });
 
   function showLoadingForTwoSeconds() {
     if (loadingOverlay) {
@@ -294,6 +615,24 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = `/movie/${urlTargetId}`;
         }
       };
+
+      // Watchlist bookmark button (top-left of card)
+      if (!isModal) {
+        const bookmarkBtn = document.createElement('button');
+        bookmarkBtn.className = 'watchlist-btn';
+        bookmarkBtn.dataset.movieId = String(targetId);
+        const bookmarkIcon = document.createElement('span');
+        bookmarkIcon.className = 'material-symbols-outlined';
+        bookmarkIcon.textContent = watchlistMovieIds.has(String(targetId)) ? 'bookmark' : 'bookmark_border';
+        bookmarkBtn.appendChild(bookmarkIcon);
+        if (watchlistMovieIds.has(String(targetId))) bookmarkBtn.classList.add('watchlist-active');
+        if (!getToken()) bookmarkBtn.style.display = 'none';
+        bookmarkBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleWatchlist(targetId, movie.title || '', movie.poster_path || '', bookmarkBtn);
+        });
+        card.appendChild(bookmarkBtn);
+      }
 
       container.appendChild(card);
     });

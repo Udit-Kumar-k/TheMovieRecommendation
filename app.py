@@ -1,16 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from sklearn.metrics.pairwise import linear_kernel
 from data_loader import get_data, get_basic_data
-from flask import Flask, render_template
 import pandas as pd
 from difflib import SequenceMatcher
-
-app = Flask(__name__)
-
 import os
+import datetime
 import requests
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -21,6 +20,49 @@ TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 print(f"Global API Key is: {'*'*5 + TMDB_API_KEY[-4:] if TMDB_API_KEY else 'None'}")
 
 HF_INDEX_DATASET = os.getenv('HF_INDEX_DATASET', 'uditkumar/movie-rec-data')
+
+app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-fallback-secret-key-change-me')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
+# ── MongoDB Atlas Setup (graceful degradation) ───────────────────────────────
+MONGO_URI = os.getenv('MONGO_URI')
+db = None
+users_col = None
+watchlist_col = None
+
+if MONGO_URI:
+    try:
+        from pymongo import MongoClient
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_client.server_info()  # Force connection test
+        db = mongo_client.get_database('movierec')
+        users_col = db.users
+        watchlist_col = db.watchlists
+        # Ensure indexes
+        users_col.create_index('email', unique=True)
+        watchlist_col.create_index([('user_id', 1), ('movie_id', 1)], unique=True)
+        print('[INFO] MongoDB Atlas connected successfully!')
+    except Exception as e:
+        print(f'[WARN] MongoDB connection failed: {e}. Auth/Watchlist features disabled.')
+        db = None
+else:
+    print('[INFO] MONGO_URI not set. Auth/Watchlist features disabled.')
+
+
+def mongo_required(f):
+    """Decorator that returns 503 if MongoDB is not available."""
+    from functools import wraps
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if db is None:
+            return jsonify({'error': 'Auth/Watchlist service unavailable. MongoDB not configured.'}), 503
+        return f(*args, **kwargs)
+    return wrapper
+
 
 USE_RECOMMENDATION = True
 
@@ -128,7 +170,8 @@ def home():
     load_dotenv()
     api_key = os.getenv('TMDB_API_KEY')
     api_base = os.getenv('TMDB_API_BASE', 'https://api.tmdb.org/3')
-    return render_template('index.html', tmdb_api_key=api_key, tmdb_api_base=api_base)
+    google_client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    return render_template('index.html', tmdb_api_key=api_key, tmdb_api_base=api_base, google_client_id=google_client_id)
 
 @app.route('/smart_recommend', methods=['GET'])
 def smart_recommend():
@@ -358,7 +401,8 @@ def movie_detail(movie_id):
     # We pass the ID and Title. The frontend template will do the heavy lifting of fetching
     # high-res TMDB metadata, cast, and trailers securely.
     api_key = os.getenv('TMDB_API_KEY')
-    return render_template('movie_detail.html', movie=movie, tmdb_api_key=api_key, error=False)
+    google_client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    return render_template('movie_detail.html', movie=movie, tmdb_api_key=api_key, google_client_id=google_client_id, error=False)
 
 @app.route('/recommend_multi', methods=['POST'])
 def recommend_multi():
@@ -481,6 +525,219 @@ def recommend_multi():
     except Exception as e:
         print("[EXCEPTION] recommend_multi:", e)
         return jsonify({"error": str(e)}), 500
+
+# ── Auth Endpoints ────────────────────────────────────────────────────────────
+
+@app.route('/auth/register', methods=['POST'])
+@mongo_required
+def auth_register():
+    data = request.json or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required.'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters.'}), 400
+
+    pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    try:
+        result = users_col.insert_one({
+            'email': email,
+            'password_hash': pw_hash,
+            'created_at': datetime.datetime.utcnow()
+        })
+        token = create_access_token(identity=str(result.inserted_id))
+        return jsonify({'token': token, 'email': email}), 201
+    except Exception as e:
+        if 'duplicate key' in str(e).lower() or 'E11000' in str(e):
+            return jsonify({'error': 'An account with this email already exists.'}), 409
+        print(f'[ERROR] Registration failed: {e}')
+        return jsonify({'error': 'Registration failed.'}), 500
+
+
+@app.route('/auth/login', methods=['POST'])
+@mongo_required
+def auth_login():
+    data = request.json or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required.'}), 400
+
+    user = users_col.find_one({'email': email})
+    if not user or not bcrypt.check_password_hash(user['password_hash'], password):
+        return jsonify({'error': 'Invalid email or password.'}), 401
+
+    token = create_access_token(identity=str(user['_id']))
+    return jsonify({
+        'token': token,
+        'email': user['email'],
+        'name': user.get('name', ''),
+        'picture': user.get('picture', '')
+    })
+
+
+@app.route('/auth/google', methods=['POST'])
+@mongo_required
+def auth_google():
+    data = request.json or {}
+    credential = data.get('credential')
+
+    if not credential:
+        return jsonify({'error': 'Google credential token is required.'}), 400
+
+    google_client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    if not google_client_id:
+        return jsonify({'error': 'GOOGLE_CLIENT_ID is not configured on the server.'}), 500
+
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        import pymongo
+
+        # Verify Google ID Token
+        id_info = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            google_client_id
+        )
+
+        email = id_info.get('email')
+        name = id_info.get('name', '')
+        picture = id_info.get('picture', '')
+        google_sub = id_info.get('sub')
+
+        if not email:
+            return jsonify({'error': 'Failed to retrieve email from Google.'}), 400
+
+        # Upsert user in MongoDB
+        user = users_col.find_one_and_update(
+            {'email': email.lower()},
+            {
+                '$set': {
+                    'google_id': google_sub,
+                    'name': name,
+                    'picture': picture,
+                    'email': email.lower(),
+                    'last_login': datetime.datetime.utcnow()
+                },
+                '$setOnInsert': {
+                    'created_at': datetime.datetime.utcnow()
+                }
+            },
+            upsert=True,
+            return_document=pymongo.ReturnDocument.AFTER
+        )
+
+        token = create_access_token(identity=str(user['_id']))
+        return jsonify({
+            'token': token,
+            'email': user['email'],
+            'name': user.get('name', ''),
+            'picture': user.get('picture', '')
+        })
+    except ValueError as ve:
+        print(f'[WARN] Invalid Google Token: {ve}')
+        return jsonify({'error': f'Invalid Google token: {ve}'}), 401
+    except Exception as e:
+        print(f'[ERROR] Google auth error: {e}')
+        return jsonify({'error': 'Google authentication failed.'}), 500
+
+
+@app.route('/auth/me', methods=['GET'])
+@mongo_required
+@jwt_required()
+def auth_me():
+    from bson.objectid import ObjectId
+    user_id = get_jwt_identity()
+    user = users_col.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        return jsonify({'error': 'User not found.'}), 404
+    return jsonify({
+        'email': user.get('email', ''),
+        'name': user.get('name', ''),
+        'picture': user.get('picture', '')
+    })
+
+
+# ── Watchlist Endpoints ───────────────────────────────────────────────────────
+
+@app.route('/watchlist', methods=['GET'])
+@mongo_required
+@jwt_required()
+def get_watchlist():
+    from bson.objectid import ObjectId
+    user_id = ObjectId(get_jwt_identity())
+    items = list(watchlist_col.find({'user_id': user_id}).sort('added_at', -1))
+    watchlist = []
+    for item in items:
+        watchlist.append({
+            'movie_id': item['movie_id'],
+            'movie_title': item.get('movie_title', ''),
+            'poster_path': item.get('poster_path', ''),
+            'added_at': item.get('added_at', '').isoformat() if isinstance(item.get('added_at'), datetime.datetime) else ''
+        })
+    return jsonify({'watchlist': watchlist})
+
+
+@app.route('/watchlist/ids', methods=['GET'])
+@mongo_required
+@jwt_required()
+def get_watchlist_ids():
+    from bson.objectid import ObjectId
+    user_id = ObjectId(get_jwt_identity())
+    items = watchlist_col.find({'user_id': user_id}, {'movie_id': 1, '_id': 0})
+    ids = [item['movie_id'] for item in items]
+    return jsonify({'ids': ids})
+
+
+@app.route('/watchlist', methods=['POST'])
+@mongo_required
+@jwt_required()
+def add_to_watchlist():
+    from bson.objectid import ObjectId
+    data = request.json or {}
+    movie_id = str(data.get('movie_id', '')).strip()
+    movie_title = data.get('movie_title', '').strip()
+    poster_path = data.get('poster_path', '').strip()
+
+    if not movie_id:
+        return jsonify({'error': 'movie_id is required.'}), 400
+
+    user_id = ObjectId(get_jwt_identity())
+
+    try:
+        watchlist_col.update_one(
+            {'user_id': user_id, 'movie_id': movie_id},
+            {'$set': {
+                'movie_title': movie_title,
+                'poster_path': poster_path,
+                'added_at': datetime.datetime.utcnow()
+            },
+             '$setOnInsert': {
+                'user_id': user_id,
+                'movie_id': movie_id
+            }},
+            upsert=True
+        )
+        return jsonify({'success': True, 'message': 'Added to watchlist.'})
+    except Exception as e:
+        print(f'[ERROR] Watchlist add failed: {e}')
+        return jsonify({'error': 'Failed to add to watchlist.'}), 500
+
+
+@app.route('/watchlist/<movie_id>', methods=['DELETE'])
+@mongo_required
+@jwt_required()
+def remove_from_watchlist(movie_id):
+    from bson.objectid import ObjectId
+    user_id = ObjectId(get_jwt_identity())
+    watchlist_col.delete_one({'user_id': user_id, 'movie_id': str(movie_id)})
+    return jsonify({'success': True, 'message': 'Removed from watchlist.'})
+
 
 if __name__ == '__main__':
     # Bind to 0.0.0.0 and port 7860 for Hugging Face Spaces

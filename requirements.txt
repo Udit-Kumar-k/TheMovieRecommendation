@@ -7,3 +7,7 @@ flask
 kagglehub
 python-dotenv
 huggingface_hub
+pymongo[srv]
+flask-bcrypt
+flask-jwt-extended
+google-auth

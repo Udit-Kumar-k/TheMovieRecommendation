@@ -413,7 +413,7 @@ input:checked+.toggle-slider:before {
 .selected-badge {
     position: absolute;
     top: 10px;
-    left: 10px;
+    right: 10px;
     background: #ff0055;
     color: #fff;
     font-weight: bold;
@@ -1332,4 +1332,324 @@ input:checked+.toggle-slider:before {
 .movie-card.disabled:hover {
     transform: none;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ── User Nav (top-right) ─────────────────────────────────────────────────── */
+.user-nav {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-nav > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.user-nav-btn:hover {
+    background: #f5f5f5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #bbb;
+}
+
+.user-email-display {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #666;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
+}
+
+/* ── Auth Modal ───────────────────────────────────────────────────────────── */
+.auth-modal-content {
+    max-width: 420px !important;
+    height: auto !important;
+    padding: 40px 35px 35px 35px !important;
+}
+
+.auth-toggle {
+    display: flex;
+    background: #e0e0e0;
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.auth-toggle-option {
+    flex: 1;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 26px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+    transition: all 0.3s ease;
+}
+
+.auth-toggle-option.active {
+    background: #fff;
+    color: #b30000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px 18px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.auth-input:focus {
+    border-color: #b30000;
+    box-shadow: 0 0 0 3px rgba(179,0,0,0.08);
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #b30000;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    margin-top: 5px;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+    background: #900000;
+    transform: translateY(-1px);
+}
+
+.auth-submit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.auth-error {
+    color: #b30000;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-height: 1.2em;
+    text-align: center;
+}
+
+/* ── Google Sign-In & Auth Modal Enhancements ────────────────────────────── */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.google-signin-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    min-height: 44px;
+}
+
+.google-config-hint {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+    margin-top: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.google-config-hint code {
+    background: #e2e8f0;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.2rem 0;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    text-transform: lowercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.auth-divider span {
+    padding: 0 12px;
+}
+
+/* ── Watchlist Bookmark Button (on movie cards) ───────────────────────────── */
+.watchlist-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 6;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.watchlist-btn .material-symbols-outlined {
+    font-size: 1.2rem;
+    color: #fff;
+    transition: color 0.2s ease;
+}
+
+.watchlist-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+.watchlist-btn.watchlist-active {
+    background: #10b981;
+    border-color: #34d399;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.watchlist-btn.watchlist-active .material-symbols-outlined {
+    color: #ffffff;
+    font-variation-settings: 'FILL' 1;
+}
+
+.watchlist-btn.watchlist-active:hover {
+    background: #059669;
+    border-color: #10b981;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+}
+
+/* ── Watchlist Button on Detail Page ──────────────────────────────────────── */
+.detail-title-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.detail-watchlist-btn {
+    flex-shrink: 0;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.detail-watchlist-btn .material-symbols-outlined {
+    font-size: 1.6rem;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.detail-watchlist-btn:hover {
+    background: #eee;
+    border-color: #ccc;
+}
+
+.detail-watchlist-btn.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+}
+
+.detail-watchlist-btn.active .material-symbols-outlined {
+    color: #10b981;
+    font-variation-settings: 'FILL' 1;
+}
+
+/* ── Empty Watchlist State ────────────────────────────────────────────────── */
+.empty-watchlist {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-watchlist h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.6rem;
+    color: #444;
+    margin: 0 0 10px 0;
+}
+
+.empty-watchlist p {
+    font-size: 1rem;
+    color: #888;
+    margin: 0;
 }
