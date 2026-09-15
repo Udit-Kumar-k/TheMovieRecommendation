@@ -1386,89 +1386,32 @@ input:checked+.toggle-slider:before {
     padding: 0 4px;
 }
 
-/* ── Auth Modal ───────────────────────────────────────────────────────────── */
+/* ── Auth Modal (Google Sign-In) ─────────────────────────────────────────── */
 .auth-modal-content {
-    max-width: 420px !important;
+    max-width: 380px !important;
     height: auto !important;
-    padding: 40px 35px 35px 35px !important;
-}
-
-.auth-toggle {
-    display: flex;
-    background: #e0e0e0;
-    border-radius: 30px;
-    padding: 4px;
-    margin-bottom: 25px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.auth-toggle-option {
-    flex: 1;
+    padding: 35px 28px 28px 28px !important;
     text-align: center;
-    padding: 8px 16px;
-    border-radius: 26px;
-    cursor: pointer;
+    border-radius: 24px;
+}
+
+.auth-modal-header {
+    margin-bottom: 24px;
+}
+
+.auth-modal-header h2 {
     font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #555;
-    transition: all 0.3s ease;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: #111;
 }
 
-.auth-toggle-option.active {
-    background: #fff;
-    color: #b30000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.auth-input {
-    width: 100%;
-    padding: 12px 18px;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
-    background: #fff;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-sizing: border-box;
-}
-
-.auth-input:focus {
-    border-color: #b30000;
-    box-shadow: 0 0 0 3px rgba(179,0,0,0.08);
-}
-
-.auth-submit-btn {
-    width: 100%;
-    padding: 12px;
-    background: #b30000;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease;
-    margin-top: 5px;
-}
-
-.auth-submit-btn:hover:not(:disabled) {
-    background: #900000;
-    transform: translateY(-1px);
-}
-
-.auth-submit-btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+.auth-modal-subtitle {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
 }
 
 .auth-error {
@@ -1477,6 +1420,7 @@ input:checked+.toggle-slider:before {
     font-weight: 500;
     min-height: 1.2em;
     text-align: center;
+    margin-top: 10px;
 }
 
 /* ── Google Sign-In & Auth Modal Enhancements ────────────────────────────── */
@@ -1493,9 +1437,8 @@ input:checked+.toggle-slider:before {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    min-height: 44px;
+    margin: 0.8rem 0;
+    min-height: 48px;
 }
 
 .google-config-hint {
@@ -1517,27 +1460,6 @@ input:checked+.toggle-slider:before {
     border-radius: 4px;
     color: #0f172a;
     font-weight: 600;
-}
-
-.auth-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 1.2rem 0;
-    color: #94a3b8;
-    font-size: 0.82rem;
-    text-transform: lowercase;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.auth-divider span {
-    padding: 0 12px;
 }
 
 /* ── Watchlist Bookmark Button (on movie cards) ───────────────────────────── */

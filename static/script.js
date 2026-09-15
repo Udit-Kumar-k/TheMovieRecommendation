@@ -140,71 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Auth Modal Handlers
-  const authTabLogin = document.getElementById('authTabLogin');
-  const authTabRegister = document.getElementById('authTabRegister');
-  const authSubmitBtn = document.getElementById('authSubmitBtn');
-  const authModalTitle = document.getElementById('authModalTitle');
-  const authError = document.getElementById('authError');
-  const authForm = document.getElementById('authForm');
   const authModal = document.getElementById('authModal');
-
-  if (authTabLogin) authTabLogin.addEventListener('click', () => {
-    isAuthMode = 'login';
-    authTabLogin.classList.add('active'); authTabRegister.classList.remove('active');
-    authSubmitBtn.textContent = 'Login'; authModalTitle.textContent = 'Login';
-    if (authError) authError.textContent = '';
-  });
-  if (authTabRegister) authTabRegister.addEventListener('click', () => {
-    isAuthMode = 'register';
-    authTabRegister.classList.add('active'); authTabLogin.classList.remove('active');
-    authSubmitBtn.textContent = 'Register'; authModalTitle.textContent = 'Register';
-    if (authError) authError.textContent = '';
-  });
   if (authModal) {
     authModal.addEventListener('click', (e) => {
       if (e.target === authModal) authModal.classList.add('hidden');
     });
   }
-
-  if (authForm) authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value.trim();
-    if (authError) authError.textContent = '';
-    authSubmitBtn.disabled = true;
-    authSubmitBtn.textContent = 'Please wait...';
-    const url = isAuthMode === 'register' ? '/auth/register' : '/auth/login';
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        if (authError) authError.textContent = data.error || 'Something went wrong.';
-        authSubmitBtn.disabled = false;
-        authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
-        return;
-      }
-      localStorage.setItem('movierec_jwt', data.token);
-      localStorage.setItem('movierec_email', data.email);
-      if (data.name) localStorage.setItem('movierec_name', data.name);
-      if (data.picture) localStorage.setItem('movierec_picture', data.picture);
-      authModal.classList.add('hidden');
-      authSubmitBtn.disabled = false;
-      authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
-      await loadWatchlistIds();
-      updateAuthUI();
-      updateModeUI();
-      // Re-render any existing results to show bookmark icons
-      refreshBookmarkIcons();
-    } catch (err) {
-      if (authError) authError.textContent = 'Network error. Try again.';
-      authSubmitBtn.disabled = false;
-      authSubmitBtn.textContent = isAuthMode === 'register' ? 'Register' : 'Login';
-    }
-  });
 
   // Logout
   const btnLogout = document.getElementById('btnLogout');
