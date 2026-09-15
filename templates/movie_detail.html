@@ -8,6 +8,8 @@
   <meta name="description" content="{{ movie.overview[:160] if movie.overview else 'Movie details and recommendations.' }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=bookmark,bookmark_border,person,logout" />
   <script>
     window.TMDB_API_KEY = "{{ tmdb_api_key }}";
     const MOVIE_ID = "{{ movie.id }}";
@@ -36,7 +38,12 @@
       </div>
 
       <div class="detail-info">
-        <h1 id="detailTitle">{{ movie.title }}</h1>
+        <div class="detail-title-row">
+          <h1 id="detailTitle">{{ movie.title }}</h1>
+          <button class="detail-watchlist-btn" id="detailWatchlistBtn" title="Add to Watchlist" style="display:none;">
+            <span class="material-symbols-outlined" id="detailWatchlistIcon">bookmark_border</span>
+          </button>
+        </div>
 
         <div class="detail-meta">
           <span id="detailYear" class="meta-badge">{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
@@ -106,8 +113,134 @@
     <p>Fetching rich movie data...</p>
   </div>
 
+  <!-- Auth Modal (minimal for detail page) -->
+  <div id="authModal" class="modal hidden">
+    <div class="modal-content auth-modal-content">
+      <span class="modal-close" onclick="document.getElementById('authModal').classList.add('hidden')">&times;</span>
+      <h2 id="authModalTitle">Login</h2>
+      <div class="auth-toggle">
+        <div class="auth-toggle-option active" id="authTabLogin">Login</div>
+        <div class="auth-toggle-option" id="authTabRegister">Register</div>
+      </div>
+      <form id="authForm" class="auth-form" onsubmit="return false;">
+        <input type="email" id="authEmail" class="auth-input" placeholder="Email" required autocomplete="email" />
+        <input type="password" id="authPassword" class="auth-input" placeholder="Password" required autocomplete="current-password" />
+        <div id="authError" class="auth-error"></div>
+        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Login</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+
+      // ── Auth + Watchlist helpers for detail page ─────────────────────────
+      const _getToken = () => localStorage.getItem('movierec_jwt');
+      const _authHeaders = () => ({ 'Authorization': 'Bearer ' + _getToken(), 'Content-Type': 'application/json' });
+      let _isAuthMode = 'login';
+      let _isInWatchlist = false;
+
+      const detailWatchlistBtn = document.getElementById('detailWatchlistBtn');
+      const detailWatchlistIcon = document.getElementById('detailWatchlistIcon');
+
+      function updateDetailWatchlistBtn() {
+        if (!_getToken()) {
+          if (detailWatchlistBtn) detailWatchlistBtn.style.display = 'none';
+          return;
+        }
+        if (detailWatchlistBtn) detailWatchlistBtn.style.display = '';
+        if (detailWatchlistIcon) {
+          detailWatchlistIcon.textContent = _isInWatchlist ? 'bookmark' : 'bookmark_border';
+          detailWatchlistBtn.title = _isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
+          detailWatchlistBtn.classList.toggle('active', _isInWatchlist);
+        }
+      }
+
+      // Check if this movie is in watchlist
+      if (_getToken() && MOVIE_ID) {
+        fetch('/watchlist/ids', { headers: _authHeaders() })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(data => {
+            _isInWatchlist = (data.ids || []).includes(String(MOVIE_ID));
+            updateDetailWatchlistBtn();
+          })
+          .catch(() => updateDetailWatchlistBtn());
+      }
+
+      if (detailWatchlistBtn) {
+        detailWatchlistBtn.addEventListener('click', () => {
+          if (!_getToken()) {
+            document.getElementById('authModal').classList.remove('hidden');
+            return;
+          }
+          if (_isInWatchlist) {
+            fetch(`/watchlist/${MOVIE_ID}`, { method: 'DELETE', headers: _authHeaders() })
+              .then(r => r.json())
+              .then(() => { _isInWatchlist = false; updateDetailWatchlistBtn(); });
+          } else {
+            // Get current poster from the page
+            const posterImg = document.getElementById('posterImg');
+            let posterPath = '';
+            if (posterImg && posterImg.src.includes('/t/p/')) {
+              posterPath = posterImg.src.split('/t/p/w500')[1] || '';
+            }
+            fetch('/watchlist', {
+              method: 'POST',
+              headers: _authHeaders(),
+              body: JSON.stringify({
+                movie_id: MOVIE_ID,
+                movie_title: document.getElementById('detailTitle')?.textContent || MOVIE_TITLE,
+                poster_path: posterPath
+              })
+            })
+              .then(r => r.json())
+              .then(() => { _isInWatchlist = true; updateDetailWatchlistBtn(); });
+          }
+        });
+      }
+
+      // ── Auth modal logic (detail page) ─────────────────────────────────
+      const authTabLogin = document.getElementById('authTabLogin');
+      const authTabRegister = document.getElementById('authTabRegister');
+      const authSubmitBtn = document.getElementById('authSubmitBtn');
+      const authModalTitle = document.getElementById('authModalTitle');
+      const authError = document.getElementById('authError');
+      const authForm = document.getElementById('authForm');
+
+      if (authTabLogin) authTabLogin.addEventListener('click', () => {
+        _isAuthMode = 'login';
+        authTabLogin.classList.add('active'); authTabRegister.classList.remove('active');
+        authSubmitBtn.textContent = 'Login'; authModalTitle.textContent = 'Login';
+        authError.textContent = '';
+      });
+      if (authTabRegister) authTabRegister.addEventListener('click', () => {
+        _isAuthMode = 'register';
+        authTabRegister.classList.add('active'); authTabLogin.classList.remove('active');
+        authSubmitBtn.textContent = 'Register'; authModalTitle.textContent = 'Register';
+        authError.textContent = '';
+      });
+
+      if (authForm) authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value.trim();
+        authError.textContent = '';
+        const url = _isAuthMode === 'register' ? '/auth/register' : '/auth/login';
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) { authError.textContent = data.error || 'Something went wrong.'; return; }
+          localStorage.setItem('movierec_jwt', data.token);
+          localStorage.setItem('movierec_email', data.email);
+          document.getElementById('authModal').classList.add('hidden');
+          // Refresh page to show watchlist state
+          window.location.reload();
+        } catch { authError.textContent = 'Network error. Try again.'; }
+      });
       if (MOVIE_ID) {
         fetchMovieDetails(MOVIE_ID);
       } else {
@@ -348,5 +481,4 @@
     });
   </script>
 </body>
-
 </html>
