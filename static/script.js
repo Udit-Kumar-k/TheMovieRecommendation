@@ -8,15 +8,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const authHeaders = () => ({ 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' });
 
   let watchlistMovieIds = new Set();
-  let isAuthMode = 'login'; // 'login' or 'register'
   let watchlistModeActive = false;
+  let pendingWatchlistMovie = null;
+
+  function handleTokenExpired() {
+    localStorage.removeItem('movierec_jwt');
+    localStorage.removeItem('movierec_email');
+    localStorage.removeItem('movierec_name');
+    localStorage.removeItem('movierec_picture');
+    watchlistMovieIds.clear();
+    updateAuthUI();
+    updateModeUI();
+    refreshBookmarkIcons();
+    const authModal = document.getElementById('authModal');
+    if (authModal) authModal.classList.remove('hidden');
+  }
 
   // Load watchlist IDs if logged in
   function loadWatchlistIds() {
     const token = getToken();
     if (!token) { watchlistMovieIds.clear(); return Promise.resolve(); }
     return fetch('/watchlist/ids', { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(r => {
+        if (r.status === 401) {
+          handleTokenExpired();
+          return Promise.reject('Token expired');
+        }
+        return r.ok ? r.json() : Promise.reject('Failed to load watchlist');
+      })
       .then(data => { watchlistMovieIds = new Set((data.ids || []).map(String)); })
       .catch(() => { watchlistMovieIds.clear(); });
   }
@@ -85,7 +104,26 @@ document.addEventListener('DOMContentLoaded', () => {
       await loadWatchlistIds();
       updateAuthUI();
       updateModeUI();
+
+      if (pendingWatchlistMovie) {
+        const p = pendingWatchlistMovie;
+        pendingWatchlistMovie = null;
+        try {
+          await fetch('/watchlist', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ movie_id: p.id, movie_title: p.title, poster_path: p.poster })
+          });
+          watchlistMovieIds.add(p.id);
+        } catch (e) {
+          console.error('Auto-add watchlist error:', e);
+        }
+      }
+
       refreshBookmarkIcons();
+      if (watchlistModeActive) {
+        renderWatchlistView();
+      }
     } catch (err) {
       console.error('Google Sign-In Error:', err);
       if (authError) authError.textContent = 'Google sign-in network error.';
@@ -163,33 +201,67 @@ document.addEventListener('DOMContentLoaded', () => {
   function refreshBookmarkIcons() {
     document.querySelectorAll('.watchlist-btn').forEach(btn => {
       const mid = btn.dataset.movieId;
-      if (!getToken()) {
-        btn.style.display = 'none';
-      } else {
-        btn.style.display = '';
-        const icon = btn.querySelector('.material-symbols-outlined');
-        if (icon) icon.textContent = watchlistMovieIds.has(mid) ? 'bookmark' : 'bookmark_border';
-        btn.classList.toggle('watchlist-active', watchlistMovieIds.has(mid));
-      }
+      btn.style.display = '';
+      const icon = btn.querySelector('.material-symbols-outlined');
+      const isBookmarked = watchlistMovieIds.has(mid);
+      if (icon) icon.textContent = isBookmarked ? 'bookmark' : 'bookmark_border';
+      btn.classList.toggle('watchlist-active', isBookmarked);
+      btn.title = isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist';
     });
   }
 
   async function toggleWatchlist(movieId, movieTitle, posterPath, btn) {
     if (!getToken()) {
+      pendingWatchlistMovie = { id: String(movieId), title: movieTitle, poster: posterPath };
+      const authModal = document.getElementById('authModal');
       if (authModal) authModal.classList.remove('hidden');
       return;
     }
     const mid = String(movieId);
     if (watchlistMovieIds.has(mid)) {
-      await fetch(`/watchlist/${mid}`, { method: 'DELETE', headers: authHeaders() });
-      watchlistMovieIds.delete(mid);
+      try {
+        const res = await fetch(`/watchlist/${mid}`, { method: 'DELETE', headers: authHeaders() });
+        if (res.status === 401) {
+          handleTokenExpired();
+          return;
+        }
+        watchlistMovieIds.delete(mid);
+        if (watchlistModeActive && btn) {
+          const card = btn.closest('.movie-card');
+          if (card) {
+            card.style.transition = 'all 0.25s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.85)';
+            setTimeout(() => {
+              card.remove();
+              const remaining = document.querySelectorAll('#results .movie-card');
+              if (remaining.length === 0) {
+                const resContainer = document.getElementById('results');
+                if (resContainer) {
+                  resContainer.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><h2>Your watchlist is empty</h2><p>Search for movies and click the bookmark icon to add them here.</p></div>';
+                }
+              }
+            }, 250);
+          }
+        }
+      } catch (err) {
+        console.error('Watchlist delete error:', err);
+      }
     } else {
-      await fetch('/watchlist', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ movie_id: mid, movie_title: movieTitle, poster_path: posterPath })
-      });
-      watchlistMovieIds.add(mid);
+      try {
+        const res = await fetch('/watchlist', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ movie_id: mid, movie_title: movieTitle, poster_path: posterPath })
+        });
+        if (res.status === 401) {
+          handleTokenExpired();
+          return;
+        }
+        watchlistMovieIds.add(mid);
+      } catch (err) {
+        console.error('Watchlist add error:', err);
+      }
     }
     refreshBookmarkIcons();
   }
@@ -201,14 +273,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sortControls) sortControls.classList.add('hidden');
 
     if (!getToken()) {
-      container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><p>Please login to see your watchlist.</p></div>';
+      container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><h2>Sign in to view your Watchlist</h2><p>Save movies and sync across your devices.</p><button class="user-nav-btn" style="margin-top:16px;" onclick="document.getElementById(\'authModal\').classList.remove(\'hidden\')"><span class="material-symbols-outlined" style="font-size:1.2rem;">person</span>Login with Google</button></div>';
       return;
     }
 
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:2rem;"><div class="spinner"></div></div>';
 
     fetch('/watchlist', { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(r => {
+        if (r.status === 401) {
+          handleTokenExpired();
+          return Promise.reject('Token expired');
+        }
+        return r.ok ? r.json() : Promise.reject('Failed to load');
+      })
       .then(data => {
         const items = data.watchlist || [];
         if (items.length === 0) {
@@ -224,10 +302,12 @@ document.addEventListener('DOMContentLoaded', () => {
           similarity: '',
           adult: 'FALSE'
         }));
-        renderMovieCards(movies, true); // isSearchResult=true so no similarity badge
+        renderMovieCards(movies, false, null, true); // isSearchResult=false, targetContainer=null, isWatchlist=true
       })
-      .catch(() => {
-        container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><p>Failed to load watchlist. Try again.</p></div>';
+      .catch((err) => {
+        if (err !== 'Token expired') {
+          container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><p>Failed to load watchlist. Try again.</p></div>';
+        }
       });
   }
 
@@ -310,6 +390,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSearchMode.addEventListener('click', () => {
       poolModeActive = false;
       watchlistModeActive = false;
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.delete('mode');
+      window.history.pushState({}, '', newUrl);
       updateModeUI();
     });
   }
@@ -318,6 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPoolMode.addEventListener('click', () => {
       poolModeActive = true;
       watchlistModeActive = false;
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('mode', 'pool');
+      newUrl.searchParams.delete('q');
+      newUrl.searchParams.delete('recommend_id');
+      newUrl.searchParams.delete('recommend_title');
+      window.history.pushState({ mode: 'pool' }, '', newUrl);
       updateModeUI();
     });
   }
@@ -327,6 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnWatchlistMode.addEventListener('click', () => {
       watchlistModeActive = true;
       poolModeActive = false;
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('mode', 'watchlist');
+      newUrl.searchParams.delete('q');
+      newUrl.searchParams.delete('recommend_id');
+      newUrl.searchParams.delete('recommend_title');
+      window.history.pushState({ mode: 'watchlist' }, '', newUrl);
       updateModeUI();
     });
   }
@@ -369,8 +464,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAndRender(title);
   }
 
-  // Helper function to render cards (used by both search results and recommendations)
-  function renderMovieCards(movies, isSearchResult = false, targetContainer = null) {
+  // Helper function to render cards (used by search results, recommendations, and watchlist)
+  function renderMovieCards(movies, isSearchResult = false, targetContainer = null, isWatchlist = false) {
     const isModal = targetContainer === modalResultsContainer;
     const container = targetContainer || document.getElementById('results');
 
@@ -385,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sortControls = document.getElementById('sortControls');
     if (sortControls && !isModal) {
-      if (isSearchResult) {
+      if (isSearchResult || isWatchlist) {
         sortControls.classList.add('hidden');
       } else {
         sortControls.classList.remove('hidden');
@@ -449,14 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
       overlay.appendChild(hoverContent);
       card.appendChild(overlay);
 
-      // Similarity Badge (Only for recommendations, exclude the top exact match)
-      if (!isSearchResult && index !== 0 && movie.similarity && !poolModeActive) {
+      // Similarity Badge (Only for recommendations, exclude the top exact match and watchlist)
+      if (!isSearchResult && !isWatchlist && index !== 0 && movie.similarity && !poolModeActive) {
         const simBadge = document.createElement('div');
         simBadge.className = 'similarity-badge';
         // Ensure it has % sign
         simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
         card.appendChild(simBadge);
-      } else if (!isSearchResult && movie.similarity && poolModeActive) {
+      } else if (!isSearchResult && !isWatchlist && movie.similarity && poolModeActive) {
         // In pool mode, show similarity on all returned cards!
         const simBadge = document.createElement('div');
         simBadge.className = 'similarity-badge';
@@ -465,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Add "Selected" badge to the highest match
-      if (!isSearchResult && index === 0 && !poolModeActive) {
+      if (!isSearchResult && !isWatchlist && index === 0 && !poolModeActive) {
         card.classList.add('selected');
         const badge = document.createElement('div');
         badge.className = 'selected-badge';
@@ -535,6 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
           if (sc) sc.classList.add('hidden');
           
           renderPool();
+        } else if (isWatchlist) {
+          // Watchlist movie card clicked: open detail view directly
+          let urlTargetId = movie.id || movie.tmdb_id;
+          if (urlTargetId) {
+            window.location.href = `/movie/${urlTargetId}`;
+          }
         } else if (isSearchResult) {
           // If we clicked a search result, trigger the recommendation engine and update the URL!
           const newUrl = new URL(window.location);
@@ -562,12 +663,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'watchlist-btn';
         bookmarkBtn.dataset.movieId = String(targetId);
+        const isBookmarked = watchlistMovieIds.has(String(targetId));
+        bookmarkBtn.title = isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist';
         const bookmarkIcon = document.createElement('span');
         bookmarkIcon.className = 'material-symbols-outlined';
-        bookmarkIcon.textContent = watchlistMovieIds.has(String(targetId)) ? 'bookmark' : 'bookmark_border';
+        bookmarkIcon.textContent = isBookmarked ? 'bookmark' : 'bookmark_border';
         bookmarkBtn.appendChild(bookmarkIcon);
-        if (watchlistMovieIds.has(String(targetId))) bookmarkBtn.classList.add('watchlist-active');
-        if (!getToken()) bookmarkBtn.style.display = 'none';
+        if (isBookmarked) bookmarkBtn.classList.add('watchlist-active');
         bookmarkBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleWatchlist(targetId, movie.title || '', movie.poster_path || '', bookmarkBtn);
@@ -888,31 +990,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const recTitle = params.get('recommend_title');
     const mode = params.get('mode');
 
-    if (mode === 'pool') {
-        poolModeActive = true;
-        updateModeUI();
-        const validIds = moviePool.filter(m => m !== null).map(m => m.id);
-        if (validIds.length >= 2) performPoolRecommendation(false);
+    if (mode === 'watchlist') {
+      watchlistModeActive = true;
+      poolModeActive = false;
+      updateModeUI();
+    } else if (mode === 'pool') {
+      poolModeActive = true;
+      watchlistModeActive = false;
+      updateModeUI();
+      const validIds = moviePool.filter(m => m !== null).map(m => m.id);
+      if (validIds.length >= 2) performPoolRecommendation(false);
     } else {
-        if (poolModeActive) {
-            poolModeActive = false;
-            updateModeUI();
-        }
-        if (recId && recTitle) {
-          searchInput.value = recTitle;
-          fetchRecommendations(recTitle, recId, true);
-        } else if (query) {
-          searchInput.value = query;
-          // Re-run the search without pushing a new history state
-          fetchAndRender(query);
-        } else {
-          // If we went back to the home page (no ?q=), clear results
-          searchInput.value = '';
-          document.getElementById('results').innerHTML = '';
-          document.getElementById('loadingOverlay').style.display = 'none';
-          const sortControls = document.getElementById('sortControls');
-          if (sortControls) sortControls.classList.add('hidden');
-        }
+      watchlistModeActive = false;
+      poolModeActive = false;
+      updateModeUI();
+      if (recId && recTitle) {
+        searchInput.value = recTitle;
+        fetchRecommendations(recTitle, recId, true);
+      } else if (query) {
+        searchInput.value = query;
+        // Re-run the search without pushing a new history state
+        fetchAndRender(query);
+      } else {
+        // If we went back to the home page (no ?q=), clear results
+        searchInput.value = '';
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('loadingOverlay').style.display = 'none';
+        const sortControls = document.getElementById('sortControls');
+        if (sortControls) sortControls.classList.add('hidden');
+      }
     }
   });
 
@@ -923,11 +1029,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialRecTitle = initialParams.get('recommend_title');
   const initialMode = initialParams.get('mode');
 
-  if (initialMode === 'pool') {
-      poolModeActive = true;
-      updateModeUI();
-      const validIds = moviePool.filter(m => m !== null).map(m => m.id);
-      if (validIds.length >= 2) performPoolRecommendation(false);
+  if (initialMode === 'watchlist') {
+    watchlistModeActive = true;
+    poolModeActive = false;
+    updateModeUI();
+  } else if (initialMode === 'pool') {
+    poolModeActive = true;
+    watchlistModeActive = false;
+    updateModeUI();
+    const validIds = moviePool.filter(m => m !== null).map(m => m.id);
+    if (validIds.length >= 2) performPoolRecommendation(false);
   } else if (initialRecId && initialRecTitle) {
     searchInput.value = initialRecTitle;
     fetchRecommendations(initialRecTitle, initialRecId, true);

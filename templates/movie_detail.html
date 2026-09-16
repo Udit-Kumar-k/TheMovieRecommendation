@@ -10,8 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=bookmark,bookmark_border,person,logout" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     window.TMDB_API_KEY = "{{ tmdb_api_key }}";
+    window.GOOGLE_CLIENT_ID = "{{ google_client_id or '' }}";
     const MOVIE_ID = "{{ movie.id }}";
     const MOVIE_TITLE = "{{ movie.title | safe }}";
     const MOVIE_YEAR = "{{ movie.release_date[:4] if movie.release_date else '' }}";
@@ -21,11 +23,28 @@
 <body class="detail-page-body">
 
   <div class="top-nav">
-    <button class="back-btn" onclick="history.back()">
+    <button class="back-btn" onclick="if (history.length > 1) { history.back(); } else { window.location.href = '/'; }">
       <img src="{{ url_for('static', filename='icons/search_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg') }}"
         alt="Back icon" style="transform: rotate(180deg);" />
       Back to Search
     </button>
+  </div>
+
+  <!-- User Nav (top-right) -->
+  <div class="user-nav" id="userNav">
+    <div id="loggedOutNav">
+      <button class="user-nav-btn" id="btnOpenAuth" onclick="document.getElementById('authModal').classList.remove('hidden')">
+        <span class="material-symbols-outlined" style="font-size:1.2rem;">person</span>
+        Login
+      </button>
+    </div>
+    <div id="loggedInNav" style="display:none;">
+      <img id="navUserAvatar" class="user-avatar" style="display:none;" alt="avatar" />
+      <span class="user-email-display" id="navUserEmail"></span>
+      <button class="user-nav-btn" id="btnLogout" title="Logout">
+        <span class="material-symbols-outlined" style="font-size:1.2rem;">logout</span>
+      </button>
+    </div>
   </div>
 
   <div id="movieDetailContainer" class="movie-detail-container" style="display:none;">
@@ -40,7 +59,7 @@
       <div class="detail-info">
         <div class="detail-title-row">
           <h1 id="detailTitle">{{ movie.title }}</h1>
-          <button class="detail-watchlist-btn" id="detailWatchlistBtn" title="Add to Watchlist" style="display:none;">
+          <button class="detail-watchlist-btn" id="detailWatchlistBtn" title="Add to Watchlist">
             <span class="material-symbols-outlined" id="detailWatchlistIcon">bookmark_border</span>
           </button>
         </div>
@@ -113,21 +132,23 @@
     <p>Fetching rich movie data...</p>
   </div>
 
-  <!-- Auth Modal (minimal for detail page) -->
+  <!-- Auth Modal -->
   <div id="authModal" class="modal hidden">
     <div class="modal-content auth-modal-content">
       <span class="modal-close" onclick="document.getElementById('authModal').classList.add('hidden')">&times;</span>
-      <h2 id="authModalTitle">Login</h2>
-      <div class="auth-toggle">
-        <div class="auth-toggle-option active" id="authTabLogin">Login</div>
-        <div class="auth-toggle-option" id="authTabRegister">Register</div>
+      <div class="auth-modal-header">
+        <h2 id="authModalTitle">Sign in to MovieRec</h2>
+        <p class="auth-modal-subtitle">Save movies to your personal watchlist and sync across devices.</p>
       </div>
-      <form id="authForm" class="auth-form" onsubmit="return false;">
-        <input type="email" id="authEmail" class="auth-input" placeholder="Email" required autocomplete="email" />
-        <input type="password" id="authPassword" class="auth-input" placeholder="Password" required autocomplete="current-password" />
-        <div id="authError" class="auth-error"></div>
-        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Login</button>
-      </form>
+
+      <!-- Google Sign In Option -->
+      <div id="googleSignInWrapper" class="google-signin-wrapper">
+        <div id="googleSignInDiv"></div>
+        <div id="googleConfigHint" class="google-config-hint" style="display:none;">
+          <span>💡 Google Sign-In requires <code>GOOGLE_CLIENT_ID</code> in environment variables.</span>
+        </div>
+      </div>
+      <div id="authError" class="auth-error"></div>
     </div>
   </div>
 
@@ -136,19 +157,19 @@
 
       // ── Auth + Watchlist helpers for detail page ─────────────────────────
       const _getToken = () => localStorage.getItem('movierec_jwt');
+      const _getEmail = () => localStorage.getItem('movierec_email');
+      const _getName = () => localStorage.getItem('movierec_name');
+      const _getPicture = () => localStorage.getItem('movierec_picture');
       const _authHeaders = () => ({ 'Authorization': 'Bearer ' + _getToken(), 'Content-Type': 'application/json' });
-      let _isAuthMode = 'login';
       let _isInWatchlist = false;
+      let _pendingAddOnLogin = false;
 
       const detailWatchlistBtn = document.getElementById('detailWatchlistBtn');
       const detailWatchlistIcon = document.getElementById('detailWatchlistIcon');
 
       function updateDetailWatchlistBtn() {
-        if (!_getToken()) {
-          if (detailWatchlistBtn) detailWatchlistBtn.style.display = 'none';
-          return;
-        }
-        if (detailWatchlistBtn) detailWatchlistBtn.style.display = '';
+        if (!detailWatchlistBtn) return;
+        detailWatchlistBtn.style.display = 'inline-flex';
         if (detailWatchlistIcon) {
           detailWatchlistIcon.textContent = _isInWatchlist ? 'bookmark' : 'bookmark_border';
           detailWatchlistBtn.title = _isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist';
@@ -156,91 +177,219 @@
         }
       }
 
+      function updateAuthUI() {
+        const loggedOutNav = document.getElementById('loggedOutNav');
+        const loggedInNav = document.getElementById('loggedInNav');
+        const navUserEmail = document.getElementById('navUserEmail');
+        const navUserAvatar = document.getElementById('navUserAvatar');
+
+        if (_getToken()) {
+          if (loggedOutNav) loggedOutNav.style.display = 'none';
+          if (loggedInNav) loggedInNav.style.display = 'flex';
+          const displayName = _getName() || _getEmail() || '';
+          if (navUserEmail) navUserEmail.textContent = displayName;
+          if (navUserAvatar) {
+            const pic = _getPicture();
+            if (pic) {
+              navUserAvatar.src = pic;
+              navUserAvatar.style.display = 'block';
+            } else {
+              navUserAvatar.style.display = 'none';
+            }
+          }
+        } else {
+          if (loggedOutNav) loggedOutNav.style.display = '';
+          if (loggedInNav) loggedInNav.style.display = 'none';
+          if (navUserAvatar) navUserAvatar.style.display = 'none';
+        }
+      }
+
+      function handleTokenExpired() {
+        localStorage.removeItem('movierec_jwt');
+        localStorage.removeItem('movierec_email');
+        localStorage.removeItem('movierec_name');
+        localStorage.removeItem('movierec_picture');
+        _isInWatchlist = false;
+        updateAuthUI();
+        updateDetailWatchlistBtn();
+        const authModal = document.getElementById('authModal');
+        if (authModal) authModal.classList.remove('hidden');
+      }
+
       // Check if this movie is in watchlist
       if (_getToken() && MOVIE_ID) {
         fetch('/watchlist/ids', { headers: _authHeaders() })
-          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(r => {
+            if (r.status === 401) { handleTokenExpired(); return Promise.reject(); }
+            return r.ok ? r.json() : Promise.reject();
+          })
           .then(data => {
             _isInWatchlist = (data.ids || []).includes(String(MOVIE_ID));
             updateDetailWatchlistBtn();
           })
           .catch(() => updateDetailWatchlistBtn());
+      } else {
+        updateDetailWatchlistBtn();
+      }
+
+      function addMovieToWatchlist() {
+        const posterImg = document.getElementById('posterImg');
+        let posterPath = '';
+        if (posterImg && posterImg.src.includes('/t/p/')) {
+          posterPath = posterImg.src.split('/t/p/w500')[1] || '';
+        }
+        return fetch('/watchlist', {
+          method: 'POST',
+          headers: _authHeaders(),
+          body: JSON.stringify({
+            movie_id: MOVIE_ID,
+            movie_title: document.getElementById('detailTitle')?.textContent || MOVIE_TITLE,
+            poster_path: posterPath
+          })
+        })
+          .then(r => {
+            if (r.status === 401) { handleTokenExpired(); return; }
+            return r.json();
+          })
+          .then(() => { _isInWatchlist = true; updateDetailWatchlistBtn(); });
       }
 
       if (detailWatchlistBtn) {
         detailWatchlistBtn.addEventListener('click', () => {
           if (!_getToken()) {
+            _pendingAddOnLogin = true;
             document.getElementById('authModal').classList.remove('hidden');
             return;
           }
           if (_isInWatchlist) {
             fetch(`/watchlist/${MOVIE_ID}`, { method: 'DELETE', headers: _authHeaders() })
-              .then(r => r.json())
+              .then(r => {
+                if (r.status === 401) { handleTokenExpired(); return; }
+                return r.json();
+              })
               .then(() => { _isInWatchlist = false; updateDetailWatchlistBtn(); });
           } else {
-            // Get current poster from the page
-            const posterImg = document.getElementById('posterImg');
-            let posterPath = '';
-            if (posterImg && posterImg.src.includes('/t/p/')) {
-              posterPath = posterImg.src.split('/t/p/w500')[1] || '';
-            }
-            fetch('/watchlist', {
-              method: 'POST',
-              headers: _authHeaders(),
-              body: JSON.stringify({
-                movie_id: MOVIE_ID,
-                movie_title: document.getElementById('detailTitle')?.textContent || MOVIE_TITLE,
-                poster_path: posterPath
-              })
-            })
-              .then(r => r.json())
-              .then(() => { _isInWatchlist = true; updateDetailWatchlistBtn(); });
+            addMovieToWatchlist();
           }
         });
       }
 
-      // ── Auth modal logic (detail page) ─────────────────────────────────
-      const authTabLogin = document.getElementById('authTabLogin');
-      const authTabRegister = document.getElementById('authTabRegister');
-      const authSubmitBtn = document.getElementById('authSubmitBtn');
-      const authModalTitle = document.getElementById('authModalTitle');
-      const authError = document.getElementById('authError');
-      const authForm = document.getElementById('authForm');
+      // Logout handler
+      const btnLogout = document.getElementById('btnLogout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          localStorage.removeItem('movierec_jwt');
+          localStorage.removeItem('movierec_email');
+          localStorage.removeItem('movierec_name');
+          localStorage.removeItem('movierec_picture');
+          _isInWatchlist = false;
+          updateAuthUI();
+          updateDetailWatchlistBtn();
+        });
+      }
 
-      if (authTabLogin) authTabLogin.addEventListener('click', () => {
-        _isAuthMode = 'login';
-        authTabLogin.classList.add('active'); authTabRegister.classList.remove('active');
-        authSubmitBtn.textContent = 'Login'; authModalTitle.textContent = 'Login';
-        authError.textContent = '';
-      });
-      if (authTabRegister) authTabRegister.addEventListener('click', () => {
-        _isAuthMode = 'register';
-        authTabRegister.classList.add('active'); authTabLogin.classList.remove('active');
-        authSubmitBtn.textContent = 'Register'; authModalTitle.textContent = 'Register';
-        authError.textContent = '';
-      });
+      // Auth modal backdrop click
+      const authModal = document.getElementById('authModal');
+      if (authModal) {
+        authModal.addEventListener('click', (e) => {
+          if (e.target === authModal) authModal.classList.add('hidden');
+        });
+      }
 
-      if (authForm) authForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value.trim();
-        authError.textContent = '';
-        const url = _isAuthMode === 'register' ? '/auth/register' : '/auth/login';
+      // GIS (Google Identity Services)
+      async function handleGoogleCredentialResponse(response) {
+        if (!response || !response.credential) return;
+        const authError = document.getElementById('authError');
+        if (authError) authError.textContent = '';
+
         try {
-          const res = await fetch(url, {
+          const res = await fetch('/auth/google', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ credential: response.credential })
           });
           const data = await res.json();
-          if (!res.ok) { authError.textContent = data.error || 'Something went wrong.'; return; }
+          if (!res.ok) {
+            if (authError) authError.textContent = data.error || 'Google sign-in failed.';
+            return;
+          }
+
           localStorage.setItem('movierec_jwt', data.token);
-          localStorage.setItem('movierec_email', data.email);
-          document.getElementById('authModal').classList.add('hidden');
-          // Refresh page to show watchlist state
-          window.location.reload();
-        } catch { authError.textContent = 'Network error. Try again.'; }
-      });
+          if (data.email) localStorage.setItem('movierec_email', data.email);
+          if (data.name) localStorage.setItem('movierec_name', data.name);
+          if (data.picture) localStorage.setItem('movierec_picture', data.picture);
+
+          if (authModal) authModal.classList.add('hidden');
+          updateAuthUI();
+
+          if (_pendingAddOnLogin) {
+            _pendingAddOnLogin = false;
+            addMovieToWatchlist();
+          } else {
+            // Check status for this movie
+            fetch('/watchlist/ids', { headers: _authHeaders() })
+              .then(r => r.ok ? r.json() : Promise.reject())
+              .then(d => {
+                _isInWatchlist = (d.ids || []).includes(String(MOVIE_ID));
+                updateDetailWatchlistBtn();
+              })
+              .catch(() => updateDetailWatchlistBtn());
+          }
+        } catch (err) {
+          console.error('Google Sign-In Error:', err);
+          if (authError) authError.textContent = 'Google sign-in network error.';
+        }
+      }
+
+      function initGoogleSignIn() {
+        const googleClient = window.GOOGLE_CLIENT_ID;
+        const googleBtnDiv = document.getElementById('googleSignInDiv');
+        const googleConfigHint = document.getElementById('googleConfigHint');
+
+        if (!googleClient) {
+          if (googleConfigHint) googleConfigHint.style.display = 'block';
+          if (googleBtnDiv) googleBtnDiv.style.display = 'none';
+          return;
+        }
+
+        if (googleConfigHint) googleConfigHint.style.display = 'none';
+        if (googleBtnDiv) googleBtnDiv.style.display = 'block';
+
+        let attempts = 0;
+        const renderGIS = () => {
+          attempts++;
+          if (window.google && window.google.accounts && window.google.accounts.id) {
+            try {
+              window.google.accounts.id.initialize({
+                client_id: googleClient,
+                callback: handleGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+              });
+              window.google.accounts.id.renderButton(
+                googleBtnDiv,
+                {
+                  theme: 'outline',
+                  size: 'large',
+                  type: 'standard',
+                  text: 'continue_with',
+                  shape: 'pill',
+                  logo_alignment: 'left',
+                  width: 280
+                }
+              );
+            } catch (e) {
+              console.warn('Could not render Google Sign-In button:', e);
+            }
+          } else if (attempts < 20) {
+            setTimeout(renderGIS, 150);
+          }
+        };
+        renderGIS();
+      }
+
+      updateAuthUI();
+      initGoogleSignIn();
       if (MOVIE_ID) {
         fetchMovieDetails(MOVIE_ID);
       } else {
