@@ -424,7 +424,7 @@ def movie_detail(movie_id):
         
     if idx is None:
         dummy_movie = {'id': movie_id, 'title': 'Movie Not Found', 'release_date': '', 'vote_average': 0.0, 'runtime': 0, 'genres': '', 'overview': ''}
-        return render_template('movie_detail.html', movie=dummy_movie, tmdb_api_key=os.getenv('TMDB_API_KEY'), error=True, original_title=movie_id)
+        return render_template('movie_detail.html', movie=dummy_movie, tmdb_api_key=os.getenv('TMDB_API_KEY'), google_client_id=os.getenv('GOOGLE_CLIENT_ID', ''), error=True, original_title=movie_id)
 
     movie_series = df.iloc[idx]
     
@@ -724,7 +724,7 @@ def add_to_watchlist():
 def remove_from_watchlist(movie_id):
     from bson.objectid import ObjectId
     user_id = ObjectId(get_jwt_identity())
-    watchlist_col.delete_one({'user_id': user_id, 'movie_id': str(movie_id)})
+    watchlist_col.delete_one({'user_id': user_id, 'movie_id': str(movie_id).strip()})
     return jsonify({'success': True, 'message': 'Removed from watchlist.'})
 
 
