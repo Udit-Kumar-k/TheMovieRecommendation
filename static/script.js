@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
           similarity: '',
           adult: 'FALSE'
         }));
-        renderMovieCards(movies, false, null, true); // isSearchResult=false, targetContainer=null, isWatchlist=true
+        renderMovieCards(movies, false, container, true); // Explicitly render into watchlistResults container!
       })
       .catch((err) => {
         if (err !== 'Token expired') {
@@ -352,22 +352,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnWatchlistMode) btnWatchlistMode.classList.add('active');
       if (btnSearchMode) btnSearchMode.classList.remove('active');
       if (btnPoolMode) btnPoolMode.classList.remove('active');
-      if (searchBarContainer) searchBarContainer.classList.add('hidden');
-      if (poolContainer) poolContainer.classList.add('hidden');
-      if (resultsContainer) resultsContainer.classList.add('hidden');
-      if (poolResultsContainer) poolResultsContainer.classList.add('hidden');
-      if (watchlistResultsContainer) watchlistResultsContainer.classList.remove('hidden');
+      if (searchBarContainer) { searchBarContainer.classList.add('hidden'); searchBarContainer.style.display = 'none'; }
+      if (poolContainer) { poolContainer.classList.add('hidden'); poolContainer.style.display = 'none'; }
+      if (resultsContainer) { resultsContainer.classList.add('hidden'); resultsContainer.style.display = 'none'; }
+      if (poolResultsContainer) { poolResultsContainer.classList.add('hidden'); poolResultsContainer.style.display = 'none'; }
+      if (watchlistResultsContainer) { watchlistResultsContainer.classList.remove('hidden'); watchlistResultsContainer.style.display = ''; }
       if (sortControls) sortControls.classList.add('hidden');
       renderWatchlistView();
     } else if (poolModeActive) {
       if (btnPoolMode) btnPoolMode.classList.add('active');
       if (btnSearchMode) btnSearchMode.classList.remove('active');
       if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
-      if (searchBarContainer) searchBarContainer.classList.add('hidden');
-      if (poolContainer) poolContainer.classList.remove('hidden');
-      if (resultsContainer) resultsContainer.classList.add('hidden');
-      if (watchlistResultsContainer) watchlistResultsContainer.classList.add('hidden');
-      if (poolResultsContainer) poolResultsContainer.classList.remove('hidden');
+      if (searchBarContainer) { searchBarContainer.classList.add('hidden'); searchBarContainer.style.display = 'none'; }
+      if (poolContainer) { poolContainer.classList.remove('hidden'); poolContainer.style.display = ''; }
+      if (resultsContainer) { resultsContainer.classList.add('hidden'); resultsContainer.style.display = 'none'; }
+      if (watchlistResultsContainer) { watchlistResultsContainer.classList.add('hidden'); watchlistResultsContainer.style.display = 'none'; }
+      if (poolResultsContainer) { poolResultsContainer.classList.remove('hidden'); poolResultsContainer.style.display = ''; }
       renderPool();
       if (sortControls && poolResultsContainer && poolResultsContainer.innerHTML.trim() !== '') {
         sortControls.classList.remove('hidden');
@@ -380,11 +380,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnSearchMode) btnSearchMode.classList.add('active');
       if (btnPoolMode) btnPoolMode.classList.remove('active');
       if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
-      if (poolContainer) poolContainer.classList.add('hidden');
-      if (poolResultsContainer) poolResultsContainer.classList.add('hidden');
-      if (watchlistResultsContainer) watchlistResultsContainer.classList.add('hidden');
-      if (searchBarContainer) searchBarContainer.classList.remove('hidden');
-      if (resultsContainer) resultsContainer.classList.remove('hidden');
+      if (poolContainer) { poolContainer.classList.add('hidden'); poolContainer.style.display = 'none'; }
+      if (poolResultsContainer) { poolResultsContainer.classList.add('hidden'); poolResultsContainer.style.display = 'none'; }
+      if (watchlistResultsContainer) { watchlistResultsContainer.classList.add('hidden'); watchlistResultsContainer.style.display = 'none'; }
+      if (searchBarContainer) { searchBarContainer.classList.remove('hidden'); searchBarContainer.style.display = ''; }
+      if (resultsContainer) { resultsContainer.classList.remove('hidden'); resultsContainer.style.display = ''; }
       if (sortControls && resultsContainer && resultsContainer.innerHTML.trim() !== '' && !resultsContainer.querySelector('.similar-banner')) {
         sortControls.classList.remove('hidden');
         const tmdbToggle = document.getElementById('tmdbApiToggle');

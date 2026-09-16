@@ -5,7 +5,8 @@ body {
     background-color: #f0f2f5;
 }
 
-.hidden {
+.hidden,
+.results-container.hidden {
     display: none !important;
 }
 
@@ -265,10 +266,6 @@ body {
 
 .reset-btn:hover {
     background-color: #d32f2f;
-}
-
-.hidden {
-    display: none;
 }
 
 /* Sort Controls styles */
