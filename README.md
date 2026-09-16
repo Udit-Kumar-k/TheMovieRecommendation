@@ -83,6 +83,8 @@ The pool state persists in localStorage across sessions. Slots can be edited or 
 
 - **Semantic search** — understands thematic similarity, not just surface genre tags
 - **Pool Mode** — select up to 5 movies and find recommendations at the geometric centroid of their embedding vectors; describe your taste as a combination rather than a single anchor
+- **Watchlist** — save movies while browsing; your list is stored in MongoDB and syncs across devices and sessions
+- **Google OAuth** — sign in with Google (no username/password); JWT issued server-side and persisted in localStorage so you stay logged in across tabs and browser restarts
 - **TMDB live integration** — real-time poster, rating, cast, trailer, and metadata on every card and detail page
 - **Genre Jaccard boost** — validated 2.8pp improvement in domain relevance
 - **Quality filters** — eliminates shorts, unrated obscurities, TV movies, documentaries
@@ -163,13 +165,13 @@ movierec/
 │       └── index_data.pkl  # DataFrame + title→index map (Git LFS)
 │
 ├── static/
-│   ├── script.js           # Frontend logic (Search mode, Pool mode, TMDB live)
-│   ├── style.css           # All styles — index, pool UI, modal, detail page
+│   ├── script.js           # Frontend logic (Search/Pool/Watchlist modes, Google OAuth, TMDB live)
+│   ├── style.css           # All styles — index, pool UI, modal, watchlist, detail page
 │   └── icons/              # SVGs (search, fallback poster, 18+ badge)
 │
 ├── templates/
-│   ├── index.html          # Main page — Search/Pool toggle, modal, results grid
-│   └── movie_detail.html   # Full movie detail page
+│   ├── index.html          # Main page — Search/Pool/Watchlist tabs, Google sign-in modal, results grid
+│   └── movie_detail.html   # Full movie detail page with watchlist button
 │
 ├── bench_relevancy.py      # Ground-truth Recall/MRR/nDCG benchmark
 ├── bench_jaccard.py        # Genre boost ablation study
@@ -195,6 +197,9 @@ movierec/
 | Variable | Required | Description |
 |---|---|---|
 | `TMDB_API_KEY` | ✅ | TMDB v3 API key — get one free at [themoviedb.org](https://www.themoviedb.org/settings/api) |
+| `GOOGLE_CLIENT_ID` | ✅ (for auth) | Google OAuth 2.0 client ID — create one at [console.cloud.google.com](https://console.cloud.google.com/); add your domain to Authorized JavaScript Origins |
+| `MONGODB_URI` | ✅ (for watchlist) | MongoDB connection string — used to store users and watchlist data (MongoDB Atlas free tier works) |
+| `JWT_SECRET` | ✅ (for auth) | Secret key used to sign JWT tokens issued after Google sign-in |
 | `HF_INDEX_DATASET` | Optional | Hugging Face dataset ID for remote index storage (e.g. `your-username/movie-rec-data`) |
 | `MODEL_PATH` | Optional | Override model directory (default: `models/minilm`) |
 | `TMDB_API_BASE` | Optional | Override TMDB API host (useful in regions that block `api.themoviedb.org`) |
@@ -255,6 +260,8 @@ docker run -p 5000:5000 -e TMDB_API_KEY=your_key movierec
 | Vector search | `faiss-cpu` (IndexFlatIP — exact inner product) |
 | Pool Mode | Centroid of selected movie vectors, L2-normalized, queried against same FAISS index |
 | Backend | Flask |
+| Auth | Google Identity Services (GIS) OAuth 2.0 — JWT issued server-side, persisted in localStorage |
+| User data | MongoDB (Atlas) — `users` and `watchlists` collections |
 | Data | TMDB Discover API + Kaggle TMDB dataset (930k movies) |
 | Frontend | Vanilla JS + CSS — no framework |
 | Metadata | TMDB API v3 (live, client-side) |
