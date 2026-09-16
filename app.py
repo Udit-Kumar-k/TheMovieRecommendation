@@ -28,38 +28,51 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-# ── MongoDB Atlas Setup (graceful degradation) ───────────────────────────────
+# ── MongoDB Atlas Setup (resilient with auto-reconnect) ─────────────────────────
 MONGO_URI = os.getenv('MONGO_URI')
 db = None
 users_col = None
 watchlist_col = None
 
-if MONGO_URI:
+def get_db():
+    global db, users_col, watchlist_col
+    if db is not None and users_col is not None and watchlist_col is not None:
+        return db
+    uri = os.getenv('MONGO_URI')
+    if not uri:
+        return None
     try:
         import certifi
         from pymongo import MongoClient
-        mongo_client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(), serverSelectionTimeoutMS=5000)
-        mongo_client.server_info()  # Force connection test
-        db = mongo_client.get_database('movierec')
+        client = MongoClient(uri, tlsCAFile=certifi.where(), serverSelectionTimeoutMS=5000)
+        client.server_info()  # Test connection
+        db = client.get_database('movierec')
         users_col = db.users
         watchlist_col = db.watchlists
         # Ensure indexes
-        users_col.create_index('email', unique=True)
-        watchlist_col.create_index([('user_id', 1), ('movie_id', 1)], unique=True)
+        try:
+            users_col.create_index('email', unique=True)
+            watchlist_col.create_index([('user_id', 1), ('movie_id', 1)], unique=True)
+        except Exception:
+            pass
         print('[INFO] MongoDB Atlas connected successfully!')
+        return db
     except Exception as e:
-        print(f'[WARN] MongoDB connection failed: {e}. Auth/Watchlist features disabled.')
+        print(f'[WARN] MongoDB connection attempt failed: {e}')
         db = None
-else:
-    print('[INFO] MONGO_URI not set. Auth/Watchlist features disabled.')
+        users_col = None
+        watchlist_col = None
+        return None
 
+# Attempt connection on startup
+get_db()
 
 def mongo_required(f):
     """Decorator that returns 503 if MongoDB is not available."""
     from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
-        if db is None or users_col is None:
+        if get_db() is None:
             return jsonify({'error': 'Auth/Watchlist service unavailable. MongoDB not configured.'}), 503
         return f(*args, **kwargs)
     return decorated
