@@ -234,12 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.transform = 'scale(0.85)';
             setTimeout(() => {
               card.remove();
-              const remaining = document.querySelectorAll('#results .movie-card');
+              const container = document.getElementById('watchlistResults') || document.getElementById('results');
+              const remaining = container.querySelectorAll('.movie-card');
               if (remaining.length === 0) {
-                const resContainer = document.getElementById('results');
-                if (resContainer) {
-                  resContainer.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><h2>Your watchlist is empty</h2><p>Search for movies and click the bookmark icon to add them here.</p></div>';
-                }
+                container.innerHTML = '<div class="empty-watchlist" style="grid-column: 1 / -1;"><h2>Your watchlist is empty</h2><p>Search for movies and click the bookmark icon to add them here.</p></div>';
               }
             }, 250);
           }
@@ -268,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Watchlist View
   function renderWatchlistView() {
-    const container = document.getElementById('results');
+    const container = document.getElementById('watchlistResults') || document.getElementById('results');
     const sortControls = document.getElementById('sortControls');
     if (sortControls) sortControls.classList.add('hidden');
 
@@ -345,6 +343,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSearchMode = document.getElementById('btnSearchMode');
     const btnPoolMode = document.getElementById('btnPoolMode');
     const btnWatchlistMode = document.getElementById('btnWatchlistMode');
+    const resultsContainer = document.getElementById('results');
+    const poolResultsContainer = document.getElementById('poolResults');
+    const watchlistResultsContainer = document.getElementById('watchlistResults');
+    const sortControls = document.getElementById('sortControls');
 
     if (watchlistModeActive) {
       if (btnWatchlistMode) btnWatchlistMode.classList.add('active');
@@ -352,7 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnPoolMode) btnPoolMode.classList.remove('active');
       if (searchBarContainer) searchBarContainer.classList.add('hidden');
       if (poolContainer) poolContainer.classList.add('hidden');
-      const sortControls = document.getElementById('sortControls');
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+      if (poolResultsContainer) poolResultsContainer.classList.add('hidden');
+      if (watchlistResultsContainer) watchlistResultsContainer.classList.remove('hidden');
       if (sortControls) sortControls.classList.add('hidden');
       renderWatchlistView();
     } else if (poolModeActive) {
@@ -361,27 +365,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
       if (searchBarContainer) searchBarContainer.classList.add('hidden');
       if (poolContainer) poolContainer.classList.remove('hidden');
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+      if (watchlistResultsContainer) watchlistResultsContainer.classList.add('hidden');
+      if (poolResultsContainer) poolResultsContainer.classList.remove('hidden');
       renderPool();
-      const resultsContainer = document.getElementById('results');
-      if(resultsContainer && !window.location.search.includes('mode=pool')) resultsContainer.innerHTML = '';
-      const sortControls = document.getElementById('sortControls');
-      if (sortControls && window.location.search.includes('mode=pool')) {
-          sortControls.classList.remove('hidden');
-          const tmdbToggle = document.getElementById('tmdbApiToggle');
-          if(tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'none';
-      } else if(sortControls) {
-          sortControls.classList.add('hidden');
+      if (sortControls && poolResultsContainer && poolResultsContainer.innerHTML.trim() !== '') {
+        sortControls.classList.remove('hidden');
+        const tmdbToggle = document.getElementById('tmdbApiToggle');
+        if (tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'none';
+      } else if (sortControls) {
+        sortControls.classList.add('hidden');
       }
     } else {
       if (btnSearchMode) btnSearchMode.classList.add('active');
       if (btnPoolMode) btnPoolMode.classList.remove('active');
       if (btnWatchlistMode) btnWatchlistMode.classList.remove('active');
       if (poolContainer) poolContainer.classList.add('hidden');
+      if (poolResultsContainer) poolResultsContainer.classList.add('hidden');
+      if (watchlistResultsContainer) watchlistResultsContainer.classList.add('hidden');
       if (searchBarContainer) searchBarContainer.classList.remove('hidden');
-      const sortControls = document.getElementById('sortControls');
-      if (sortControls && document.getElementById('results').innerHTML.trim() !== '') {
-          const tmdbToggle = document.getElementById('tmdbApiToggle');
-          if(tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'flex';
+      if (resultsContainer) resultsContainer.classList.remove('hidden');
+      if (sortControls && resultsContainer && resultsContainer.innerHTML.trim() !== '' && !resultsContainer.querySelector('.similar-banner')) {
+        sortControls.classList.remove('hidden');
+        const tmdbToggle = document.getElementById('tmdbApiToggle');
+        if (tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'flex';
+      } else if (sortControls) {
+        sortControls.classList.add('hidden');
       }
     }
   }
@@ -624,8 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
           savePool();
           closeModal();
           
-          const mainRes = document.getElementById('results');
-          if (mainRes) mainRes.innerHTML = '';
+          const poolRes = document.getElementById('poolResults');
+          if (poolRes) poolRes.innerHTML = '';
           const sc = document.getElementById('sortControls');
           if (sc) sc.classList.add('hidden');
           
@@ -1159,7 +1168,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   e.stopPropagation();
                   moviePool[index] = null;
                   savePool();
-                  document.getElementById('results').innerHTML = ''; // Clear results if shown
+                  const poolRes = document.getElementById('poolResults');
+                  if (poolRes) poolRes.innerHTML = ''; // Clear pool results if shown
                   const sortControls = document.getElementById('sortControls');
                   if (sortControls) sortControls.classList.add('hidden');
                   renderPool();
@@ -1277,7 +1287,14 @@ document.addEventListener('DOMContentLoaded', () => {
                  setTimeout(() => { poolWarning.classList.add('hidden'); }, 5000);
               }
           } else if (data.results) {
-              renderMovieCards(data.results, false, null);
+              const poolResContainer = document.getElementById('poolResults') || document.getElementById('results');
+              renderMovieCards(data.results, false, poolResContainer);
+              const sortControls = document.getElementById('sortControls');
+              if (sortControls) {
+                  sortControls.classList.remove('hidden');
+                  const tmdbToggle = document.getElementById('tmdbApiToggle');
+                  if (tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = 'none';
+              }
           }
       })
       .catch(err => {
