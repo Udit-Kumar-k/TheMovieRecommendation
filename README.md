@@ -12,16 +12,14 @@ app_port: 7860
 
 A semantic movie recommendation engine. You search for a movie you love, it finds you movies that feel like it — same themes, same tone, similar plot — not because they share a genre tag or both got popular in the same year.
 
-**Live demo:** https://uditkumar-moviesindex.hf.space
+https://uditkumar-moviesindex.hf.space
 
 
 ## What it does
 
 Most recommendation systems work on co-watch patterns or genre buckets. This one encodes each movie as a semantic vector from its plot, genres, and keywords, then uses approximate nearest-neighbour search to find films that are genuinely close in meaning.
 
-Search for *Parasite* and you get *Burning*, *Shoplifters*, *Memories of Murder* — not *Knives Out* because it's also a thriller people watched in 2019.
-
-You get a poster, a description, and a trailer link. You decide whether to watch. No score, no "97% of users liked this."
+You get a poster, a description, and a trailer link. You decide whether to watch. No score, no algorithm deciding for you.
 
 
 ## Features
