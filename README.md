@@ -7,232 +7,185 @@ sdk: docker
 pinned: false
 app_port: 7860
 ---
-# 🎬 MovieRec — Semantic Movie Recommendation Engine
 
-> *Find your next obsession. Not because it's popular — because it actually matches what you love.*
+# MovieRec
 
+A semantic movie recommendation engine. You search for a movie you love, it finds you movies that feel like it — same themes, same tone, similar plot — not because they share a genre tag or both got popular in the same year.
 
-## What Is This?
-
-MovieRec is a **production-grade semantic recommendation engine** that understands movies the way a film-literate human does — not by genre tags or co-watch patterns, but by the actual meaning and themes embedded in a film's DNA.
-
-You search for *Parasite*. You get *Burning*, *Shoplifters*, *Memories of Murder* — not *Knives Out* because it's also a thriller that people watched in 2019.
-
-Built on **FAISS vector search** + **sentence transformers**, with a clean Flask backend and a fully TMDB-integrated frontend.
+**Live demo:** https://uditkumar-moviesindex.hf.space
 
 
-## How It Works
+## What it does
 
-Each movie is encoded as a high-dimensional semantic vector from its genres, keywords, and overview. When you search for a movie, the engine performs approximate nearest-neighbor lookup in a 90,000-movie FAISS index — returning films that are genuinely similar in theme, tone, and narrative structure.
+Most recommendation systems work on co-watch patterns or genre buckets. This one encodes each movie as a semantic vector from its plot, genres, and keywords, then uses approximate nearest-neighbour search to find films that are genuinely close in meaning.
 
-On top of raw cosine similarity, a **25% Genre Jaccard boost** nudges results toward domain-relevant matches. This was validated in ablation testing: the boost moves genre alignment from ~92.1% → **98.7%** without sacrificing semantic diversity.
+Search for *Parasite* and you get *Burning*, *Shoplifters*, *Memories of Murder* — not *Knives Out* because it's also a thriller people watched in 2019.
 
-```
-User query
-    │
-    ▼
-TMDB Live Search → Enrich with local index → Select movie
-    │
-    ▼
-FAISS nearest-neighbor (pool = 750 candidates)
-    │
-    ▼
-Genre Jaccard re-ranking (+25% weight)
-    │
-    ▼
-Quality filters (runtime, vote_count, popularity, genre exclusions)
-    │
-    ▼
-Sort by: Similarity | Quality | Strict Genre Match
-    │
-    ▼
-Results (top 50, rendered as poster grid with live TMDB metadata)
-```
-
-
-## Pool Mode — Taste Centroid Search
-
-Pool Mode lets you describe your taste as a *combination* of up to 5 movies rather than a single anchor. "Give me something between *Parasite* and *No Country for Old Men*" is a more precise query than either film alone.
-
-```
-User selects up to 5 movies
-    │
-    ▼
-Extract 384-dim vectors for each via index.reconstruct()
-    │
-    ▼
-Compute centroid: V_mean = (V_A + V_B + ... + V_N) / N
-    │
-    ▼
-L2-normalize centroid (required for IndexFlatIP cosine similarity)
-    │
-    ▼
-FAISS nearest-neighbor search on centroid vector
-    │
-    ▼
-Genre Jaccard re-ranking against combined genre footprint of all input films
-    │
-    ▼
-Quality filters + sort → top 50 results
-```
-
-The pool state persists in localStorage across sessions. Slots can be edited or removed individually. No new index or data is required — the endpoint reads vectors directly from the already-loaded FAISS index via `index.reconstruct()`.
+You get a poster, a description, and a trailer link. You decide whether to watch. No score, no "97% of users liked this."
 
 
 ## Features
 
-- **Semantic search** — understands thematic similarity, not just surface genre tags
-- **Pool Mode** — select up to 5 movies and find recommendations at the geometric centroid of their embedding vectors; describe your taste as a combination rather than a single anchor
-- **Watchlist** — save movies while browsing; your list is stored in MongoDB and syncs across devices and sessions
-- **Google OAuth** — sign in with Google (no username/password); JWT issued server-side and persisted in localStorage so you stay logged in across tabs and browser restarts
-- **TMDB live integration** — real-time poster, rating, cast, trailer, and metadata on every card and detail page
-- **Genre Jaccard boost** — validated 2.8pp improvement in domain relevance
-- **Quality filters** — eliminates shorts, unrated obscurities, TV movies, documentaries
-- **Three sort modes** — Similarity, Quality (vote-weighted), Strict Genre Match
-- **TMDB API toggle** — compare our FAISS results against TMDB's own recommendation engine live
-- **Fuzzy fallback** — "Did you mean?" suggestions when a title isn't in the index
-- **Detail pages** — full cast, crew, trailer embed, keywords, budget/box office, tagline
-- **Adult content handling** — 18+ badge instead of poster, carried through all surfaces
-- **Daily auto-update** — GitHub Actions workflow rebuilds the index nightly from TMDB's Discover API
+**Search**
+- Semantic similarity search over ~90k movies using FAISS + MiniLM sentence embeddings
+- Genre Jaccard re-ranking on top of cosine similarity (validated +2.8pp domain relevance in ablation tests)
+- Quality filters: removes shorts, unrated obscurities, TV movies, documentaries
+- Three sort modes: Similarity, Quality (vote-weighted), Strict Genre Match
+- "Did you mean?" fuzzy fallback when a title isn't in the index
+- TMDB API toggle to compare our results against TMDB's own recommendation engine live
+
+**Pool Mode**
+- Pick up to 5 movies, get recommendations at the centroid of their embedding vectors
+- Useful when you want something "between *No Country for Old Men* and *Parasite*" — a single anchor can't express that
+- Pool state persists in localStorage across sessions; slots can be edited or removed individually
+
+**Watchlist**
+- Save movies while browsing; synced to your account via MongoDB
+- Accessible from any device after signing in
+- Add from search results, recommendations, or the detail page
+
+**Auth**
+- Sign in with Google — no username or password
+- JWT issued server-side, stored in localStorage; you stay logged in across tabs and browser restarts
+
+**Movie detail pages**
+- Full cast, crew, trailer embed, keywords, budget, box office, tagline
+- Watchlist button directly on the detail page
+- 18+ badge instead of poster for adult-flagged titles
+
+**Index updates**
+- GitHub Actions workflow runs every Sunday at midnight UTC
+- Fetches new movies from TMDB's Discover API, merges them, and incrementally updates the FAISS index
+- Automatically pushes the updated index to Hugging Face Spaces
+
+
+## How it works
+
+```
+User searches for a movie title
+        │
+        ▼
+TMDB Live Search → user selects the exact film
+        │
+        ▼
+FAISS nearest-neighbour (pool of 750 candidates from 384-dim MiniLM vectors)
+        │
+        ▼
+Genre Jaccard re-ranking (+25% weight toward genre-aligned results)
+        │
+        ▼
+Quality filters (runtime, vote count, popularity, genre exclusions)
+        │
+        ▼
+Sort: Similarity | Quality | Strict Genre Match
+        │
+        ▼
+Top 50 results — posters, ratings, and metadata fetched live from TMDB
+```
+
+**Pool Mode** works the same way, except the query vector is the L2-normalised mean of up to 5 selected movie vectors retrieved directly from the loaded FAISS index via `index.reconstruct()`.
 
 
 ## Performance
 
-Benchmarked on a hand-curated golden dataset of 100 anchor movies (20 franchise pairs, 20 cross-genre semantic pairs, 25 hard cases, 35 Bollywood/regional films).
+Benchmarked on a hand-curated golden dataset of 100 anchor movies across four difficulty tiers: franchise pairs (sanity checks), cross-genre semantic pairs, hard cases, and Bollywood/regional films.
 
-| Model | Recall@5 | Recall@10 | nDCG@5 | nDCG@10 | MRR@5 | MRR@10 | TMDB Overlap@10 | Latency |
-|---|---|---|---|---|---|---|---|---|
-| **MiniLM** *(production)* | 16.3% | 20.0% | **0.277** | **0.279** | **0.262** | **0.266** | 1.12 | **1.64 ms** |
-| MPNet | 16.4% | 20.5% | 0.253 | 0.277 | 0.238 | 0.251 | 1.12 | 10.38 ms |
+| Model | Recall@5 | Recall@10 | nDCG@5 | nDCG@10 | MRR@5 | MRR@10 | Latency |
+|---|---|---|---|---|---|---|---|
+| **MiniLM** *(production)* | 16.3% | 20.0% | **0.277** | **0.279** | **0.262** | **0.266** | **1.64 ms** |
+| MPNet | 16.4% | 20.5% | 0.253 | 0.277 | 0.238 | 0.251 | 10.38 ms |
 
-The models are nearly identical on Recall — MPNet edges ahead by just 0.8pp on Recall@5 and 2.7pp on Recall@10. But MiniLM actually **beats MPNet on ranking quality**: higher nDCG@5 (0.277 vs 0.253) and MRR@5 (0.262 vs 0.238), meaning it surfaces relevant results higher up the list. At a **533% latency penalty** (~6.3× slower) for MPNet, the choice is clear: MiniLM wins on both speed and ranking quality.
+MPNet edges ahead by ~1–2pp on raw Recall. MiniLM beats it on ranking quality (nDCG, MRR) and is 6× faster. Production uses MiniLM.
 
-> Recall numbers look modest by design. The evaluation deliberately targets **hard semantic pairs** — not obvious franchise sequels or genre clones. A system that finds *Burning* for *Parasite* and *Force Majeure* for *A Separation* is doing real work.
+Recall numbers look modest because the evaluation targets hard semantic pairs, not obvious franchise sequels. A system that returns *Burning* for *Parasite* and *Force Majeure* for *A Separation* is doing real work. The 20 franchise pairs in the dataset are sanity checks and should be excluded from aggregate metrics when reporting real-world performance.
+
+Full methodology in [`EVALUATION.md`](EVALUATION.md).
 
 
-## Quick Start
+## Quick start
 
 ```bash
-# 1. Clone and install
-git clone https://github.com/your-username/movierec
-cd movierec
+git clone https://github.com/Udit-Kumar-k/TheMovieRecommendation.git
+cd TheMovieRecommendation
 pip install -r requirements.txt
 
-# 2. Set your TMDB API key
-echo "TMDB_API_KEY=your_key_here" > .env
+# Copy and fill in your env vars
+cp .env.example .env
 
-# 3. Build the FAISS index (first run — ~30 min on CPU)
+# Build the FAISS index (first run — ~30 min on CPU)
 python build_index.py --model minilm --output-dir models/minilm
 
-# 4. Start the server
+# Start the server
 python app.py
 ```
 
-Visit `http://localhost:5000` — search for any movie, click it, and watch the recommendations load.
+Visit `http://localhost:5000`.
 
 
-## Keeping the Index Fresh
+## Environment variables
 
-### One-command local update (Windows)
-```bat
-auto_sync.bat
-```
-Fetches the latest movies from TMDB's Discover API, merges them into the dataset, and incrementally updates the FAISS index without a full rebuild.
-
-### Automated nightly update (GitHub Actions)
-The included `.github/workflows/daily_update.yml` runs at midnight UTC, rebuilds the MiniLM index from scratch, and uploads `faiss.index` + `index_data.pkl` to a Hugging Face dataset. The app downloads them on cold start if they're not present locally.
-
-To enable:
-1. Add `TMDB_API_KEY` and `HF_TOKEN` to your repository secrets
-2. Set `repo_id` in the workflow to your Hugging Face dataset
-3. Set `HF_INDEX_DATASET` in your deployment environment
+| Variable | Required | Description |
+|---|---|---|
+| `TMDB_API_KEY` | ✅ | TMDB v3 API key — [get one free](https://www.themoviedb.org/settings/api) |
+| `GOOGLE_CLIENT_ID` | ✅ | Google OAuth 2.0 client ID — [create at Google Cloud Console](https://console.cloud.google.com/); add your domain to Authorized JavaScript Origins |
+| `MONGODB_URI` | ✅ | MongoDB connection string — MongoDB Atlas free tier works |
+| `JWT_SECRET` | ✅ | Secret key for signing JWTs issued after Google sign-in |
+| `HF_INDEX_DATASET` | Optional | Hugging Face dataset ID for remote index storage |
+| `MODEL_PATH` | Optional | Override model directory (default: `models/minilm`) |
+| `TMDB_API_BASE` | Optional | Override TMDB API host |
 
 
-## Project Structure
+## Project structure
 
 ```
 movierec/
-├── app.py                  # Flask app — /smart_recommend, /recommend_multi, /enrich_tmdb_results, etc.
+├── app.py                  # Flask app — routes for search, recommendations, pool, watchlist, auth
 ├── build_index.py          # Build FAISS index from scratch (MiniLM or MPNet)
 ├── update_index.py         # Incremental index update (new movies only)
-├── smart_tmdb_fetcher.py   # TMDB Discover API fetcher + dataset merger
-├── data_loader.py          # Load FAISS index + DataFrame from disk
-├── data_utils.py           # Kaggle dataset path resolution
+├── smart_tmdb_fetcher.py   # TMDB Discover API fetcher and dataset merger
+├── data_loader.py          # Load FAISS index and DataFrame from disk
+├── data_utils.py           # Dataset path resolution
 │
 ├── models/
 │   └── minilm/
-│       ├── faiss.index     # Vector index (Git LFS / download on cold start)
-│       └── index_data.pkl  # DataFrame + title→index map (Git LFS)
+│       ├── faiss.index     # Vector index (Git LFS)
+│       └── index_data.pkl  # DataFrame and title→index map (Git LFS)
 │
 ├── static/
-│   ├── script.js           # Frontend logic (Search/Pool/Watchlist modes, Google OAuth, TMDB live)
-│   ├── style.css           # All styles — index, pool UI, modal, watchlist, detail page
-│   └── icons/              # SVGs (search, fallback poster, 18+ badge)
+│   ├── script.js           # Frontend — Search, Pool, Watchlist modes, Google OAuth, TMDB live fetch
+│   ├── style.css           # All styles
+│   └── icons/              # SVGs: search icon, fallback poster, 18+ badge
 │
 ├── templates/
-│   ├── index.html          # Main page — Search/Pool/Watchlist tabs, Google sign-in modal, results grid
+│   ├── index.html          # Main page — Search / Pool / Watchlist tabs, sign-in modal
 │   └── movie_detail.html   # Full movie detail page with watchlist button
 │
-├── bench_relevancy.py      # Ground-truth Recall/MRR/nDCG benchmark
-├── bench_jaccard.py        # Genre boost ablation study
-├── bench_tmdb_overlap.py   # TMDB overlap reference benchmark
-├── bench_latency.py        # MiniLM vs MPNet inference latency benchmark
-├── get_metrics.py          # Clean metrics summary for both models
+├── .github/workflows/
+│   └── update_index.yml    # Weekly: fetch new TMDB movies, rebuild index, push to HF Spaces
+│
+├── bench_relevancy.py      # Recall / MRR / nDCG benchmark
+├── bench_jaccard.py        # Genre boost ablation
+├── bench_tmdb_overlap.py   # TMDB overlap reference
+├── bench_latency.py        # MiniLM vs MPNet latency
+├── get_metrics.py          # Clean metrics summary
 │
 ├── golden_dataset.json     # 100-anchor hand-curated evaluation set
 ├── EVALUATION.md           # Full evaluation methodology and results
 │
-├── .github/workflows/
-│   ├── daily_update.yml    # Nightly FAISS index rebuild + HF dataset upload
-│   └── update_index.yml    # Weekly incremental index update + HF Spaces push
-│
-├── Dockerfile              # Container deployment (Hugging Face Spaces / self-hosted)
+├── Dockerfile
 ├── requirements.txt
-└── auto_sync.bat           # One-click local update (Windows)
+└── auto_sync.bat           # One-click local index update (Windows)
 ```
 
 
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `TMDB_API_KEY` | ✅ | TMDB v3 API key — get one free at [themoviedb.org](https://www.themoviedb.org/settings/api) |
-| `GOOGLE_CLIENT_ID` | ✅ (for auth) | Google OAuth 2.0 client ID — create one at [console.cloud.google.com](https://console.cloud.google.com/); add your domain to Authorized JavaScript Origins |
-| `MONGODB_URI` | ✅ (for watchlist) | MongoDB connection string — used to store users and watchlist data (MongoDB Atlas free tier works) |
-| `JWT_SECRET` | ✅ (for auth) | Secret key used to sign JWT tokens issued after Google sign-in |
-| `HF_INDEX_DATASET` | Optional | Hugging Face dataset ID for remote index storage (e.g. `your-username/movie-rec-data`) |
-| `MODEL_PATH` | Optional | Override model directory (default: `models/minilm`) |
-| `TMDB_API_BASE` | Optional | Override TMDB API host (useful in regions that block `api.themoviedb.org`) |
-
-
-## Evaluation
-
-The evaluation framework is documented in full in [`EVALUATION.md`](EVALUATION.md). The short version:
-
-- **Golden dataset**: 100 hand-curated anchor→ground-truth pairs across four difficulty tiers
-- **Metrics**: Recall@5, Recall@10, nDCG@10, MRR@10 — all computed on raw FAISS cosine similarity with no boosts
-- **Ablation**: Genre Jaccard boost validated independently on the full 100-anchor set
-- **TMDB overlap**: Measured as a reference baseline — agreement with TMDB is not an optimization target
-
-Ground truth pairs were selected *before* running any benchmarks to prevent label leakage.
-
-To run the benchmarks yourself:
+## Running benchmarks
 
 ```bash
-# Semantic quality (Recall, MRR, nDCG)
-python bench_relevancy.py
-
-# Genre boost ablation
-python bench_jaccard.py --golden-file golden_dataset.json
-
-# TMDB overlap comparison
-python bench_tmdb_overlap.py
-
-# Latency (MiniLM vs MPNet)
-python bench_latency.py
-
-# Clean summary table for both models
-python get_metrics.py
+python bench_relevancy.py                           # Recall, MRR, nDCG
+python bench_jaccard.py --golden-file golden_dataset.json   # Genre boost ablation
+python bench_tmdb_overlap.py                        # TMDB overlap comparison
+python bench_latency.py                             # MiniLM vs MPNet latency
+python get_metrics.py                               # Summary table
 ```
 
 
@@ -240,39 +193,35 @@ python get_metrics.py
 
 ```bash
 docker build -t movierec .
-docker run -p 5000:5000 -e TMDB_API_KEY=your_key movierec
+docker run -p 5000:5000 \
+  -e TMDB_API_KEY=your_key \
+  -e GOOGLE_CLIENT_ID=your_client_id \
+  -e MONGODB_URI=your_mongo_uri \
+  -e JWT_SECRET=your_secret \
+  movierec
 ```
 
 
-## Known Limitations
-
-- Recall numbers are computed against one annotator's judgment. Production-grade evaluation would use multiple annotators with inter-rater agreement (Cohen's Kappa).
-- The index covers ~90k movies filtered from the TMDB dataset. Very obscure or very new films may not be present — the app falls back to TMDB's own recommendation API in that case.
-- Keyword and genre data quality varies in the source dataset; some older or non-English films have sparse metadata, which hurts semantic retrieval quality.
-- The 20 franchise anchor pairs in the golden dataset are intentional sanity checks and should be excluded from aggregate semantic metrics when reporting real-world performance.
-
-
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Embeddings | `sentence-transformers` (MiniLM-L6-v2) |
-| Vector search | `faiss-cpu` (IndexFlatIP — exact inner product) |
-| Pool Mode | Centroid of selected movie vectors, L2-normalized, queried against same FAISS index |
+| Embeddings | `sentence-transformers` MiniLM-L6-v2 |
+| Vector search | `faiss-cpu` IndexFlatIP (exact inner product) |
 | Backend | Flask |
-| Auth | Google Identity Services (GIS) OAuth 2.0 — JWT issued server-side, persisted in localStorage |
-| User data | MongoDB (Atlas) — `users` and `watchlists` collections |
-| Data | TMDB Discover API + Kaggle TMDB dataset (930k movies) |
-| Frontend | Vanilla JS + CSS — no framework |
+| Auth | Google Identity Services (GIS) OAuth 2.0 — JWT persisted in localStorage |
+| User data | MongoDB Atlas — `users` and `watchlists` collections |
+| Frontend | Vanilla JS + CSS, no framework |
 | Metadata | TMDB API v3 (live, client-side) |
-| Index hosting | Hugging Face Datasets (downloaded on cold start) |
 | App hosting | Hugging Face Spaces (Docker) |
-| CI/CD | GitHub Actions — nightly index rebuild + weekly HF Spaces push |
+| CI/CD | GitHub Actions — weekly index update + automatic HF Spaces deploy |
 
 
-## Deployment
+## Known limitations
 
-The live demo runs on Hugging Face Spaces via Docker. The `update_index.yml` workflow pushes to Spaces automatically on a weekly schedule via `git push huggingface main --force`.
+- Recall is computed against one annotator's judgment. Multi-annotator evaluation with inter-rater agreement would be more rigorous.
+- The index covers ~90k movies. Very obscure or very recently released films may not be present; the app falls back to TMDB's own recommendation API in that case.
+- Metadata quality varies in the source dataset. Some older or non-English films have sparse keyword and genre data, which reduces retrieval quality for those titles.
 
 
 ## License
