@@ -442,34 +442,46 @@ document.addEventListener('DOMContentLoaded', () => {
     initGoogleSignIn();
   });
 
-  function showLoadingForTwoSeconds() {
-    if (loadingOverlay) {
-      loadingOverlay.style.display = 'flex';
-      setTimeout(() => {
-        loadingOverlay.style.display = 'none';
-      }, 2000);
-    }
+  function showLoadingOverlay() {
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+  }
+
+  function hideLoadingOverlay() {
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+  }
+
+  function resetToHomePage() {
+    searchInput.value = '';
+    const resultsContainer = document.getElementById('results');
+    if (resultsContainer) resultsContainer.innerHTML = '';
+    hideLoadingOverlay();
+    const sortControls = document.getElementById('sortControls');
+    if (sortControls) sortControls.classList.add('hidden');
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.delete('q');
+    newUrl.searchParams.delete('recommend_id');
+    newUrl.searchParams.delete('recommend_title');
+    newUrl.searchParams.delete('mode');
+    window.history.pushState({}, '', newUrl);
   }
 
   function performSearch() {
     const title = searchInput.value.trim();
     if (!title) {
-      alert("Please enter a movie search term.");
+      resetToHomePage();
       return;
     }
 
-    showLoadingForTwoSeconds();
+    showLoadingOverlay();
 
     // Update URL so the Back button works
     const newUrl = new URL(window.location);
     newUrl.searchParams.set('q', title);
-    // Ensure we drop any recommendation parameters from the URL when doing a raw search!
     newUrl.searchParams.delete('recommend_id');
     newUrl.searchParams.delete('recommend_title');
     newUrl.searchParams.delete('mode');
     window.history.pushState({ query: title }, '', newUrl);
 
-    // Refactored out to avoid duplication with popstate logic
     fetchAndRender(title);
   }
 
@@ -482,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('modalScrollWrapper').style.display = 'block';
     }
 
-    if (!isModal && loadingOverlay) loadingOverlay.style.display = 'none'; // Dismiss overlay immediately on success
+    if (!isModal) hideLoadingOverlay();
     if (isModal && modalLoadingOverlay) modalLoadingOverlay.style.display = 'none';
 
     container.innerHTML = '';
@@ -505,12 +517,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     movies.forEach((movie, index) => {
+      renderSingleCard(movie, index, container, isSearchResult, isWatchlist, isModal);
+    });
+  }
+
+  // Builds and appends a single movie card to container
+  function renderSingleCard(movie, index, container, isSearchResult, isWatchlist, isModal = false) {
       const card = document.createElement('div');
       card.className = 'movie-card';
 
-      // Default to what the backend thinks or a placeholder
-      let img;
-      img = document.createElement('img');
+      let img = document.createElement('img');
       if (movie.adult === 'TRUE') {
         img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
         img.alt = '18+ Poster';
@@ -519,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/static/icons/fallback.svg';
         img.alt = 'Poster';
         if (!movie.poster_path) img.classList.add('fallback');
-
         img.onerror = function () {
           this.onerror = null;
           this.src = '/static/icons/fallback.svg';
@@ -528,47 +543,36 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       card.appendChild(img);
 
-      // Create hovering overlay
       const overlay = document.createElement('div');
       overlay.className = 'hover-overlay';
-
       const hoverContent = document.createElement('div');
       hoverContent.className = 'hover-content';
-
       const hoverTitle = document.createElement('h3');
       hoverTitle.className = 'hover-title';
       hoverTitle.textContent = movie.title || 'Untitled Movie';
-
       const hoverRating = document.createElement('div');
       hoverRating.className = 'hover-rating';
       hoverRating.innerHTML = `<span class="tmdb-star">★</span> <span class="rating-value">--</span>`;
-
       const hoverOverview = document.createElement('p');
       hoverOverview.className = 'hover-overview';
       hoverOverview.textContent = movie.overview || 'No description available.';
-
       hoverContent.appendChild(hoverTitle);
       hoverContent.appendChild(hoverRating);
       hoverContent.appendChild(hoverOverview);
       overlay.appendChild(hoverContent);
       card.appendChild(overlay);
 
-      // Similarity Badge (Only for recommendations, exclude the top exact match and watchlist)
-      if (!isSearchResult && !isWatchlist && index !== 0 && movie.similarity && !poolModeActive) {
-        const simBadge = document.createElement('div');
-        simBadge.className = 'similarity-badge';
-        // Ensure it has % sign
-        simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
-        card.appendChild(simBadge);
-      } else if (!isSearchResult && !isWatchlist && movie.similarity && poolModeActive) {
-        // In pool mode, show similarity on all returned cards!
-        const simBadge = document.createElement('div');
-        simBadge.className = 'similarity-badge';
-        simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
-        card.appendChild(simBadge);
+      // Similarity badge
+      if (!isSearchResult && !isWatchlist && movie.similarity) {
+        if (index !== 0 || poolModeActive) {
+          const simBadge = document.createElement('div');
+          simBadge.className = 'similarity-badge';
+          simBadge.textContent = String(movie.similarity).includes('%') ? movie.similarity : `${movie.similarity}%`;
+          card.appendChild(simBadge);
+        }
       }
 
-      // Add "Selected" badge to the highest match
+      // "Selected" badge on first result
       if (!isSearchResult && !isWatchlist && index === 0 && !poolModeActive) {
         card.classList.add('selected');
         const badge = document.createElement('div');
@@ -577,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.appendChild(badge);
       }
 
-      // Live TMDB Data Fetch on render (removes local CSV dependency)
+      // Live TMDB metadata fetch
       const targetId = movie.id || movie.tmdb_id;
       if (targetId) {
         const apiKey = window.TMDB_API_KEY || '';
@@ -585,26 +589,16 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`${apiBase}/movie/${targetId}?api_key=${apiKey}`)
           .then(res => res.json())
           .then(data => {
-            // Live TMDB Adult overriding
             if (data.adult === true) {
               img.src = '/static/icons/18_up_rating_24dp_8B1A10_FILL0_wght400_GRAD0_opsz24.svg';
               img.classList.add('fallback');
             } else if (data.poster_path && img.src.includes('fallback.svg') && !img.src.includes('18_up')) {
-              // Only override with poster if it wasn't already caught by the local adult flag
               img.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
               img.classList.remove('fallback');
             }
-            if (data.vote_average) {
-              hoverRating.querySelector('.rating-value').textContent = data.vote_average.toFixed(1);
-            } else {
-              hoverRating.querySelector('.rating-value').textContent = 'NR';
-            }
-            if (data.title) {
-              hoverTitle.textContent = data.title;
-            }
-            if (data.overview) {
-              hoverOverview.textContent = data.overview;
-            }
+            hoverRating.querySelector('.rating-value').textContent = data.vote_average ? data.vote_average.toFixed(1) : 'NR';
+            if (data.title) hoverTitle.textContent = data.title;
+            if (data.overview) hoverOverview.textContent = data.overview;
           })
           .catch(() => {
             if (hoverRating.querySelector('.rating-value').textContent === '--') {
@@ -615,15 +609,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isModal) {
         const alreadySelected = moviePool.some(m => m && String(m.id) === String(targetId));
-        if (alreadySelected) {
-          card.classList.add('disabled');
-        }
+        if (alreadySelected) card.classList.add('disabled');
       }
 
-      // Step 2: When a card is clicked...
       card.onclick = () => {
         if (card.classList.contains('disabled')) return;
-
         if (isModal) {
           moviePool[activeModalSlotIndex] = {
             id: String(movie.id || movie.tmdb_id),
@@ -632,42 +622,30 @@ document.addEventListener('DOMContentLoaded', () => {
           };
           savePool();
           closeModal();
-          
           const poolRes = document.getElementById('poolResults');
           if (poolRes) poolRes.innerHTML = '';
           const sc = document.getElementById('sortControls');
           if (sc) sc.classList.add('hidden');
-          
           renderPool();
         } else if (isWatchlist) {
-          // Watchlist movie card clicked: open detail view directly
-          let urlTargetId = movie.id || movie.tmdb_id;
-          if (urlTargetId) {
-            window.location.href = `/movie/${urlTargetId}`;
-          }
+          const urlTargetId = movie.id || movie.tmdb_id;
+          if (urlTargetId) window.location.href = `/movie/${urlTargetId}`;
         } else if (isSearchResult) {
-          // If we clicked a search result, trigger the recommendation engine and update the URL!
           const newUrl = new URL(window.location);
           newUrl.searchParams.set('recommend_id', movie.id);
           newUrl.searchParams.set('recommend_title', movie.title);
           newUrl.searchParams.delete('mode');
           window.history.pushState({ recommend_id: movie.id, recommend_title: movie.title }, '', newUrl);
-
           searchInput.value = movie.title;
-          fetchRecommendations(movie.title, movie.id, false); // false = don't show loading overlay if it interrupts scroll
+          fetchRecommendations(movie.title, movie.id, false);
         } else {
-          // If we clicked a recommendation, go to its detail page using its UNIQUE ID, not title
-          let urlTargetId = movie.id || movie.tmdb_id;
-          if (!urlTargetId) {
-            console.error("Missing movie ID in payload!", movie);
-            alert("Error: Movie ID not found.");
-            return;
-          }
+          const urlTargetId = movie.id || movie.tmdb_id;
+          if (!urlTargetId) { alert('Error: Movie ID not found.'); return; }
           window.location.href = `/movie/${urlTargetId}`;
         }
       };
 
-      // Watchlist bookmark button (top-left of card)
+      // Watchlist bookmark button
       if (!isModal) {
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'watchlist-btn';
@@ -687,18 +665,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       container.appendChild(card);
-    });
   }
+
 
   // Function to actually trigger the AI Recommendations
   function fetchRecommendations(title, id, showLoading = true) {
-    if (showLoading) showLoadingForTwoSeconds();
+    if (showLoading) showLoadingOverlay();
 
     // Check TMDB API Override
     const tmdbToggle = document.getElementById('tmdbApiToggle');
     if (tmdbToggle && tmdbToggle.checked) {
       if (id) {
-        console.log("TMDB API Toggle ON - Bypassing FAISS and fetching from TMDB directly...");
         fetchTMDBRecommendations(id, title).then(data => {
           if (data && data.results && data.results.length > 0) {
             renderMovieCards(data.results, false);
@@ -710,26 +687,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Check user's preferred sort method
     const sortToggle = document.getElementById('qualitySortToggle');
     const sortMode = (sortToggle && sortToggle.checked) ? 'quality' : 'similarity';
 
-    // Check strict genre preference
     const strictGenreToggle = document.getElementById('strictGenreToggle');
     const strictGenre = (strictGenreToggle && strictGenreToggle.checked) ? 'true' : 'false';
 
-    // Pass both title and id. Id helps resolve duplicate titles (like "Parasite").
-    // Fetch limit is 50
-    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=50&id=${id || ''}&sort=${sortMode}&strict_genre=${strictGenre}`;
+    // Fetch up to 100 results; render 25 at a time
+    const url = `/smart_recommend?title=${encodeURIComponent(title)}&limit=100&id=${id || ''}&sort=${sortMode}&strict_genre=${strictGenre}`;
 
     fetch(url)
       .then(res => {
         if (!res.ok) {
           return res.json().then(err => {
             if (res.status === 404) {
-              // Fallback: If not found in local index, fetch directly from TMDB API Recommendations
               if (id) {
-                console.log(`Movie ID ${id} not found in local index. Falling back to TMDB recommendations...`);
                 return fetchTMDBRecommendations(id, title);
               } else {
                 showSimilarMovies(title);
@@ -742,17 +714,55 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.json();
       })
       .then(data => {
-        // If the inner layer threw an error (e.g. TMDB fallback returning nothing), data might be undefined
         if (data && data.results && data.results.length > 0) {
-          console.log("Recommendations:", data.results);
-          renderMovieCards(data.results, false); // false = these are recommendations
+          renderMovieCardsPaginated(data.results, false);
         }
       })
       .catch(err => {
         if (err.message === "") return;
         console.error("Fetch errors:", err);
-        // Only alert if we totally failed and didn't trigger `showSimilarMovies`
       });
+  }
+
+  // Render results in batches of 25 with a Load More button (max 100)
+  function renderMovieCardsPaginated(allMovies, isSearchResult = false, targetContainer = null) {
+    const PAGE_SIZE = 25;
+    const container = targetContainer || document.getElementById('results');
+    hideLoadingOverlay();
+    container.innerHTML = '';
+
+    const sortControls = document.getElementById('sortControls');
+    if (sortControls) {
+      sortControls.classList.remove('hidden');
+      const tmdbToggle = document.getElementById('tmdbApiToggle');
+      if (tmdbToggle && tmdbToggle.parentElement) tmdbToggle.parentElement.style.display = poolModeActive ? 'none' : 'flex';
+    }
+
+    let rendered = 0;
+
+    function renderNextBatch() {
+      // Remove existing Load More button if present
+      const existingBtn = document.getElementById('loadMoreBtn');
+      if (existingBtn) existingBtn.remove();
+
+      const batch = allMovies.slice(rendered, rendered + PAGE_SIZE);
+      batch.forEach((movie, batchIndex) => {
+        renderSingleCard(movie, rendered + batchIndex, container, isSearchResult, false);
+      });
+      rendered += batch.length;
+
+      if (rendered < allMovies.length) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.id = 'loadMoreBtn';
+        loadMoreBtn.className = 'load-more-btn';
+        loadMoreBtn.textContent = `Load more (${rendered} / ${allMovies.length})`;
+        loadMoreBtn.style.gridColumn = '1 / -1';
+        loadMoreBtn.addEventListener('click', renderNextBatch);
+        container.appendChild(loadMoreBtn);
+      }
+    }
+
+    renderNextBatch();
   }
 
   function fetchTMDBRecommendations(id, title) {
@@ -812,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('modalScrollWrapper').style.display = 'block';
     }
 
-    if (!isModal && loadingOverlay) loadingOverlay.style.display = 'none';
+    if (!isModal) hideLoadingOverlay();
     if (isModal && modalLoadingOverlay) modalLoadingOverlay.style.display = 'none';
 
     const sortControls = document.getElementById('sortControls');
@@ -1062,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = targetContainer || document.getElementById('results');
 
     if (!isModal) {
-        showLoadingForTwoSeconds();
+        showLoadingOverlay();
     } else {
         if (modalLoadingOverlay) modalLoadingOverlay.style.display = 'flex';
     }
