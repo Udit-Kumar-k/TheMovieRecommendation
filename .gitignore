@@ -2,7 +2,8 @@
 __pycache__/
 *.pyc
 *.csv
-!healed_tmdb_dataset.csv
+healed_tmdb_dataset.csv
+models/
 .env
 
 # Benchmark outputs & reports
